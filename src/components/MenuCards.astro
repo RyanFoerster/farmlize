@@ -1,0 +1,329 @@
+---
+/**
+ * Cartes du menu « Découvrir » (header desktop et menu mobile) : une grille de cartes colorées,
+ * papier moucheté, chacune avec son illustration riso qui s'anime au survol.
+ */
+import IlloWalker from './illos/IlloWalker.astro';
+import IlloFarmer from './illos/IlloFarmer.astro';
+import { ink, starPath } from '../lib/riso';
+import { seasonArt } from '../lib/season-art';
+import { farms } from '../data/farms';
+
+interface Props {
+  variant?: 'desktop' | 'mobile';
+}
+const { variant = 'desktop' } = Astro.props;
+const month = new Date().getMonth() + 1;
+const pin = (x: number, y: number, c: string) =>
+  `<g transform="translate(${x} ${y})"><path d="M0 -26 C -9 -26 -15 -19 -15 -11 C -15 0 0 12 0 12 C 0 12 15 0 15 -11 C 15 -19 9 -26 0 -26 Z" fill="${c}"/><circle cy="-12" r="5.5" fill="${ink.paper}"/></g>`;
+---
+
+<div class:list={['menu-cards', `menu-cards--${variant}`]} data-menu-cards>
+  <a href="/commencer" class="mcard mcard--start" data-mcard>
+    <span class="mcard__text">
+      <strong>Trouver une ferme</strong>
+      <span>Deux questions, et on vous montre les fermes autour de chez vous.</span>
+    </span>
+    <span class="mcard__go" aria-hidden="true">C’est parti →</span>
+    <span class="mcard__art mcard__art--walker" aria-hidden="true"><IlloWalker /></span>
+  </a>
+
+  <a href="/fermes" class="mcard mcard--map" data-mcard>
+    <span class="mcard__text">
+      <strong>La carte</strong>
+      <span>{farms.length} fermes en Wallonie, à Bruxelles et en Flandre.</span>
+    </span>
+    <span class="mcard__art mcard__art--map" aria-hidden="true">
+      <svg class="illo riso" viewBox="0 0 200 130">
+        <rect x="8" y="58" width="70" height="40" rx="12" fill={ink.leaf} transform="rotate(-8 43 78)"></rect>
+        <rect x="118" y="20" width="64" height="36" rx="12" fill={ink.yellow} transform="rotate(6 150 38)"></rect>
+        <rect x="104" y="78" width="80" height="40" rx="12" fill={ink.green} transform="rotate(-4 144 98)"></rect>
+        <path d="M-10 30 C 40 20 60 60 100 66 S 160 120 220 110" stroke={ink.blue} stroke-width="10" fill="none" stroke-linecap="round"></path>
+        <path d="M20 120 C 60 96 90 90 120 60 S 170 20 196 10" stroke={ink.paper} stroke-width="3" fill="none" stroke-dasharray="6 6" stroke-linecap="round"></path>
+        <g class="mcard__pin" set:html={pin(52, 62, ink.coral)}></g>
+        <g class="mcard__pin" style="--d:.08s" set:html={pin(128, 52, ink.blue)}></g>
+        <g class="mcard__pin" style="--d:.16s" set:html={pin(162, 104, ink.red)}></g>
+      </svg>
+    </span>
+  </a>
+
+  <a href="/producteurs" class="mcard mcard--farmer" data-mcard>
+    <span class="mcard__text">
+      <strong>Producteurs</strong>
+      <span>Votre ferme sur la carte, gratuitement, en dix minutes.</span>
+    </span>
+    <span class="mcard__art mcard__art--farmer" aria-hidden="true"><IlloFarmer /></span>
+  </a>
+
+  <a href="/saisons" class="mcard mcard--season" data-mcard>
+    <span class="mcard__text">
+      <strong>De saison</strong>
+      <span>Ce qui pousse en ce moment, mois par mois.</span>
+    </span>
+    <span class="mcard__art mcard__art--season" aria-hidden="true" data-month={month}>
+      {
+        ['Fraises', 'Carottes', 'Poires'].map((n, i) => (
+          <svg class="riso" viewBox="0 0 60 60" style={`--i:${i}`} set:html={seasonArt(n)} />
+        ))
+      }
+    </span>
+  </a>
+
+  <a href="/fermes?favoris=1" class="mcard mcard--favs" data-mcard>
+    <span class="mcard__text">
+      <strong>Mes favoris</strong>
+      <span>Les fermes que vous avez gardées sous le coude.</span>
+    </span>
+    <span class="mcard__art mcard__art--heart" aria-hidden="true">
+      <svg class="illo riso" viewBox="0 0 120 110">
+        <defs><clipPath id={`heart-${variant}`}><path d="M60 100 C 20 76 6 54 8 34 C 10 16 24 8 38 8 C 48 8 56 14 60 22 C 64 14 72 8 82 8 C 96 8 110 16 112 34 C 114 54 100 76 60 100 Z"></path></clipPath></defs>
+        <path d="M60 100 C 20 76 6 54 8 34 C 10 16 24 8 38 8 C 48 8 56 14 60 22 C 64 14 72 8 82 8 C 96 8 110 16 112 34 C 114 54 100 76 60 100 Z" fill={ink.coral}></path>
+        <g clip-path={`url(#heart-${variant})`} fill={ink.pink}>
+          <rect x="0" y="30" width="120" height="9"></rect><rect x="0" y="52" width="120" height="9"></rect><rect x="0" y="74" width="120" height="9"></rect>
+        </g>
+        <path d="M60 100 C 20 76 6 54 8 34 C 10 16 24 8 38 8 C 48 8 56 14 60 22 C 64 14 72 8 82 8 C 96 8 110 16 112 34 C 114 54 100 76 60 100 Z" fill="url(#ri-r-d)" filter="url(#ri-dot)"></path>
+        <path class="mcard__spark" d={starPath(104, 14, 11, 4.5, 8)} fill={ink.yellow}></path>
+        <path class="mcard__spark" style="--d:.1s" d={starPath(14, 84, 7, 3, 8)} fill={ink.yellow}></path>
+      </svg>
+    </span>
+  </a>
+</div>
+
+<style>
+  .menu-cards {
+    display: grid;
+    gap: 12px;
+  }
+  .menu-cards--desktop {
+    grid-template-columns: 1.15fr 1fr 1fr;
+    grid-template-rows: 156px 156px;
+  }
+  .menu-cards--desktop .mcard--start {
+    grid-row: 1 / 3;
+  }
+  .menu-cards--mobile {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 150px;
+  }
+  .menu-cards--mobile .mcard--start {
+    grid-column: 1 / -1;
+    grid-row: span 1;
+    min-height: 180px;
+  }
+
+  .mcard {
+    --bg: var(--cream-2);
+    --fg: var(--ink);
+    --fg-2: var(--ink-2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-radius: 20px;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--bg) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    color: var(--fg);
+    transition:
+      transform 0.5s var(--ease),
+      box-shadow 0.5s var(--ease);
+  }
+  .mcard:hover,
+  .mcard:focus-visible {
+    transform: translate(-2px, -3px) rotate(-0.6deg);
+    box-shadow: 6px 7px 0 0 var(--off, var(--ink));
+    outline: none;
+  }
+  .mcard__text {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 230px;
+  }
+  .mcard__text strong {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 48, 'wdth' 88;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--fg);
+  }
+  .mcard__text span {
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--fg-2);
+  }
+  .mcard__go {
+    position: relative;
+    z-index: 2;
+    align-self: flex-start;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--cream);
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.4s var(--ease);
+  }
+  .mcard:hover .mcard__go {
+    transform: translateX(4px);
+  }
+
+  /* --- couleurs */
+  .mcard--start {
+    --off: var(--coral);
+  }
+  .mcard--map {
+    --bg: var(--sky);
+    --off: var(--blue);
+  }
+  .mcard--farmer {
+    --bg: var(--coral);
+    --fg: var(--white);
+    --fg-2: rgba(255, 253, 248, 0.86);
+    --off: var(--ink);
+  }
+  .mcard--season {
+    --bg: var(--butter);
+    --off: var(--tangerine);
+  }
+  .mcard--favs {
+    --bg: var(--ink);
+    --fg: var(--cream);
+    --fg-2: rgba(252, 250, 242, 0.7);
+    --off: var(--coral);
+  }
+
+  /* --- illustrations */
+  .mcard__art {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .mcard__art--walker {
+    right: -6px;
+    bottom: -4px;
+    width: min(62%, 260px);
+  }
+  .mcard__art--map {
+    right: -10px;
+    bottom: -22px;
+    width: 50%;
+  }
+  .mcard--map .mcard__text {
+    max-width: 54%;
+  }
+  .mcard__art--farmer {
+    right: 4px;
+    bottom: -96px;
+    width: 150px;
+  }
+  .mcard--farmer .mcard__text {
+    max-width: 60%;
+  }
+  .mcard__art--season {
+    right: 10px;
+    bottom: 10px;
+    display: flex;
+  }
+  .mcard__art--season svg {
+    width: 64px;
+    height: 64px;
+    margin-left: -16px;
+    rotate: calc((var(--i) - 1) * 12deg);
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition-delay: calc(var(--i) * 50ms);
+  }
+  .mcard__art--heart {
+    right: 16px;
+    bottom: 14px;
+    width: 86px;
+  }
+  .mcard:hover .mcard__art--walker {
+    transform: translate(-6px, -4px) rotate(-2deg);
+  }
+  .mcard:hover .mcard__art--map {
+    transform: scale(1.06) rotate(-2deg);
+  }
+  .mcard:hover .mcard__art--farmer {
+    transform: translateY(-14px) rotate(3deg);
+  }
+  .mcard:hover .mcard__art--season svg {
+    transform: translateY(-10px) rotate(-8deg);
+  }
+  .mcard:hover .mcard__art--heart {
+    transform: scale(1.12) rotate(-6deg);
+  }
+  .mcard__pin {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition-delay: var(--d, 0s);
+  }
+  .mcard:hover .mcard__pin {
+    transform: translateY(-8px);
+  }
+  .mcard__spark {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.6s var(--ease);
+    transition-delay: var(--d, 0s);
+  }
+  .mcard:hover .mcard__spark {
+    transform: rotate(90deg) scale(1.3);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .mcard__art--heart svg {
+      animation: mcard-beat 2.4s ease-in-out infinite;
+    }
+  }
+  @keyframes mcard-beat {
+    0%,
+    60%,
+    100% {
+      scale: 1;
+    }
+    70% {
+      scale: 1.08;
+    }
+    80% {
+      scale: 0.98;
+    }
+  }
+
+  .menu-cards--mobile .mcard__text {
+    max-width: none;
+  }
+  .menu-cards--mobile .mcard__text span {
+    display: none;
+  }
+  .menu-cards--mobile .mcard--start .mcard__text span {
+    display: block;
+    max-width: 58%;
+  }
+  .menu-cards--mobile .mcard__art--map {
+    width: 92%;
+    bottom: -12px;
+  }
+  .menu-cards--mobile .mcard__art--walker {
+    width: 44%;
+  }
+  .menu-cards--mobile .mcard__art--farmer {
+    width: 92px;
+    bottom: -56px;
+  }
+  .menu-cards--mobile .mcard__art--season svg {
+    width: 48px;
+    height: 48px;
+    margin-left: -12px;
+  }
+  .menu-cards--mobile .mcard__art--heart {
+    width: 64px;
+  }
+</style>

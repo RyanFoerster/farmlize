@@ -1,0 +1,1902 @@
+---
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import Icon from '../../components/Icon.astro';
+import { ink } from '../../lib/riso';
+import Produce from '../../components/Produce.astro';
+import FarmCard from '../../components/FarmCard.astro';
+import { farms } from '../../data/farms';
+import { categories } from '../../data/categories';
+
+const labels = [...new Set(farms.flatMap((f) => f.labels))].sort((a, b) => a.localeCompare(b, 'fr'));
+const radii = [
+  { v: 10, l: '< 10 km' },
+  { v: 25, l: '< 25 km' },
+  { v: 50, l: '< 50 km' },
+  { v: 0, l: 'Toute la Belgique' },
+];
+---
+
+<Base title="Explorer les fermes" smooth={false} bodyClass="explore-body">
+  <div class="explore" data-explore>
+    <!-- En-tête : la même pilule que sur le reste du site, avec la recherche dedans -->
+    <div class="ex-top">
+      <SiteHeader variant="explore">
+        <label class="ex-search" slot="search">
+          <Icon name="search" size={20} />
+          <span class="sr-only">Rechercher une ferme ou un produit</span>
+          <input type="search" placeholder="Rechercher une ferme, un produit…" data-q autocomplete="off" />
+        </label>
+      </SiteHeader>
+    </div>
+
+    <!-- Liste -->
+    <aside class="ex-panel" data-panel>
+      <div class="ex-panel__controls">
+        <div class="ex-where" data-where-wrap>
+          <label class="ex-where__field">
+            <Icon name="pin" size={20} />
+            <span class="sr-only">Commune</span>
+            <input
+              type="text"
+              data-where
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="ex-where-list"
+              aria-autocomplete="list"
+              autocomplete="off"
+              placeholder="Commune ou code postal"
+            />
+            <button type="button" class="ex-where__locate" data-locate aria-label="Me localiser" title="Me localiser">
+              <Icon name="locate" size={20} />
+            </button>
+          </label>
+          <ul class="ex-suggest" id="ex-where-list" role="listbox" data-where-list hidden></ul>
+        </div>
+        <button type="button" class="ex-filter-btn" data-open-filters aria-label="Plus de filtres">
+          <Icon name="sliders" size={24} />
+          <span class="ex-filter-btn__badge" data-filter-badge hidden>0</span>
+        </button>
+      </div>
+
+      <div class="ex-chips" data-chips>
+        <div class="ex-chips__cats" data-cat-chips></div>
+        <div class="ex-radius">
+          <button type="button" class="chip" data-radius-btn aria-haspopup="listbox" aria-expanded="false">
+            <span data-radius-label>&lt; 25 km</span>
+            <Icon name="chevron-down" size={16} />
+          </button>
+          <ul class="ex-pop" role="listbox" data-radius-pop hidden>
+            {
+              radii.map((r) => (
+                <li role="option" data-radius={r.v} aria-selected="false">
+                  {r.l}
+                  <Icon name="check" size={16} />
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <button type="button" class="chip" data-open-chip aria-pressed="false">Ouvert maintenant</button>
+      </div>
+
+      <div class="ex-head">
+        <h1 class="ex-head__title serif">
+          <span data-head-label>Fermes à proximité</span> <span class="ex-head__count">(<span data-count>{farms.length}</span>)</span>
+        </h1>
+        <button type="button" class="ex-sort" data-sort>
+          Trier : <strong data-sort-label>distance</strong>
+        </button>
+      </div>
+
+      <div class="ex-list" data-list>
+        {farms.map((f) => <FarmCard farm={f} />)}
+      </div>
+
+      <div class="ex-empty" data-empty hidden>
+        <span class="ex-empty__blob riso" aria-hidden="true"><svg viewBox="0 0 100 100" class="ex-empty__art"><use href="#ico-legumes"></use></svg></span>
+        <p class="serif ex-empty__title">Rien par ici… pour l’instant.</p>
+        <p class="ex-empty__text" data-empty-text>Aucune ferme ne correspond à vos critères dans ce rayon.</p>
+        <div class="ex-empty__actions">
+          <button type="button" class="btn btn--sm" data-widen>Élargir la recherche</button>
+          <button type="button" class="btn btn--sm btn--ghost" data-reset>Réinitialiser</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Carte -->
+    <!-- Carte : une grande carte « imprimée », scotchée sur la page, avec ses commandes en papier -->
+    <section class="ex-map" aria-label="Carte des fermes">
+      <div class="ex-map__card" data-map-card>
+        <div class="ex-map__frame">
+          <div class="ex-map__canvas" data-map></div>
+          <div class="ex-map__loading" data-map-loading>
+            <span class="ex-map__loader riso" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#ico-legumes"></use></svg></span>
+            Chargement de la carte…
+          </div>
+        </div>
+        <span class="ex-tape ex-tape--a" aria-hidden="true" data-map-deco></span>
+        <span class="ex-tape ex-tape--b" aria-hidden="true" data-map-deco></span>
+
+        <!-- le lieu, sur une étiquette tamponnée -->
+        <div class="ex-stamp" data-map-stamp data-map-deco>
+          <span class="ex-stamp__pin"><Icon name="pin" size={20} /></span>
+          <span class="ex-stamp__text">
+            <strong class="ex-stamp__name" data-map-label>Namur</strong>
+            <small class="ex-stamp__sub" data-map-sub>Belgique</small>
+          </span>
+        </div>
+
+        <button type="button" class="ex-recenter" data-recenter data-map-deco>
+          <Icon name="locate" size={18} /> Recentrer
+        </button>
+
+        <div class="ex-zoom" data-map-deco>
+          <button type="button" data-zoom-in aria-label="Zoomer"><Icon name="plus" size={22} /></button>
+          <span class="ex-zoom__sep" aria-hidden="true"></span>
+          <button type="button" data-zoom-out aria-label="Dézoomer"><Icon name="minus" size={22} /></button>
+        </div>
+
+        <button type="button" class="ex-compass" data-compass data-map-deco aria-label="Réorienter la carte vers le nord">
+          <svg viewBox="0 0 80 80" class="riso" aria-hidden="true">
+            <circle cx="40" cy="40" r="31" fill="none" stroke={ink.brown} stroke-width="2" stroke-dasharray="0.5 7.6" stroke-linecap="round" opacity="0.55"></circle>
+            <g data-compass-rose>
+              <g class="ex-compass__needle ri-sway" style="--a:4deg; --dur:2.4s; --o:50% 50%">
+                <path d="M40 15 L47.5 40 L32.5 40 Z" fill={ink.coral}></path>
+                <path d="M40 15 L47.5 40 L40 40 Z" fill="url(#ri-r-r)" filter="url(#ri-dot)"></path>
+                <path d="M40 65 L47.5 40 L32.5 40 Z" fill={ink.brown}></path>
+                <circle cx="40" cy="40" r="4.6" fill={ink.yellow} stroke={ink.brown} stroke-width="1.6"></circle>
+              </g>
+              <text x="40" y="11.5" text-anchor="middle" font-size="9" font-weight="800" fill={ink.brown}>N</text>
+            </g>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Bascule mobile -->
+    <button type="button" class="ex-toggle" data-view-toggle>
+      <span class="ex-toggle__map"><Icon name="map" size={18} /> Carte</span>
+      <span class="ex-toggle__list"><Icon name="list" size={18} /> Liste</span>
+    </button>
+
+    <!-- Tiroir filtres -->
+    <div class="ex-drawer" data-drawer hidden>
+      <div class="ex-drawer__backdrop" data-close-filters></div>
+      <div class="ex-drawer__sheet" role="dialog" aria-modal="true" aria-labelledby="filters-title">
+        <div class="ex-drawer__head">
+          <h2 class="title" id="filters-title">Filtres</h2>
+          <button type="button" class="ex-drawer__close" data-close-filters aria-label="Fermer"><Icon name="close" size={22} /></button>
+        </div>
+        <div class="ex-drawer__body">
+          <fieldset>
+            <legend class="eyebrow">Catégories</legend>
+            <div class="ex-drawer__cats">
+              {
+                categories.map((c) => (
+                  <button type="button" class="ex-cat" data-cat-toggle={c.id} aria-pressed="false" style={`--c:${c.color}`}>
+                    <Produce cat={c.id} size={34} />
+                    {c.label}
+                  </button>
+                ))
+              }
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend class="eyebrow">Distance maximale · <span data-range-label>25 km</span></legend>
+            <input type="range" min="5" max="120" step="5" value="25" data-range class="ex-range" />
+          </fieldset>
+          <fieldset>
+            <legend class="eyebrow">Sur place</legend>
+            <div class="ex-drawer__labels">
+              {
+                labels.map((l) => (
+                  <button type="button" class="chip" data-label-toggle={l} aria-pressed="false">
+                    {l}
+                  </button>
+                ))
+              }
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend class="eyebrow">Trier par</legend>
+            <div class="ex-drawer__labels">
+              <button type="button" class="chip" data-sort-opt="distance" aria-pressed="true">Distance</button>
+              <button type="button" class="chip" data-sort-opt="note" aria-pressed="false">Note</button>
+              <button type="button" class="chip" data-sort-opt="nom" aria-pressed="false">Nom</button>
+            </div>
+          </fieldset>
+        </div>
+        <div class="ex-drawer__foot">
+          <button type="button" class="btn btn--ghost btn--sm" data-reset>Réinitialiser</button>
+          <button type="button" class="btn btn--sm" data-close-filters>Voir <span data-drawer-count>0</span> fermes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  .explore-body {
+    overflow: hidden;
+  }
+  .explore {
+    display: grid;
+    grid-template-columns: minmax(420px, 33.5%) 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100svh;
+    background: var(--cream) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+  }
+
+  /* --- en-tête : la pilule du site posée au-dessus, la rangée lui garde sa place --- */
+  .ex-top {
+    grid-column: 1 / -1;
+    position: relative;
+    z-index: 30;
+    height: 84px;
+  }
+  .ex-search {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 18px;
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--ink-2);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    transition:
+      box-shadow 0.35s,
+      translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ex-search:hover {
+    box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  }
+  /* au focus, la recherche se « décolle » avec sa plaque jaune */
+  .ex-search:focus-within {
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      3px 4px 0 0 var(--butter);
+    translate: -1px -2px;
+    color: var(--ink);
+  }
+  .ex-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .ex-search input::placeholder {
+    color: var(--muted);
+  }
+
+  /* --- panneau --- */
+  .ex-panel {
+    position: relative;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 32px clamp(20px, 2.2vw, 34px) 120px;
+    /* papier moucheté, comme les cartes */
+    background: var(--cream-2) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    border-right: 1px solid var(--line);
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .ex-panel__controls {
+    display: flex;
+    gap: 16px;
+  }
+  .ex-where {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    z-index: 6;
+  }
+  .ex-where__field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 72px;
+    padding: 0 12px 0 22px;
+    border-radius: var(--r-l);
+    background: var(--white);
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      3px 4px 0 0 var(--line);
+    transition:
+      box-shadow 0.35s,
+      translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  /* au focus, le champ se « décolle » avec sa plaque de couleur décalée */
+  .ex-where__field:focus-within {
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      5px 6px 0 0 var(--butter);
+    translate: -2px -2px;
+  }
+  .ex-where__field > .icon {
+    color: var(--bark);
+  }
+  .ex-where__field input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: 18px;
+  }
+  .ex-where__locate {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: var(--ink-2);
+    transition:
+      background 0.3s,
+      color 0.3s;
+  }
+  .ex-where__locate:hover {
+    background: var(--sand);
+    color: var(--ink);
+  }
+  .ex-where__locate.is-loading .icon {
+    animation: spin 1.1s linear infinite;
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .ex-suggest {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--white);
+    border-radius: 18px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      var(--shadow-m);
+  }
+  .ex-suggest[hidden] {
+    display: none;
+  }
+  .ex-suggest li {
+    padding: 12px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+  .ex-suggest li[aria-selected='true'] {
+    background: var(--sand);
+  }
+  .ex-suggest li span {
+    color: var(--muted);
+  }
+  .ex-filter-btn {
+    position: relative;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: var(--r-l);
+    background: var(--white);
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      3px 4px 0 0 var(--coral);
+    transition:
+      background 0.3s,
+      color 0.3s,
+      box-shadow 0.35s,
+      translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ex-filter-btn:hover {
+    background: var(--ink);
+    color: var(--cream);
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      5px 6px 0 0 var(--coral);
+    translate: -2px -2px;
+  }
+  .ex-filter-btn:active {
+    translate: 2px 3px;
+    box-shadow: inset 0 0 0 2px var(--ink);
+  }
+  .ex-filter-btn__badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--coral);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .ex-filter-btn__badge[hidden] {
+    display: none;
+  }
+
+  .ex-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .ex-chips__cats {
+    display: contents;
+  }
+  .chip-cat {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--cream);
+    font-weight: 600;
+  }
+  .chip-cat:hover {
+    border-color: var(--ink);
+  }
+  .chip-cat .icon {
+    opacity: 0.85;
+  }
+  .ex-radius {
+    position: relative;
+  }
+  .ex-radius .chip .icon {
+    transition: transform 0.4s var(--ease);
+  }
+  .ex-radius .chip[aria-expanded='true'] .icon {
+    transform: rotate(180deg);
+  }
+  .ex-pop {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 8px);
+    z-index: 10;
+    min-width: 210px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--white);
+    border-radius: 18px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      var(--shadow-m);
+  }
+  .ex-pop[hidden] {
+    display: none;
+  }
+  .ex-pop li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .ex-pop li:hover {
+    background: var(--sand);
+  }
+  .ex-pop li .icon {
+    opacity: 0;
+  }
+  .ex-pop li[aria-selected='true'] .icon {
+    opacity: 1;
+  }
+
+  .ex-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 38px 0 24px;
+  }
+  .ex-head__title {
+    margin: 0;
+    font-size: clamp(22px, 1.75vw, 30px);
+    line-height: 1.1;
+  }
+  /* le libellé souligné d'un trait ondulé, comme les titres du site */
+  .ex-head__title [data-head-label] {
+    padding-bottom: 7px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 12' preserveAspectRatio='none'%3E%3Cpath d='M2 7 C 12 1, 22 1, 32 7 S 52 13, 62 7 S 82 1, 92 7 S 112 13, 118 6' fill='none' stroke='%23e9694f' stroke-width='3' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E")
+      left bottom / 100% 9px no-repeat;
+  }
+  .ex-sort {
+    font-size: 14px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .ex-sort strong {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .ex-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .ex-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .ex-empty[hidden] {
+    display: none;
+  }
+  /* une tache riso qui respire derrière le légume, qui se balance */
+  .ex-empty__blob {
+    display: grid;
+    place-items: center;
+    width: 140px;
+    height: 140px;
+    border-radius: 46% 54% 42% 58% / 56% 44% 56% 44%;
+    background: var(--butter);
+    box-shadow: 4px 5px 0 0 var(--coral);
+  }
+  .ex-empty__art {
+    width: 90px;
+    transform: rotate(-12deg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ex-empty__blob {
+      animation: ex-blob 6s ease-in-out infinite alternate;
+    }
+    .ex-empty__art {
+      animation: ex-sway 2.6s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes ex-blob {
+    to {
+      border-radius: 58% 42% 54% 46% / 44% 56% 44% 56%;
+      rotate: 8deg;
+    }
+  }
+  @keyframes ex-sway {
+    from {
+      transform: rotate(-16deg);
+    }
+    to {
+      transform: rotate(8deg) translateY(-6px);
+    }
+  }
+  .ex-empty__title {
+    font-size: 24px;
+    margin: 18px 0 6px;
+  }
+  .ex-empty__text {
+    color: var(--ink-2);
+    margin: 0 0 22px;
+    max-width: 320px;
+  }
+  .ex-empty__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* --- carte : une grande carte imprimée, scotchée sur le papier --- */
+  .ex-map {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    padding: 18px clamp(22px, 2.4vw, 36px) clamp(24px, 2.6vw, 38px) clamp(18px, 2vw, 30px);
+  }
+  .ex-map__card {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+  .ex-map__frame {
+    position: absolute;
+    inset: 0;
+    border-radius: 30px;
+    overflow: hidden;
+    background: #f1ecdf;
+    /* plaque de couleur décalée, comme les cartes du site */
+    box-shadow: 9px 11px 0 0 var(--leaf);
+  }
+  /* trait d'encre posé par-dessus la carte (sinon la carte le recouvre) */
+  .ex-map__card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: 30px;
+    box-shadow: inset 0 0 0 2px var(--ink);
+    pointer-events: none;
+  }
+  .ex-map__frame .ex-map__canvas {
+    position: absolute;
+    inset: 0;
+  }
+  .ex-map__loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 14px;
+    color: var(--ink-2);
+    font-size: 14px;
+    font-weight: 600;
+    pointer-events: none;
+  }
+  .ex-map__loader {
+    width: 56px;
+  }
+  .ex-map__loader svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ex-map__loader {
+      animation: ex-loader 0.55s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes ex-loader {
+    from {
+      translate: 0 4px;
+      rotate: -12deg;
+    }
+    to {
+      translate: 0 -12px;
+      rotate: 10deg;
+    }
+  }
+
+  /* morceaux de scotch qui tiennent la carte */
+  .ex-tape {
+    position: absolute;
+    z-index: 3;
+    width: 104px;
+    height: 30px;
+    background: rgba(243, 214, 119, 0.82) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow: 0 1px 0 rgba(53, 34, 0, 0.08);
+    pointer-events: none;
+    -webkit-mask: linear-gradient(90deg, transparent 0 3px, #000 3px calc(100% - 3px), transparent calc(100% - 3px));
+    mask: linear-gradient(90deg, transparent 0 3px, #000 3px calc(100% - 3px), transparent calc(100% - 3px));
+  }
+  .ex-tape--a {
+    top: -12px;
+    left: 42%;
+    rotate: -4deg;
+  }
+  .ex-tape--b {
+    top: 52%;
+    left: -40px;
+    width: 84px;
+    rotate: -82deg;
+    background-color: rgba(188, 208, 240, 0.85);
+  }
+
+  /* le lieu, sur une étiquette tamponnée */
+  .ex-stamp {
+    position: absolute;
+    z-index: 4;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: calc(100% - 200px);
+    padding: 10px 20px 10px 10px;
+    border-radius: 20px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      4px 5px 0 0 var(--coral);
+    rotate: -2deg;
+    pointer-events: none;
+  }
+  .ex-stamp__pin {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 46% 54% 42% 58% / 56% 44% 56% 44%;
+    background: var(--coral);
+    color: var(--ink);
+  }
+  .ex-stamp__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .ex-stamp__name {
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 48, 'wdth' 86;
+    font-size: clamp(22px, 1.9vw, 30px);
+    line-height: 1;
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .ex-stamp__sub {
+    margin-top: 3px;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* commandes en papier : pilule « Recentrer », zoom, boussole */
+  .ex-recenter,
+  .ex-zoom,
+  .ex-compass {
+    position: absolute;
+    z-index: 4;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      3px 4px 0 0 var(--butter);
+  }
+  .ex-recenter {
+    top: 22px;
+    right: 22px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 46px;
+    padding: 0 18px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 14px;
+    rotate: 1.5deg;
+    transition:
+      translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.3s,
+      rotate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ex-recenter:hover {
+    rotate: 0deg;
+    translate: -1px -2px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      5px 6px 0 0 var(--butter);
+  }
+  .ex-recenter:active {
+    translate: 2px 3px;
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .ex-recenter .icon {
+    transition: rotate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ex-recenter:hover .icon {
+    rotate: 90deg;
+  }
+  .ex-zoom {
+    right: 22px;
+    bottom: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px;
+    border-radius: 999px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      3px 4px 0 0 var(--sky);
+  }
+  .ex-zoom button {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    transition:
+      background 0.3s,
+      scale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ex-zoom button:hover {
+    background: var(--butter);
+  }
+  .ex-zoom button:active {
+    scale: 0.86;
+  }
+  .ex-zoom__sep {
+    width: 24px;
+    height: 0;
+    border-top: 1.5px dashed var(--line-strong);
+  }
+  .ex-compass {
+    left: 22px;
+    bottom: 22px;
+    width: 86px;
+    height: 86px;
+    padding: 4px;
+    border-radius: 50%;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      3px 4px 0 0 var(--coral);
+    transition:
+      translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.3s;
+  }
+  .ex-compass:hover {
+    translate: -1px -2px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      5px 6px 0 0 var(--coral);
+  }
+  .ex-compass svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .ex-compass text {
+    font-family: var(--font-display);
+  }
+
+  /* marqueurs : des pastilles imprimées, avec leur ombre d'encre décalée */
+  .mk {
+    width: 48px;
+    height: 58px;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+  .mk__pin {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow:
+      0 0 0 3px var(--white),
+      0 0 0 4.5px var(--ink),
+      3px 4px 0 4.5px rgba(53, 34, 0, 0.85);
+    transform-origin: 50% 120%;
+    transition:
+      transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.3s;
+  }
+  .mk__pin::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 2px);
+    width: 0;
+    height: 0;
+    margin-left: -7px;
+    border: 7px solid transparent;
+    border-top: 9px solid var(--ink);
+    border-bottom: 0;
+  }
+  .mk__pin svg {
+    width: 32px;
+    height: 32px;
+  }
+  .mk.is-hover .mk__pin,
+  .mk:hover .mk__pin {
+    transform: scale(1.14) translateY(-3px) rotate(-6deg);
+  }
+  .mk.is-active .mk__pin {
+    transform: scale(1.3) translateY(-4px);
+    box-shadow:
+      0 0 0 3px var(--white),
+      0 0 0 5.5px var(--ink),
+      4px 6px 0 5.5px var(--coral);
+  }
+  .me {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--ink);
+    box-shadow: 0 0 0 4px var(--white);
+  }
+  .me::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    background: rgba(233, 105, 79, 0.35);
+    animation: me-pulse 2.4s var(--ease) infinite;
+  }
+  .me span {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 12px);
+    transform: translateX(-50%) rotate(-3deg);
+    white-space: nowrap;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      2px 3px 0 0 var(--coral);
+    color: var(--ink);
+    font: 700 12px/1.4 var(--font-body);
+  }
+  @keyframes me-pulse {
+    0% {
+      transform: scale(0.4);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+
+  /* popup : une petite carte imprimée */
+  .fz-popup .maplibregl-popup-content {
+    padding: 0;
+    border-radius: 22px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      5px 6px 0 0 var(--coral);
+    font-family: var(--font-body);
+  }
+  .fz-popup .maplibregl-popup-tip {
+    border-top-color: var(--ink) !important;
+  }
+  .pop {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px 14px 14px;
+    width: 340px;
+    max-width: 78vw;
+    color: var(--ink);
+  }
+  .pop__thumb {
+    width: 84px;
+    height: 84px;
+    border-radius: 14px;
+    overflow: hidden;
+    flex-shrink: 0;
+    rotate: -3deg;
+    box-shadow: 0 0 0 1.5px var(--ink);
+  }
+  .pop__name {
+    margin: 0 0 4px;
+    font-family: var(--font-logo);
+    font-weight: 600;
+    font-variation-settings: 'opsz' 24;
+    font-size: 20px;
+    line-height: 1.15;
+  }
+  .pop__meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .pop__status {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .pop__status.is-open {
+    color: #235f3e;
+  }
+  .pop__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .pop:hover .pop__link {
+    color: var(--coral);
+  }
+  .maplibregl-ctrl-attrib {
+    font-size: 10px;
+    background: rgba(252, 250, 242, 0.85) !important;
+  }
+  /* l'attribution se range à côté du zoom */
+  .ex-map .maplibregl-ctrl-bottom-right {
+    right: 82px;
+  }
+
+  /* --- tiroir filtres --- */
+  .ex-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+  }
+  .ex-drawer[hidden] {
+    display: none;
+  }
+  .ex-drawer__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(53, 34, 0, 0.32);
+  }
+  .ex-drawer__sheet {
+    position: absolute;
+    top: 12px;
+    bottom: 12px;
+    left: 12px;
+    width: min(480px, calc(100% - 24px));
+    display: flex;
+    flex-direction: column;
+    background: var(--cream);
+    border-radius: var(--r-l);
+    box-shadow: var(--shadow-m);
+    overflow: hidden;
+  }
+  .ex-drawer__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 26px 28px 10px;
+  }
+  .ex-drawer__head .title {
+    font-size: 34px;
+  }
+  .ex-drawer__close {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    transition: transform 0.4s var(--ease);
+  }
+  .ex-drawer__close:hover {
+    transform: rotate(90deg);
+  }
+  .ex-drawer__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 28px 28px;
+  }
+  .ex-drawer fieldset {
+    border: 0;
+    padding: 0;
+    margin: 22px 0 0;
+  }
+  .ex-drawer legend {
+    margin-bottom: 14px;
+  }
+  .ex-drawer__cats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .ex-cat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px 8px 8px;
+    border-radius: 16px;
+    background: var(--white);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    font-weight: 500;
+    font-size: 15px;
+    text-align: left;
+    transition:
+      background 0.3s,
+      box-shadow 0.3s;
+  }
+  .ex-cat[aria-pressed='true'] {
+    background: var(--c);
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .ex-drawer__labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ex-range {
+    width: 100%;
+    accent-color: var(--ink);
+  }
+  .ex-drawer__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 28px;
+    border-top: 1px solid var(--line);
+    background: var(--white);
+  }
+  .ex-drawer__foot .btn:last-child {
+    flex: 1;
+  }
+
+  /* --- mobile --- */
+  .ex-toggle {
+    display: none;
+  }
+  @media (max-width: 900px) {
+    .explore {
+      grid-template-columns: 1fr;
+    }
+    .ex-top {
+      height: 76px;
+    }
+    .ex-panel,
+    .ex-map {
+      min-width: 0;
+    }
+    .ex-where {
+      min-width: 0;
+    }
+    .ex-panel__controls {
+      gap: 10px;
+    }
+    .explore:not(.is-map) .ex-map * {
+      visibility: hidden !important;
+    }
+    .ex-panel,
+    .ex-map {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .ex-panel {
+      padding: 20px 16px 110px;
+      border-right: 0;
+    }
+    .ex-map {
+      visibility: hidden;
+      padding: 6px 14px 16px 12px;
+    }
+    .explore.is-map .ex-map {
+      visibility: visible;
+    }
+    .explore.is-map .ex-panel {
+      visibility: hidden;
+    }
+    .ex-map__frame,
+    .ex-map__card::after {
+      border-radius: 24px;
+    }
+    .ex-map__frame {
+      box-shadow: 6px 7px 0 0 var(--leaf);
+    }
+    .ex-stamp {
+      top: 12px;
+      left: 12px;
+      max-width: calc(100% - 150px);
+      padding: 7px 14px 7px 7px;
+      gap: 9px;
+    }
+    .ex-stamp__pin {
+      width: 34px;
+      height: 34px;
+    }
+    .ex-stamp__name {
+      font-size: 20px;
+    }
+    .ex-stamp__sub {
+      font-size: 12px;
+    }
+    .ex-recenter {
+      top: 14px;
+      right: 12px;
+      height: 42px;
+      padding: 0 14px;
+    }
+    .ex-zoom {
+      right: 12px;
+      bottom: 90px;
+    }
+    .ex-zoom button {
+      width: 44px;
+      height: 44px;
+    }
+    .ex-compass {
+      left: 12px;
+      bottom: 90px;
+      width: 62px;
+      height: 62px;
+    }
+    .ex-tape--b {
+      display: none;
+    }
+    .ex-where__field,
+    .ex-filter-btn {
+      height: 60px;
+    }
+    .ex-filter-btn {
+      width: 60px;
+    }
+    .ex-toggle {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 30;
+      display: inline-flex;
+      transform: translateX(-50%);
+      height: 54px;
+      padding: 0 24px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--cream);
+      font-weight: 600;
+      box-shadow: 3px 4px 0 0 var(--coral);
+    }
+    .ex-toggle span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ex-toggle__list,
+    .explore.is-map .ex-toggle__map {
+      display: none !important;
+    }
+    .explore.is-map .ex-toggle__list {
+      display: inline-flex !important;
+    }
+  }
+</style>
+
+<script>
+  import * as maplibregl from 'maplibre-gl';
+  import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+  import { Flip } from 'gsap/Flip';
+  import { gsap, onPage, reduced } from '../../lib/motion';
+  import { farms, farmBySlug, type Farm } from '../../data/farms';
+  import { categories, categoryById, type CategoryId } from '../../data/categories';
+  import { communeBySlug, DEFAULT_COMMUNE, type Commune } from '../../data/communes';
+  import { distanceKm, formatKm, normalize, openStatus, searchCommunes, nearestCommune } from '../../lib/geo';
+  import { getFavs, getPrefs, setPrefs } from '../../lib/store';
+  import { farmlizeStyle, circle } from '../../lib/map-style';
+
+  gsap.registerPlugin(Flip);
+  maplibregl.setWorkerUrl(workerUrl);
+
+  const VIEW_KEY = 'farmlize:explore-view';
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  const closeSvg =
+    '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>';
+  const starSvg =
+    '<svg class="icon star" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/></svg>';
+
+  onPage('[data-explore]', (root) => {
+    const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!;
+    const $$ = <T extends Element = HTMLElement>(s: string) => [...root.querySelectorAll<T>(s)];
+    const offs: (() => void)[] = [];
+    const on = (el: EventTarget, ev: string, fn: (e: any) => void, opts?: AddEventListenerOptions) => {
+      el.addEventListener(ev, fn, opts);
+      offs.push(() => el.removeEventListener(ev, fn, opts));
+    };
+
+    // ---------- état ----------
+    const params = new URLSearchParams(location.search);
+    const prefs = getPrefs();
+    const hasUrl = params.has('lieu') || params.has('cats');
+    const state = {
+      commune: communeBySlug[params.get('lieu') ?? prefs.commune ?? DEFAULT_COMMUNE] ?? communeBySlug[DEFAULT_COMMUNE],
+      cats: new Set<CategoryId>(
+        ((params.get('cats') ?? (hasUrl ? '' : (prefs.cats ?? []).join(','))) as string)
+          .split(',')
+          .filter((c): c is CategoryId => c in categoryById),
+      ),
+      radius: params.has('r') ? Number(params.get('r')) : 25,
+      open: params.get('ouvert') === '1',
+      favs: params.has('favoris'),
+      q: params.get('q') ?? '',
+      labels: new Set((params.get('labels') ?? '').split(',').filter(Boolean)),
+      sort: (params.get('tri') as 'distance' | 'note' | 'nom') ?? 'distance',
+      selected: null as string | null,
+    };
+
+    const panel = $('[data-panel]');
+    const list = $('[data-list]');
+    const cards = $$<HTMLElement>('[data-farm-card]');
+    const cardBySlug = new Map(cards.map((c) => [c.dataset.slug!, c]));
+    const dist = new Map<string, number>();
+    let visible: Farm[] = [];
+
+    // ---------- calculs ----------
+    const computeDistances = () => {
+      for (const f of farms) dist.set(f.slug, distanceKm(state.commune, f));
+      cards.forEach((card) => {
+        const d = dist.get(card.dataset.slug!)!;
+        card.querySelector('[data-distance]')!.textContent = formatKm(d);
+      });
+    };
+    const statuses = new Map(farms.map((f) => [f.slug, openStatus(f.hours)]));
+    cards.forEach((card) => {
+      const s = statuses.get(card.dataset.slug!)!;
+      const el = card.querySelector<HTMLElement>('[data-status]')!;
+      el.textContent = s.label;
+      el.classList.toggle('is-open', s.open);
+    });
+
+    const matches = (f: Farm) => {
+      const favs = getFavs();
+      if (state.favs) return favs.includes(f.slug);
+      if (state.cats.size && !f.cats.some((c) => state.cats.has(c))) return false;
+      if (state.radius && dist.get(f.slug)! > state.radius) return false;
+      if (state.open && !statuses.get(f.slug)!.open) return false;
+      for (const l of state.labels) if (!f.labels.includes(l)) return false;
+      if (state.q) {
+        const hay = normalize(cardBySlug.get(f.slug)!.dataset.search!);
+        if (!normalize(state.q).split(' ').every((w) => hay.includes(w))) return false;
+      }
+      return true;
+    };
+
+    const sortFn = (a: Farm, b: Farm) =>
+      state.sort === 'note'
+        ? b.rating - a.rating || dist.get(a.slug)! - dist.get(b.slug)!
+        : state.sort === 'nom'
+          ? a.name.localeCompare(b.name, 'fr')
+          : dist.get(a.slug)! - dist.get(b.slug)!;
+
+    // ---------- UI : chips, compteurs, URL ----------
+    const radiusLabel = (r: number) => (r ? `< ${r} km` : 'Toute la Belgique');
+    const renderChips = () => {
+      const wrap = $('[data-cat-chips]');
+      wrap.innerHTML = [...state.cats]
+        .map((c) => `<button type="button" class="chip chip-cat" data-remove-cat="${c}">${esc(categoryById[c].label)} ${closeSvg}</button>`)
+        .join('');
+      $('[data-radius-label]').textContent = radiusLabel(state.radius);
+      $$('[data-radius]').forEach((li) => li.setAttribute('aria-selected', String(Number(li.dataset.radius) === state.radius)));
+      $('[data-open-chip]').setAttribute('aria-pressed', String(state.open));
+      $('[data-fav-toggle]').setAttribute('aria-pressed', String(state.favs));
+      $$('[data-cat-toggle]').forEach((b) => b.setAttribute('aria-pressed', String(state.cats.has(b.dataset.catToggle as CategoryId))));
+      $$('[data-label-toggle]').forEach((b) => b.setAttribute('aria-pressed', String(state.labels.has(b.dataset.labelToggle!))));
+      $$('[data-sort-opt]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sortOpt === state.sort)));
+      $('[data-sort-label]').textContent = state.sort;
+      const range = $<HTMLInputElement>('[data-range]');
+      range.value = String(state.radius || 120);
+      $('[data-range-label]').textContent = state.radius ? `${state.radius} km` : 'toute la Belgique';
+      const extra = state.labels.size + (state.sort !== 'distance' ? 1 : 0) + state.cats.size;
+      const badge = $('[data-filter-badge]');
+      badge.hidden = !extra;
+      badge.textContent = String(extra);
+      $('[data-head-label]').textContent = state.favs ? 'Mes fermes favorites' : state.q ? 'Résultats' : 'Fermes à proximité';
+      const favCount = getFavs().length;
+      $('[data-fav-count]').textContent = String(favCount);
+      $('[data-fav-toggle]').classList.toggle('has-favs', favCount > 0);
+    };
+
+    const syncUrl = () => {
+      const p = new URLSearchParams();
+      p.set('lieu', state.commune.slug);
+      if (state.cats.size) p.set('cats', [...state.cats].join(','));
+      if (state.radius !== 25) p.set('r', String(state.radius));
+      if (state.open) p.set('ouvert', '1');
+      if (state.favs) p.set('favoris', '1');
+      if (state.q) p.set('q', state.q);
+      if (state.labels.size) p.set('labels', [...state.labels].join(','));
+      if (state.sort !== 'distance') p.set('tri', state.sort);
+      history.replaceState(history.state, '', `${location.pathname}?${p}`);
+      setPrefs({ commune: state.commune.slug, cats: [...state.cats] });
+    };
+
+    // ---------- liste (Flip) ----------
+    let first = true;
+    const apply = (opts: { fit?: boolean } = {}) => {
+      visible = farms.filter(matches).sort(sortFn);
+      const ids = new Set(visible.map((f) => f.slug));
+      const flipState = first || reduced() ? null : Flip.getState(cards);
+
+      cards.forEach((c) => (c.style.display = ids.has(c.dataset.slug!) ? '' : 'none'));
+      visible.forEach((f) => list.appendChild(cardBySlug.get(f.slug)!));
+
+      if (flipState) {
+        Flip.from(flipState, {
+          duration: 0.6,
+          ease: 'fz.inOut',
+          absolute: true,
+          scale: false,
+          onEnter: (els) => gsap.fromTo(els, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.55, stagger: 0.04, delay: 0.1 }),
+          onLeave: (els) => gsap.to(els, { autoAlpha: 0, scale: 0.96, duration: 0.3 }),
+        });
+      } else if (first && !reduced()) {
+        gsap.fromTo(
+          visible.slice(0, 6).map((f) => cardBySlug.get(f.slug)!),
+          { autoAlpha: 0, y: 30 },
+          { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.07, delay: 0.15 },
+        );
+      }
+      first = false;
+
+      // compteur animé
+      const countEl = $('[data-count]');
+      const from = { v: Number(countEl.textContent) || 0 };
+      gsap.to(from, { v: visible.length, duration: 0.5, ease: 'power2.out', onUpdate: () => (countEl.textContent = String(Math.round(from.v))) });
+      $('[data-drawer-count]').textContent = String(visible.length);
+      // sous l'étiquette du lieu : combien de fermes, dans quel rayon
+      const n = visible.length;
+      $('[data-map-sub]').textContent = state.favs
+        ? `${n} favorite${n > 1 ? 's' : ''}`
+        : `${n} ferme${n > 1 ? 's' : ''} · ${state.radius ? `moins de ${state.radius} km` : 'toute la Belgique'}`;
+
+      // état vide
+      const empty = $('[data-empty]');
+      empty.hidden = visible.length > 0;
+      if (!visible.length) {
+        $('[data-empty-text]').textContent = state.favs
+          ? 'Vous n’avez pas encore de ferme favorite. Touchez le cœur d’une ferme pour la retrouver ici.'
+          : 'Aucune ferme ne correspond à vos critères dans ce rayon.';
+        $('[data-widen]').hidden = state.favs || state.radius === 0;
+        if (!reduced()) gsap.fromTo(empty, { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.6 });
+      }
+
+      renderChips();
+      syncUrl();
+      updateMarkers(opts.fit ?? true);
+    };
+
+    // ---------- carte ----------
+    let map: maplibregl.Map | null = null;
+    let popup: maplibregl.Popup | null = null;
+    let me: maplibregl.Marker | null = null;
+    const markers = new Map<string, { marker: maplibregl.Marker; el: HTMLElement }>();
+    const radiusAnim = { r: state.radius || 0 };
+
+    const setRadiusShape = () => {
+      const src = map?.getSource('radius') as maplibregl.GeoJSONSource | undefined;
+      if (!src) return;
+      src.setData(circle(state.commune.lng, state.commune.lat, Math.max(radiusAnim.r, 0.01)) as any);
+    };
+
+    const fitView = (animate = true) => {
+      if (!map) return;
+      const pad = matchMedia('(max-width: 900px)').matches ? 40 : 70;
+      const b = new maplibregl.LngLatBounds();
+      if (state.favs || !state.radius) {
+        visible.forEach((f) => b.extend([f.lng, f.lat]));
+        b.extend([state.commune.lng, state.commune.lat]);
+        if (!visible.length) return map.flyTo({ center: [state.commune.lng, state.commune.lat], zoom: 8 });
+      } else {
+        const ring = circle(state.commune.lng, state.commune.lat, state.radius).features[0].geometry.coordinates[0];
+        ring.forEach((c) => b.extend(c as [number, number]));
+      }
+      map.fitBounds(b, { padding: pad, duration: animate && !reduced() ? 1400 : 0, maxZoom: 13, essential: true });
+    };
+
+    const updateMarkers = (fit: boolean) => {
+      if (!map) return;
+      const ids = new Set(visible.map((f) => f.slug));
+      markers.forEach(({ el }, slug) => {
+        const show = ids.has(slug);
+        const pin = el.querySelector('.mk__pin')!;
+        if (show && el.dataset.shown !== '1') {
+          el.style.display = '';
+          gsap.fromTo(pin, { scale: 0, y: -20 }, { scale: 1, y: 0, duration: 0.6, ease: 'back.out(2.2)', delay: Math.random() * 0.25, clearProps: 'transform' });
+        } else if (!show && el.dataset.shown === '1') {
+          gsap.to(pin, { scale: 0, duration: 0.25, ease: 'power2.in', onComplete: () => (el.style.display = 'none'), clearProps: 'transform' });
+        }
+        el.dataset.shown = show ? '1' : '0';
+      });
+      if (state.selected && !ids.has(state.selected)) select(null);
+      gsap.to(radiusAnim, { r: state.favs ? 0 : state.radius, duration: reduced() ? 0 : 0.9, ease: 'fz.inOut', onUpdate: setRadiusShape });
+      if (fit) fitView();
+    };
+
+    const placeMe = () => {
+      if (!map) return;
+      if (!me) {
+        const el = document.createElement('div');
+        el.className = 'me';
+        el.innerHTML = '<span>Vous êtes ici</span>';
+        me = new maplibregl.Marker({ element: el }).setLngLat([state.commune.lng, state.commune.lat]).addTo(map);
+      } else me.setLngLat([state.commune.lng, state.commune.lat]);
+    };
+
+    const popupHtml = (f: Farm) => {
+      const s = statuses.get(f.slug)!;
+      const cover = cardBySlug.get(f.slug)!.querySelector('.cover')!.outerHTML;
+      return `<a class="pop" href="/fermes/${f.slug}">
+        <span class="pop__thumb">${cover}</span>
+        <span>
+          <p class="pop__name">${esc(f.name)}</p>
+          <p class="pop__meta">${starSvg} ${f.rating.toFixed(1).replace('.', ',')} (${f.reviews}) · ${formatKm(dist.get(f.slug)!)}</p>
+          <p class="pop__status ${s.open ? 'is-open' : ''}">${esc(s.label)}</p>
+          <span class="pop__link">Voir la ferme →</span>
+        </span>
+      </a>`;
+    };
+
+    function select(slug: string | null, opts: { fly?: boolean; scroll?: boolean } = {}) {
+      state.selected = slug;
+      cards.forEach((c) => c.classList.toggle('is-active', c.dataset.slug === slug));
+      markers.forEach(({ el }, s) => {
+        el.classList.toggle('is-active', s === slug);
+        el.parentElement && (el.style.zIndex = s === slug ? '5' : '');
+      });
+      popup?.remove();
+      popup = null;
+      if (!slug || !map) return;
+      const f = farmBySlug[slug];
+      popup = new maplibregl.Popup({ closeButton: false, offset: [0, -64], className: 'fz-popup', maxWidth: 'none', anchor: 'bottom' })
+        .setLngLat([f.lng, f.lat])
+        .setHTML(popupHtml(f))
+        .addTo(map);
+      const content = popup.getElement()?.querySelector('.maplibregl-popup-content');
+      if (content && !reduced()) gsap.fromTo(content, { y: 14, scale: 0.92, autoAlpha: 0 }, { y: 0, scale: 1, autoAlpha: 1, duration: 0.55, ease: 'back.out(1.8)' });
+      if (opts.fly !== false) {
+        map.easeTo({ center: [f.lng, f.lat], zoom: Math.max(map.getZoom(), 11.5), duration: reduced() ? 0 : 900, offset: [0, 80] });
+      }
+      if (opts.scroll) {
+        const card = cardBySlug.get(slug)!;
+        const top = card.offsetTop - 120;
+        panel.scrollTo({ top, behavior: reduced() ? 'auto' : 'smooth' });
+      }
+    }
+
+    const initMap = async () => {
+      const container = $('[data-map]');
+      let style: any;
+      try {
+        style = await farmlizeStyle();
+      } catch {
+        style = { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#F1ECDF' } }] };
+      }
+      if (!root.isConnected) return;
+      const saved = (() => {
+        try {
+          const v = JSON.parse(sessionStorage.getItem(VIEW_KEY) || 'null');
+          return v && v.search === location.search ? v : null;
+        } catch {
+          return null;
+        }
+      })();
+      map = new maplibregl.Map({
+        container,
+        style,
+        center: saved?.center ?? [state.commune.lng, state.commune.lat],
+        zoom: saved?.zoom ?? 9.5,
+        attributionControl: { compact: true },
+        dragRotate: true,
+        pitchWithRotate: false,
+        fadeDuration: 200,
+      });
+      map.on('load', () => {
+        if (!map) return;
+        gsap.to($('[data-map-loading]'), { autoAlpha: 0, duration: 0.5 });
+        map.addSource('radius', { type: 'geojson', data: circle(state.commune.lng, state.commune.lat, 0.01) as any });
+        map.addLayer({ id: 'radius-fill', type: 'fill', source: 'radius', paint: { 'fill-color': '#E9694F', 'fill-opacity': 0.08 } });
+        map.addLayer({
+          id: 'radius-line',
+          type: 'line',
+          source: 'radius',
+          layout: { 'line-cap': 'round' },
+          paint: { 'line-color': '#E9694F', 'line-width': 2.5, 'line-dasharray': [0.1, 2.2] },
+        });
+
+        for (const f of farms) {
+          const el = document.createElement('button');
+          el.type = 'button';
+          el.className = 'mk';
+          el.style.setProperty('--c', categoryById[f.cats[0]].color);
+          el.setAttribute('aria-label', f.name);
+          el.innerHTML = `<span class="mk__pin"><svg class="riso" viewBox="0 0 100 100" aria-hidden="true"><use href="#ico-${f.cats[0]}"></use></svg></span>`;
+          el.style.display = 'none';
+          el.dataset.shown = '0';
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            select(f.slug, { scroll: true });
+          });
+          el.addEventListener('mouseenter', () => cardBySlug.get(f.slug)?.classList.add('is-hover'));
+          el.addEventListener('mouseleave', () => cardBySlug.get(f.slug)?.classList.remove('is-hover'));
+          const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([f.lng, f.lat]).addTo(map);
+          markers.set(f.slug, { marker, el });
+        }
+        placeMe();
+        updateMarkers(!saved);
+        if (saved?.selected && visible.some((f) => f.slug === saved.selected)) select(saved.selected, { fly: false, scroll: false });
+        if (saved?.scroll) panel.scrollTop = saved.scroll;
+      });
+      map.on('click', () => select(null));
+      // l'aiguille suit la carte avec un petit rebond, comme une vraie boussole
+      const rose = $('[data-compass-rose]');
+      gsap.set(rose, { svgOrigin: '40 40' });
+      map.on('rotate', () => {
+        gsap.to(rose, { rotation: -map!.getBearing(), duration: reduced() ? 0 : 0.7, ease: 'elastic.out(1, 0.45)', overwrite: 'auto' });
+      });
+    };
+
+    // ---------- interactions ----------
+    cards.forEach((card) => {
+      const slug = card.dataset.slug!;
+      on(card, 'mouseenter', () => markers.get(slug)?.el.classList.add('is-hover'));
+      on(card, 'mouseleave', () => markers.get(slug)?.el.classList.remove('is-hover'));
+      on(card, 'click', (e: MouseEvent) => {
+        if ((e.target as HTMLElement).closest('a, button')) return;
+        select(slug);
+        if (matchMedia('(max-width: 900px)').matches) setView(true);
+      });
+      on(card, 'keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter' && e.target === card) select(slug);
+      });
+    });
+
+    on(root, 'click', (e: MouseEvent) => {
+      const rm = (e.target as HTMLElement).closest<HTMLElement>('[data-remove-cat]');
+      if (rm) {
+        state.cats.delete(rm.dataset.removeCat as CategoryId);
+        gsap.to(rm, { scale: 0.6, autoAlpha: 0, duration: 0.2, onComplete: () => apply() });
+      }
+    });
+
+    // rayon
+    const radiusBtn = $('[data-radius-btn]');
+    const radiusPop = $('[data-radius-pop]');
+    const toggleRadius = (open: boolean) => {
+      radiusPop.hidden = !open;
+      radiusBtn.setAttribute('aria-expanded', String(open));
+      if (open && !reduced()) gsap.fromTo(radiusPop, { autoAlpha: 0, y: -8, scale: 0.97 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.35, transformOrigin: 'top left' });
+    };
+    on(radiusBtn, 'click', (e: MouseEvent) => {
+      e.stopPropagation();
+      toggleRadius(radiusPop.hidden);
+    });
+    $$('[data-radius]').forEach((li) =>
+      on(li, 'click', () => {
+        state.radius = Number(li.dataset.radius);
+        state.favs = false;
+        toggleRadius(false);
+        apply();
+      }),
+    );
+    on(document, 'click', (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('.ex-radius')) toggleRadius(false);
+      if (!(e.target as HTMLElement).closest('[data-where-wrap]')) closeWhere();
+    });
+
+    on($('[data-open-chip]'), 'click', () => {
+      state.open = !state.open;
+      apply({ fit: false });
+    });
+    on($('[data-fav-toggle]'), 'click', () => {
+      state.favs = !state.favs;
+      apply();
+    });
+    on(window, 'fz:favs', () => {
+      renderChips();
+      if (state.favs) apply({ fit: false });
+    });
+
+    // recherche texte
+    let qTimer = 0;
+    const qInput = $<HTMLInputElement>('[data-q]');
+    qInput.value = state.q;
+    on(qInput, 'input', () => {
+      clearTimeout(qTimer);
+      qTimer = window.setTimeout(() => {
+        state.q = qInput.value.trim();
+        if (state.q) state.radius = state.radius && state.radius < 50 ? state.radius : state.radius;
+        apply({ fit: false });
+      }, 160);
+    });
+
+    // commune
+    const whereInput = $<HTMLInputElement>('[data-where]');
+    const whereList = $('[data-where-list]');
+    let whereResults: Commune[] = [];
+    let whereActive = 0;
+    whereInput.value = state.commune.name;
+    const closeWhere = () => {
+      whereList.hidden = true;
+      whereInput.setAttribute('aria-expanded', 'false');
+    };
+    const renderWhere = () => {
+      whereResults = searchCommunes(whereInput.value);
+      if (!whereResults.length) return closeWhere();
+      whereList.innerHTML = whereResults
+        .map((c, i) => `<li role="option" data-slug="${c.slug}" aria-selected="${i === whereActive}">${esc(c.name)} <span>· ${esc(c.province)} (${c.zip})</span></li>`)
+        .join('');
+      whereList.hidden = false;
+      whereInput.setAttribute('aria-expanded', 'true');
+    };
+    const setCommune = (c: Commune) => {
+      state.commune = c;
+      whereInput.value = c.name;
+      closeWhere();
+      whereInput.blur();
+      state.favs = false;
+      computeDistances();
+      placeMe();
+      setLabel();
+      select(null);
+      apply();
+    };
+    on(whereInput, 'focus', () => whereInput.select());
+    on(whereInput, 'input', () => {
+      whereActive = 0;
+      renderWhere();
+    });
+    on(whereInput, 'keydown', (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        whereActive = (whereActive + (e.key === 'ArrowDown' ? 1 : -1) + whereResults.length) % Math.max(whereResults.length, 1);
+        renderWhere();
+      } else if (e.key === 'Enter' && whereResults[whereActive]) setCommune(whereResults[whereActive]);
+      else if (e.key === 'Escape') {
+        whereInput.value = state.commune.name;
+        closeWhere();
+      }
+    });
+    on(whereInput, 'blur', () => setTimeout(() => !whereList.matches(':hover') && (whereInput.value = state.commune.name), 150));
+    on(whereList, 'pointerdown', (e: PointerEvent) => {
+      const li = (e.target as HTMLElement).closest<HTMLElement>('li[data-slug]');
+      if (li) {
+        e.preventDefault();
+        setCommune(communeBySlug[li.dataset.slug!]);
+      }
+    });
+    on($('[data-locate]'), 'click', () => {
+      const btn = $('[data-locate]');
+      btn.classList.add('is-loading');
+      navigator.geolocation?.getCurrentPosition(
+        (p) => {
+          btn.classList.remove('is-loading');
+          const c = nearestCommune(p.coords.latitude, p.coords.longitude);
+          if (distanceKm({ lat: p.coords.latitude, lng: p.coords.longitude }, c) < 60) setCommune(c);
+        },
+        () => btn.classList.remove('is-loading'),
+        { timeout: 10000 },
+      );
+    });
+
+    // libellé de carte : l'étiquette se soulève, change de nom et se re-tamponne
+    const label = $('[data-map-label]');
+    const stamp = $('[data-map-stamp]');
+    const setLabel = () => {
+      const text = state.commune.name;
+      if (reduced() || !label.textContent) return void (label.textContent = text);
+      gsap
+        .timeline()
+        .to(stamp, { y: -14, rotation: -7, scale: 1.08, duration: 0.22, ease: 'power2.out', onComplete: () => void (label.textContent = text) })
+        .to(stamp, { y: 0, rotation: 0, scale: 1, duration: 0.75, ease: 'back.out(3.2)' });
+    };
+    label.textContent = state.commune.name;
+
+    // tiroir filtres
+    const drawer = $('[data-drawer]');
+    const sheet = drawer.querySelector<HTMLElement>('.ex-drawer__sheet')!;
+    const openDrawer = (open: boolean) => {
+      if (open) {
+        drawer.hidden = false;
+        if (reduced()) return;
+        gsap.fromTo(drawer.querySelector('.ex-drawer__backdrop'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 });
+        gsap.fromTo(sheet, { xPercent: -105 }, { xPercent: 0, duration: 0.7, ease: 'fz.out' });
+        gsap.fromTo(sheet.querySelectorAll('fieldset'), { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.06, delay: 0.15 });
+      } else {
+        if (reduced()) return void (drawer.hidden = true);
+        gsap.to(drawer.querySelector('.ex-drawer__backdrop'), { autoAlpha: 0, duration: 0.3 });
+        gsap.to(sheet, { xPercent: -105, duration: 0.45, ease: 'power3.in', onComplete: () => (drawer.hidden = true) });
+      }
+    };
+    on($('[data-open-filters]'), 'click', () => openDrawer(true));
+    $$('[data-close-filters]').forEach((b) => on(b, 'click', () => openDrawer(false)));
+    on(document, 'keydown', (e: KeyboardEvent) => e.key === 'Escape' && !drawer.hidden && openDrawer(false));
+    $$('[data-cat-toggle]').forEach((b) =>
+      on(b, 'click', () => {
+        const id = b.dataset.catToggle as CategoryId;
+        state.cats.has(id) ? state.cats.delete(id) : state.cats.add(id);
+        gsap.fromTo(b.querySelector('svg'), { rotation: -14, scale: 0.8 }, { rotation: 0, scale: 1, duration: 0.6, ease: 'back.out(3)' });
+        apply();
+      }),
+    );
+    $$('[data-label-toggle]').forEach((b) =>
+      on(b, 'click', () => {
+        const l = b.dataset.labelToggle!;
+        state.labels.has(l) ? state.labels.delete(l) : state.labels.add(l);
+        apply({ fit: false });
+      }),
+    );
+    $$('[data-sort-opt]').forEach((b) =>
+      on(b, 'click', () => {
+        state.sort = b.dataset.sortOpt as typeof state.sort;
+        apply({ fit: false });
+      }),
+    );
+    on($('[data-sort]'), 'click', () => {
+      state.sort = state.sort === 'distance' ? 'note' : state.sort === 'note' ? 'nom' : 'distance';
+      apply({ fit: false });
+    });
+    const range = $<HTMLInputElement>('[data-range]');
+    on(range, 'input', () => {
+      const v = Number(range.value);
+      state.radius = v >= 120 ? 0 : v;
+      state.favs = false;
+      $('[data-range-label]').textContent = state.radius ? `${state.radius} km` : 'toute la Belgique';
+    });
+    on(range, 'change', () => apply());
+    const reset = () => {
+      state.cats.clear();
+      state.labels.clear();
+      state.open = false;
+      state.favs = false;
+      state.q = '';
+      qInput.value = '';
+      state.radius = 25;
+      state.sort = 'distance';
+      apply();
+    };
+    $$('[data-reset]').forEach((b) => on(b, 'click', reset));
+    on($('[data-widen]'), 'click', () => {
+      state.radius = state.radius === 10 ? 25 : state.radius === 25 ? 50 : 0;
+      apply();
+    });
+
+    // carte : contrôles
+    on($('[data-zoom-in]'), 'click', () => map?.zoomIn());
+    on($('[data-zoom-out]'), 'click', () => map?.zoomOut());
+    on($('[data-recenter]'), 'click', () => {
+      select(null);
+      fitView();
+    });
+    on($('[data-compass]'), 'click', () => map?.easeTo({ bearing: 0, pitch: 0, duration: 800 }));
+    // « Recentrer » : l'icône fait un tour
+    on($('[data-recenter]'), 'click', () => {
+      if (!reduced()) gsap.fromTo($('[data-recenter] .icon'), { rotation: 0 }, { rotation: 360, duration: 0.8, ease: 'back.out(1.6)' });
+    });
+
+    // entrée : la carte se pose, puis le scotch, l'étiquette et les commandes arrivent d'un bond
+    if (!reduced()) {
+      gsap.from('[data-map-card]', { y: 30, rotation: -1.2, scale: 0.97, autoAlpha: 0, duration: 1, ease: 'back.out(1.4)', delay: 0.1 });
+      gsap.from($$('[data-map-deco]'), {
+        scale: 0,
+        rotation: (i: number) => (i % 2 ? 24 : -24),
+        duration: 0.8,
+        ease: 'back.out(2.6)',
+        stagger: 0.07,
+        delay: 0.45,
+        clearProps: 'transform',
+      });
+    }
+
+    // vue mobile
+    const setView = (mapView: boolean) => {
+      root.classList.toggle('is-map', mapView);
+      map?.resize();
+      if (mapView && !reduced()) gsap.fromTo('.ex-map', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, clearProps: 'visibility,opacity' });
+    };
+    on($('[data-view-toggle]'), 'click', () => setView(!root.classList.contains('is-map')));
+
+    // ---------- démarrage ----------
+    computeDistances();
+    apply({ fit: false });
+    initMap();
+
+    return () => {
+      // mémorise la vue pour le retour arrière
+      try {
+        if (map)
+          sessionStorage.setItem(
+            VIEW_KEY,
+            JSON.stringify({ search: location.search, center: map.getCenter().toArray(), zoom: map.getZoom(), scroll: panel.scrollTop, selected: state.selected }),
+          );
+      } catch {}
+      offs.forEach((o) => o());
+      popup?.remove();
+      map?.remove();
+      map = null;
+    };
+  });
+</script>

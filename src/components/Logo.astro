@@ -1,0 +1,40 @@
+---
+/** Logo cliquable (header, onboarding, 404). `size` = hauteur approximative du texte d'origine, en px. */
+import LogoMark from './LogoMark.astro';
+
+interface Props {
+  size?: number;
+  href?: string | null;
+  class?: string;
+}
+const { size = 40, href = '/', class: cls } = Astro.props;
+const Tag = href ? 'a' : 'span';
+---
+
+<Tag href={href ?? undefined} class:list={['logo', cls]} style={`font-size:${Math.round(size * 0.74)}px`} aria-label={href ? 'Farmlize — accueil' : 'Farmlize'}>
+  <LogoMark title="" aria-hidden="true" />
+</Tag>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .logo :global(.logo-mark) {
+    overflow: visible;
+  }
+  .logo :global(.logo-mark path) {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition: transform 0.5s var(--ease);
+    transition-delay: calc(var(--i) * 25ms);
+  }
+  a.logo:hover :global(.logo-mark path) {
+    transform: translateY(-10%) rotate(-3deg);
+  }
+  a.logo:hover :global(.logo-mark path:nth-child(even)) {
+    transform: translateY(6%) rotate(3deg);
+  }
+</style>

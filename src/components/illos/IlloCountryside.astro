@@ -1,0 +1,303 @@
+---
+/**
+ * Onboarding « Où êtes-vous ? » : la campagne belge en pleine largeur.
+ * Un village à gauche, des champs, un verger, une serre et une ferme à droite,
+ * des épingles qui rebondissent au-dessus des fermes, des moutons, une montgolfière ;
+ * sur la route, une camionnette de légumes et un cycliste se croisent.
+ * Quatre calques SVG superposés (data-cty-layer = profondeur) : la page les décale au mouvement de la souris.
+ * Comme pour le panorama, seuls les calques immobiles portent une trame (filtre coûteux).
+ */
+import { ink, shade, starPath } from '../../lib/riso';
+
+const { class: cls, ...rest } = Astro.props;
+const { brown: K, paper: W, blue: B, sky: S, orange: O, red: R, coral: C, pink: P, yellow: Y, green: G, leaf: L, taupe: T } = ink;
+const VB = '0 0 1600 420';
+const fit = 'xMidYMax slice';
+
+const tree = (x: number, y: number, r: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <rect x="-4" y="${r * 0.4}" width="8" height="${r * 1.5}" fill="${K}"/>
+    <g class="ri-sway" style="--a:2.4deg;--dur:${4.2 + (i % 3) * 0.7}s;--d:-${i * 0.8}s">
+      <path d="M0 ${-r} A ${r} ${r} 0 0 0 0 ${r} Z" fill="${G}"/>
+      <path d="M0 ${-r} A ${r} ${r} 0 0 1 0 ${r} Z" fill="${L}"/>
+      <circle cx="${-r * 0.4}" cy="${-r * 0.2}" r="4" fill="${i % 2 ? R : O}"/>
+      <circle cx="${r * 0.35}" cy="${r * 0.3}" r="4" fill="${R}"/>
+    </g>
+  </g>`;
+
+const sheep = (x: number, y: number, flip: boolean, i: number) => `
+  <g transform="translate(${x} ${y}) scale(${flip ? -1 : 1} 1)">
+    <rect x="-16" y="2" width="5" height="15" rx="2" fill="${K}"/><rect x="-5" y="4" width="5" height="14" rx="2" fill="${K}"/>
+    <rect x="6" y="4" width="5" height="14" rx="2" fill="${K}"/><rect x="15" y="2" width="5" height="15" rx="2" fill="${K}"/>
+    <g fill="${W}">
+      <circle cx="-14" cy="-4" r="13"/><circle cx="0" cy="-10" r="14"/><circle cx="14" cy="-4" r="13"/>
+      <circle cx="-6" cy="5" r="11"/><circle cx="8" cy="5" r="11"/>
+    </g>
+    <g class="ri-sway" style="--a:9deg;--dur:${2.2 + i * 0.6}s;--d:-${i}s;--o:0% 60%">
+      <ellipse cx="25" cy="-8" rx="9" ry="7.5" fill="${K}"/>
+      <ellipse cx="20" cy="-15" rx="5" ry="2.6" fill="${K}" transform="rotate(-30 20 -15)"/>
+      <circle cx="28" cy="-10" r="1.8" fill="${W}"/>
+    </g>
+  </g>`;
+
+// épingle (pointe en 0,0), sa couleur et son rebond
+const pin = (x: number, y: number, fill: string, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <ellipse class="ri-pulse" style="--a:1.5;--dur:${1.1 + i * 0.2}s" cx="0" cy="2" rx="11" ry="3.5" fill="${K}" opacity=".22"/>
+    <g class="ri-bob" style="--a:-12px;--dur:${0.9 + i * 0.25}s;--d:-${i * 0.3}s">
+      <path d="M0 0 C -14 -16 -21 -26 -21 -37 C -21 -49 -11 -58 0 -58 C 11 -58 21 -49 21 -37 C 21 -26 14 -16 0 0 Z" fill="${fill}"/>
+      <circle cx="0" cy="-38" r="8" fill="${W}"/>
+    </g>
+  </g>`;
+---
+
+<div class:list={['cty', cls]} aria-hidden="true" {...rest}>
+  <!-- 1 · ciel : soleil, nuages, montgolfière, oiseaux (animés) -->
+  <svg class="cty__layer riso" viewBox={VB} preserveAspectRatio={fit} data-cty-layer="0.25">
+    <defs><clipPath id="cty-sun"><circle cx="1380" cy="96" r="54"></circle></clipPath></defs>
+    <g class="ri-pulse" style="--a:1.05; --dur:4s">
+      <circle cx="1380" cy="96" r="54" fill={Y}></circle>
+      <g clip-path="url(#cty-sun)" fill="var(--cream)">
+        <rect x="1320" y="114" width="120" height="5"></rect><rect x="1320" y="126" width="120" height="8"></rect><rect x="1320" y="141" width="120" height="12"></rect>
+      </g>
+    </g>
+    <g class="ri-drift" style="--a:36px; --dur:17s">
+      <rect x="620" y="70" width="112" height="28" rx="14" fill={S}></rect><rect x="650" y="50" width="56" height="28" rx="14" fill={S}></rect>
+    </g>
+    <g class="ri-drift" style="--a:28px; --dur:21s; --d:-8s">
+      <rect x="1060" y="40" width="90" height="24" rx="12" fill={S}></rect><rect x="1080" y="24" width="44" height="24" rx="12" fill={S}></rect>
+    </g>
+    <g class="ri-drift" style="--a:30px; --dur:19s; --d:-4s">
+      <rect x="40" y="120" width="100" height="24" rx="12" fill={S}></rect>
+    </g>
+    <!-- montgolfière : elle dérive et flotte -->
+    <g class="ri-drift" style="--a:70px; --dur:24s; --d:-6s">
+      <g class="ri-bob" style="--a:-16px; --dur:4.6s">
+        <path d="M330 26 C 290 26 270 56 272 88 C 274 118 304 142 322 156 L 338 156 C 356 142 386 118 388 88 C 390 56 370 26 330 26 Z" fill={C}></path>
+        <path d="M330 26 C 312 56 312 116 324 156 L 336 156 C 348 116 348 56 330 26 Z" fill={Y}></path>
+        <path d="M302 36 C 284 66 288 116 314 148 M358 36 C 376 66 372 116 346 148" stroke={P} stroke-width="9" fill="none"></path>
+        <path d="M322 156 L 320 174 M338 156 L 340 174" stroke={K} stroke-width="2"></path>
+        <rect x="314" y="172" width="32" height="20" rx="3" fill={T}></rect>
+        <path d="M314 180 H346 M322 172 V192 M330 172 V192 M338 172 V192" stroke={K} stroke-width="1.6" opacity=".55"></path>
+      </g>
+    </g>
+    <g class="ri-drift" style="--a:60px; --dur:13s">
+      <path class="cty__bird" d="M880 120 q 9 -10 18 0 q 9 -10 18 0" stroke={K} stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+      <path class="cty__bird" style="--d:-.2s" d="M924 98 q 7 -8 14 0 q 7 -8 14 0" stroke={K} stroke-width="3" fill="none" stroke-linecap="round"></path>
+      <path class="cty__bird" style="--d:-.35s" d="M850 92 q 6 -7 12 0 q 6 -7 12 0" stroke={K} stroke-width="3" fill="none" stroke-linecap="round"></path>
+    </g>
+  </svg>
+
+  <!-- 2 · collines du fond (immobiles) -->
+  <svg class="cty__layer riso" viewBox={VB} preserveAspectRatio={fit} data-cty-layer="0.45">
+    <path d="M0 236 C 200 180 420 190 620 222 C 820 254 1000 186 1220 192 C 1400 198 1500 226 1600 214 V420 H0 Z" fill={B}></path>
+    <g stroke={S} stroke-width="6" fill="none">
+      <path d="M0 266 C 200 210 420 220 620 252 C 820 284 1000 216 1220 222 C 1400 228 1500 256 1600 244"></path>
+      <path d="M0 296 C 200 240 420 250 620 282 C 820 314 1000 246 1220 252 C 1400 258 1500 286 1600 274"></path>
+    </g>
+    <path d="M0 236 C 200 180 420 190 620 222 C 820 254 1000 186 1220 192 C 1400 198 1500 226 1600 214 V420 H0 Z" {...shade('k', 'b')}></path>
+  </svg>
+
+  <!-- 3 · champs, village, verger, serre, ferme, moutons et épingles (animés) -->
+  <svg class="cty__layer riso" viewBox={VB} preserveAspectRatio={fit} data-cty-layer="0.7">
+    <defs>
+      <clipPath id="cty-field"><path d="M0 300 C 240 262 480 268 720 292 C 960 316 1200 270 1600 286 V420 H0 Z"></path></clipPath>
+    </defs>
+    <path d="M0 300 C 240 262 480 268 720 292 C 960 316 1200 270 1600 286 V420 H0 Z" fill={L}></path>
+    <!-- sillons -->
+    <g clip-path="url(#cty-field)" stroke={G} stroke-width="6" fill="none" opacity=".75">
+      <path d="M430 300 C 580 290 740 300 920 318"></path>
+      <path d="M420 316 C 580 306 740 316 930 334"></path>
+      <path d="M410 332 C 580 322 740 332 940 350"></path>
+    </g>
+
+    <!-- village -->
+    <rect x="96" y="252" width="64" height="48" fill={W}></rect>
+    <path d="M88 256 L128 222 L168 256 Z" fill={C}></path>
+    <rect x="120" y="276" width="14" height="24" fill={K}></rect>
+    <rect x="102" y="262" width="12" height="10" fill={Y}></rect>
+    <rect x="146" y="226" width="9" height="18" fill={K}></rect>
+    <g class="cty__smoke"><circle cx="151" cy="214" r="5" fill={S}></circle><circle cx="146" cy="202" r="7" fill={S}></circle><circle cx="140" cy="188" r="9" fill={S}></circle></g>
+    <rect x="176" y="238" width="56" height="62" fill={O}></rect>
+    <path d="M170 242 L204 212 L238 242 Z" fill={B}></path>
+    <rect x="186" y="252" width="12" height="12" fill={W}></rect><rect x="210" y="252" width="12" height="12" fill={W}></rect>
+    <rect x="196" y="276" width="16" height="24" fill={K}></rect>
+    <rect x="250" y="236" width="50" height="64" fill={W}></rect>
+    <rect x="263" y="194" width="24" height="44" fill={W}></rect>
+    <path d="M259 196 L275 152 L291 196 Z" fill={R}></path>
+    <circle cx="275" cy="212" r="7" fill={Y} stroke={K} stroke-width="2"></circle>
+    <path d="M266 300 V 280 A 9 9 0 0 1 284 280 V 300 Z" fill={B}></path>
+    <rect x="314" y="256" width="66" height="44" fill={P}></rect>
+    <path d="M306 260 L347 230 L388 260 Z" fill={K}></path>
+    <rect x="326" y="268" width="14" height="12" fill={Y}></rect><rect x="352" y="272" width="14" height="28" fill={B}></rect>
+    <Fragment set:html={tree(410, 270, 22, 0)} />
+
+    <!-- moutons -->
+    <Fragment set:html={sheep(560, 316, false, 0) + sheep(646, 328, true, 1)} />
+
+    <!-- verger -->
+    <Fragment set:html={tree(790, 286, 24, 1) + tree(842, 296, 20, 2)} />
+
+    <!-- serre -->
+    <path d="M936 306 V 272 C 936 244 1052 244 1052 272 V 306 Z" fill={S}></path>
+    <g stroke={W} stroke-width="3" fill="none">
+      <path d="M958 306 V 252 M982 306 V 247 M1006 306 V 247 M1030 306 V 252"></path>
+      <path d="M936 276 C 970 268 1018 268 1052 276"></path>
+    </g>
+    <g fill={G}><circle cx="948" cy="300" r="6"></circle><circle cx="970" cy="301" r="7"></circle><circle cx="994" cy="300" r="6"></circle><circle cx="1018" cy="301" r="7"></circle><circle cx="1040" cy="300" r="6"></circle></g>
+
+    <!-- ferme et silo -->
+    <path d="M1170 302 V 250 L 1220 216 L 1270 250 V 302 Z" fill={R}></path>
+    <path d="M1160 254 L1220 210 L1280 254 L1270 254 L1220 220 L1170 254 Z" fill={K}></path>
+    <rect x="1204" y="262" width="32" height="40" fill={W}></rect>
+    <path d="M1204 262 L1236 302 M1236 262 L1204 302" stroke={R} stroke-width="3"></path>
+    <rect x="1212" y="234" width="16" height="14" fill={Y}></rect>
+    <rect x="1286" y="214" width="34" height="88" fill={W}></rect>
+    <g fill={S}><rect x="1286" y="232" width="34" height="7"></rect><rect x="1286" y="252" width="34" height="7"></rect><rect x="1286" y="272" width="34" height="7"></rect></g>
+    <path d="M1286 216 A17 17 0 0 1 1320 216 Z" fill={R}></path>
+    <rect x="1340" y="280" width="40" height="24" rx="8" fill={Y}></rect>
+    <g stroke={O} stroke-width="2.5" fill="none"><path d="M1346 288 h28 M1346 296 h28"></path></g>
+    <Fragment set:html={tree(1460, 282, 26, 3) + tree(1520, 292, 20, 4)} />
+
+    <!-- les épingles des fermes -->
+    <Fragment set:html={pin(816, 238, C, 0) + pin(994, 228, B, 1) + pin(1220, 190, Y, 2)} />
+  </svg>
+
+  <!-- 4 · premier plan : pré, route, fleurs (tramé), puis la camionnette et le cycliste -->
+  <svg class="cty__layer riso" viewBox={VB} preserveAspectRatio={fit} data-cty-layer="1">
+    <path d="M0 352 C 300 334 700 342 1000 352 C 1250 362 1450 346 1600 352 V420 H0 Z" fill={G}></path>
+    <path d="M0 352 C 300 334 700 342 1000 352 C 1250 362 1450 346 1600 352 V420 H0 Z" {...shade('k', 'b')}></path>
+    <path d="M-40 390 C 400 376 800 384 1200 388 S 1500 396 1640 390" stroke={Y} stroke-width="28" fill="none"></path>
+    <path d="M-40 390 C 400 376 800 384 1200 388 S 1500 396 1640 390" stroke={W} stroke-width="3" fill="none" stroke-dasharray="18 18"></path>
+    {[[60, 362], [380, 358], [690, 364], [1090, 366], [1380, 360], [1560, 364]].map(([x, y], i) => <path d={starPath(x, y, 7, 3, 6)} fill={i % 2 ? C : Y} />)}
+    {[[230, 412], [860, 414], [1260, 413]].map(([x, y], i) => <path d={starPath(x, y, 6, 2.6, 6)} fill={i % 2 ? P : W} />)}
+
+    <!-- camionnette de légumes (roule vers la droite) -->
+    <g class="cty__van">
+      <g transform="translate(0 396)">
+        <g class="cty__smoke cty__smoke--van"><circle cx="-6" cy="-16" r="5" fill={S}></circle><circle cx="-16" cy="-22" r="7" fill={S}></circle><circle cx="-30" cy="-28" r="9" fill={S}></circle></g>
+        <g class="cty__bump">
+          <rect x="16" y="-72" width="30" height="16" rx="2" fill={O}></rect>
+          <path d="M22 -72 C 20 -82 24 -88 28 -90 M31 -72 C 31 -84 36 -88 40 -88" stroke={G} stroke-width="4" fill="none" stroke-linecap="round"></path>
+          <rect x="52" y="-70" width="28" height="14" rx="2" fill={Y}></rect>
+          <circle cx="60" cy="-73" r="6" fill={R}></circle><circle cx="72" cy="-74" r="6" fill={R}></circle>
+          <rect x="0" y="-58" width="100" height="44" rx="10" fill={B}></rect>
+          <rect x="0" y="-36" width="100" height="7" fill={Y}></rect>
+          <path d="M96 -14 V -46 C 96 -52 100 -54 106 -54 H 116 C 124 -54 128 -48 131 -40 L 136 -26 C 138 -18 136 -14 130 -14 Z" fill={C}></path>
+          <path d="M108 -48 H 117 C 121 -48 123 -45 125 -40 L 127 -34 H 108 Z" fill={S}></path>
+        </g>
+        <g class="ri-spin" style="--dur:0.55s"><circle cx="26" cy="-10" r="13" fill={K}></circle><circle cx="26" cy="-10" r="5" fill={Y}></circle><path d="M26 -22 V2 M14 -10 H38" stroke={T} stroke-width="2"></path></g>
+        <g class="ri-spin" style="--dur:0.55s"><circle cx="112" cy="-10" r="13" fill={K}></circle><circle cx="112" cy="-10" r="5" fill={Y}></circle><path d="M112 -22 V2 M100 -10 H124" stroke={T} stroke-width="2"></path></g>
+      </g>
+    </g>
+
+    <!-- cycliste avec son panier (roule vers la gauche) -->
+    <g class="cty__bike">
+      <g transform="translate(0 394) scale(-1 1)">
+        <g class="ri-spin" style="--dur:0.5s"><circle cx="-24" cy="-16" r="16" fill="none" stroke={K} stroke-width="4"></circle><path d="M-24 -30 V-2 M-38 -16 H-10" stroke={K} stroke-width="1.6"></path></g>
+        <g class="ri-spin" style="--dur:0.5s"><circle cx="26" cy="-16" r="16" fill="none" stroke={K} stroke-width="4"></circle><path d="M26 -30 V-2 M12 -16 H40" stroke={K} stroke-width="1.6"></path></g>
+        <g class="cty__bump">
+          <path d="M-24 -16 L -2 -16 L 10 -40 L -14 -40 Z M10 -40 L 26 -16" stroke={C} stroke-width="4.5" fill="none" stroke-linejoin="round"></path>
+          <rect x="-20" y="-47" width="14" height="5" rx="2" fill={K}></rect>
+          <path d="M10 -40 L 14 -50 L 22 -50" stroke={K} stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+          <rect x="16" y="-46" width="22" height="14" rx="3" fill={T}></rect>
+          <path d="M22 -46 C 20 -54 23 -58 26 -60" stroke={G} stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+          <circle cx="32" cy="-49" r="5" fill={R}></circle>
+          <path d="M-12 -46 L 0 -76" stroke={B} stroke-width="13" stroke-linecap="round"></path>
+          <path d="M0 -70 L 14 -50" stroke={B} stroke-width="6" stroke-linecap="round"></path>
+          <path d="M-12 -44 L -2 -22" stroke={K} stroke-width="6" stroke-linecap="round"></path>
+          <circle cx="4" cy="-88" r="9" fill={T}></circle>
+          <path d="M-6 -90 C -6 -100 14 -102 15 -91 Z" fill={Y}></path>
+          <rect x="10" y="-93" width="9" height="3.5" rx="1.5" fill={Y}></rect>
+        </g>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<style>
+  .cty {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  /* un peu plus large que l'écran : les calques peuvent glisser au mouvement de la souris */
+  .cty__layer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -40px;
+    width: calc(100% + 80px);
+    max-width: none;
+    height: 100%;
+    will-change: transform;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .cty__van {
+      animation: cty-drive 19s linear infinite;
+    }
+    .cty__bike {
+      animation: cty-ride 26s linear infinite;
+      animation-delay: -9s;
+    }
+    .cty__bump {
+      animation: cty-bump 0.32s ease-in-out infinite alternate;
+    }
+    .cty__smoke circle {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: cty-smoke 1.5s ease-out infinite;
+    }
+    .cty__smoke circle:nth-child(2) {
+      animation-delay: -0.5s;
+    }
+    .cty__smoke circle:nth-child(3) {
+      animation-delay: -1s;
+    }
+    .cty__bird {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: cty-flap 0.5s ease-in-out infinite alternate;
+      animation-delay: var(--d, 0s);
+    }
+  }
+  @keyframes cty-drive {
+    from {
+      translate: -260px 0;
+    }
+    to {
+      translate: 1820px 0;
+    }
+  }
+  @keyframes cty-ride {
+    from {
+      translate: 1800px 0;
+    }
+    to {
+      translate: -120px 0;
+    }
+  }
+  @keyframes cty-bump {
+    to {
+      translate: 0 -2.5px;
+    }
+  }
+  @keyframes cty-smoke {
+    from {
+      opacity: 0.9;
+      scale: 0.6;
+      translate: 0 6px;
+    }
+    to {
+      opacity: 0;
+      scale: 1.3;
+      translate: -4px -14px;
+    }
+  }
+  @keyframes cty-flap {
+    to {
+      scale: 1 0.4;
+    }
+  }
+</style>

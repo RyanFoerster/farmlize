@@ -1,0 +1,131 @@
+---
+/**
+ * Titre « vivant » (voir src/lib/fx-title.ts pour la syntaxe : *accent*, [surligneur], ~trait~, {icône}).
+ * `manual` : l'animation est pilotée par la page (ex. le hero, dans sa propre timeline).
+ */
+import { plainFx, renderFx } from '../lib/fx-title';
+
+interface Props {
+  text: string;
+  as?: 'h1' | 'h2' | 'h3' | 'p';
+  class?: string;
+  manual?: boolean;
+  [key: string]: unknown;
+}
+const { text, as: Tag = 'h2', class: cls, manual = false, ...rest } = Astro.props;
+---
+
+<Tag class:list={['fx', cls]} data-fx data-fx-manual={manual ? '' : undefined} aria-label={plainFx(text)} set:html={renderFx(text)} {...rest} />
+
+<style is:global>
+  /* chaque mot dans son masque (un peu d'air au-dessus pour les accents) */
+  .fx-w {
+    display: inline-block;
+    overflow: clip;
+    padding: 0.18em 0.08em 0.02em;
+    margin: -0.18em -0.08em -0.02em;
+    vertical-align: top;
+  }
+  .fx-in {
+    display: inline-block;
+  }
+  /* accent : le mot en couleur, même typo (la couleur est posée en ligne par le rendu) */
+  /* coup de surligneur riso */
+  .fx-mark {
+    position: relative;
+    display: inline-block;
+    isolation: isolate;
+    white-space: nowrap;
+  }
+  .fx-mark__bg {
+    position: absolute;
+    z-index: -1;
+    left: -0.14em;
+    top: 0.22em;
+    width: calc(100% + 0.28em);
+    height: calc(100% - 0.12em);
+    fill: var(--c);
+    transform-origin: 0 50%;
+    rotate: -1.5deg;
+    overflow: visible;
+  }
+  /* trait ondulé */
+  .fx-squig {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .fx-squig__line {
+    position: absolute;
+    left: 0;
+    bottom: -0.16em;
+    width: 100%;
+    height: 0.22em;
+    overflow: visible;
+  }
+  .fx-squig__line path {
+    fill: none;
+    stroke: var(--c);
+    stroke-width: 5px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  /* mini illustration dans la ligne */
+  .fx-icon {
+    width: 0.92em;
+    height: 0.92em;
+    margin-inline: 0.02em;
+    vertical-align: -0.06em;
+    padding-top: 0.06em;
+  }
+  .fx-icon .fx-in,
+  .fx-icon svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .fx-icon svg {
+      animation: fx-wiggle 2.8s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes fx-wiggle {
+    from {
+      rotate: -8deg;
+    }
+    to {
+      rotate: 8deg;
+    }
+  }
+  .fx:hover .fx-icon svg {
+    animation-duration: 0.5s;
+  }
+</style>
+
+<script>
+  import { ScrollTrigger, gsap, loaderDone, reduced } from '../lib/motion';
+  import { fxScrollDecor, fxTimeline } from '../lib/fx-title';
+
+  const live: (() => void)[] = [];
+  document.addEventListener('astro:page-load', async () => {
+    await loaderDone();
+    await document.fonts.ready;
+    document.querySelectorAll<HTMLElement>('[data-fx]:not([data-fx-manual])').forEach((el) => {
+      if (reduced()) return void gsap.set(el, { autoAlpha: 1 });
+      const tl = fxTimeline(el).pause();
+      const st = ScrollTrigger.create({ trigger: el, start: 'top 88%', once: true, onEnter: () => tl.play() });
+      const decor = fxScrollDecor(el);
+      live.push(() => {
+        st.kill();
+        tl.kill();
+        decor.forEach((t) => {
+          t.scrollTrigger?.kill();
+          t.kill();
+        });
+      });
+    });
+  });
+  document.addEventListener('astro:before-swap', () => live.splice(0).forEach((k) => k()));
+</script>

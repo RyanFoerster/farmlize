@@ -1,0 +1,70 @@
+---
+/**
+ * Le panier : tressé en bandes, plein de produits qui dépassent (fanes, baguette, poireau, bouteille).
+ * Les fanes et le poireau bougent à peine.
+ */
+import { ink, shade } from '../../lib/riso';
+
+const { class: cls, ...rest } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 7);
+const { brown: K, paper: W, blue: B, sky: S, orange: O, red: R, coral: C, yellow: Y, green: G, leaf: L } = ink;
+---
+
+<svg class:list={['illo', 'riso', cls]} viewBox="0 0 460 340" aria-hidden="true" {...rest}>
+  <defs>
+    <clipPath id={`basket-body-${uid}`}><path d="M62 156 H398 L370 318 C 368 330 360 336 348 336 H112 C 100 336 92 330 90 318 Z"></path></clipPath>
+  </defs>
+
+  <!-- anse -->
+  <path d="M96 160 C 96 22 364 22 364 160" stroke={R} stroke-width="18" fill="none" stroke-linecap="round"></path>
+
+  <!-- ce qui dépasse -->
+  <g class="ri-sway" style="--a:3deg; --dur:4.6s">
+    <path d="M318 160 L 352 34" stroke={W} stroke-width="22" stroke-linecap="round"></path>
+    <path d="M352 40 C 344 20 348 4 360 -2 C 366 14 364 30 352 40 Z" fill={G}></path>
+    <path d="M352 40 C 362 22 378 14 392 16 C 386 30 372 40 352 40 Z" fill={L}></path>
+    <path d="M341 74 L 352 34" stroke={L} stroke-width="22" stroke-linecap="round"></path>
+  </g>
+  <g transform="rotate(-28 160 140)">
+    <rect x="96" y="104" width="150" height="40" rx="20" fill={O}></rect>
+    <rect x="96" y="104" width="150" height="40" rx="20" {...shade('r', 'b')}></rect>
+    <g stroke={Y} stroke-width="6" stroke-linecap="round">
+      <path d="M126 112 L 140 134"></path><path d="M156 112 L 170 134"></path><path d="M186 112 L 200 134"></path><path d="M216 112 L 228 132"></path>
+    </g>
+  </g>
+  <g class="ri-sway" style="--a:4deg; --dur:3.8s; --d:-1s">
+    <path d="M232 150 C 220 120 218 92 230 70 C 238 96 240 122 238 150 Z" fill={G}></path>
+    <path d="M238 150 C 244 120 256 98 276 86 C 270 112 258 134 244 152 Z" fill={L}></path>
+    <path d="M232 152 C 214 132 192 124 172 128 C 188 142 210 152 232 156 Z" fill={L}></path>
+  </g>
+  <g>
+    <path d="M262 168 V 92 C 262 84 266 80 272 76 V 62 H 296 V 76 C 302 80 306 84 306 92 V 168 Z" fill={W}></path>
+    <rect x="270" y="56" width="28" height="12" rx="4" fill={B}></rect>
+    <rect x="262" y="110" width="44" height="26" fill={B}></rect>
+    <path d="M262 168 V 92 C 262 84 266 80 272 76 V 62 H 296 V 76 C 302 80 306 84 306 92 V 168 Z" {...shade('b', 'r')}></path>
+  </g>
+  <circle cx="148" cy="156" r="24" fill={C}></circle>
+  <circle cx="148" cy="156" r="24" {...shade('r', 'd')}></circle>
+  <path d="M140 134 L 148 140 L 156 134 L 152 144 H 144 Z" fill={G}></path>
+  <circle cx="196" cy="160" r="20" fill={Y}></circle>
+  <circle cx="196" cy="160" r="20" {...shade('o', 'd')}></circle>
+
+  <!-- corps tressé -->
+  <path d="M62 156 H398 L370 318 C 368 330 360 336 348 336 H112 C 100 336 92 330 90 318 Z" fill={O}></path>
+  <g clip-path={`url(#basket-body-${uid})`}>
+    <g fill={R}>
+      <rect x="40" y="196" width="380" height="14"></rect>
+      <rect x="40" y="236" width="380" height="14"></rect>
+      <rect x="40" y="276" width="380" height="14"></rect>
+      <rect x="40" y="316" width="380" height="14"></rect>
+    </g>
+    <g stroke={Y} stroke-width="5" stroke-linecap="round">
+      {Array.from({ length: 11 }, (_, i) => 100 + i * 28).map((x) => <path d={`M${x} 214 v 16 M${x + 14} 254 v 16 M${x} 294 v 16`} />)}
+    </g>
+  </g>
+  <path d="M62 156 H398 L370 318 C 368 330 360 336 348 336 H112 C 100 336 92 330 90 318 Z" {...shade('k', 'b')}></path>
+  <rect x="48" y="146" width="364" height="30" rx="15" fill={R}></rect>
+  <g stroke={Y} stroke-width="4" stroke-linecap="round">
+    {Array.from({ length: 15 }, (_, i) => 70 + i * 23).map((x) => <path d={`M${x} 152 l 10 18`} />)}
+  </g>
+</svg>

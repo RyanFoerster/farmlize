@@ -1,0 +1,1245 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import Ribbon from '../components/Ribbon.astro';
+import Icon from '../components/Icon.astro';
+import Produce from '../components/Produce.astro';
+import FarmCard from '../components/FarmCard.astro';
+import SeasonGarden from '../components/SeasonGarden.astro';
+import LogoMark from '../components/LogoMark.astro';
+import FunTitle from '../components/FunTitle.astro';
+import IlloPicker from '../components/illos/IlloPicker.astro';
+import IlloHoney from '../components/illos/IlloHoney.astro';
+import IlloFarmer from '../components/illos/IlloFarmer.astro';
+import IlloPanorama from '../components/illos/IlloPanorama.astro';
+import { ink } from '../lib/riso';
+import { seasonArt } from '../lib/season-art';
+import { farmBySlug } from '../data/farms';
+import { categories } from '../data/categories';
+
+// formes organiques des bulles de catégories (chaque paire a la même structure : la bulle se déforme au survol)
+const blobs: [string, string][] = [
+  [
+    'M100 12 C 150 10 190 48 188 98 C 186 150 148 190 98 188 C 48 186 10 148 12 98 C 14 50 52 14 100 12 Z',
+    'M104 8 C 158 16 192 52 186 104 C 180 156 140 192 92 186 C 42 180 8 140 16 92 C 24 44 56 2 104 8 Z',
+  ],
+  [
+    'M96 14 C 140 4 186 36 190 86 C 194 140 156 186 104 190 C 52 194 12 160 10 106 C 8 58 50 22 96 14 Z',
+    'M100 16 C 148 18 184 50 184 100 C 184 150 150 188 100 186 C 50 184 14 150 16 100 C 18 50 52 14 100 16 Z',
+  ],
+  [
+    'M90 10 C 146 4 196 46 188 104 C 182 152 140 194 90 188 C 40 182 6 140 12 92 C 18 46 46 14 90 10 Z',
+    'M110 14 C 160 22 194 66 184 114 C 174 162 128 192 82 182 C 36 172 8 128 18 82 C 28 36 64 6 110 14 Z',
+  ],
+  [
+    'M100 6 C 156 6 196 50 192 104 C 188 158 146 194 96 192 C 44 190 6 150 8 98 C 10 46 46 6 100 6 Z',
+    'M96 12 C 152 0 200 44 190 100 C 180 160 142 198 92 190 C 40 182 2 138 14 88 C 26 38 54 20 96 12 Z',
+  ],
+];
+const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-joli', 'cueillette-du-moulinet'].map(
+  (s) => farmBySlug[s],
+);
+---
+
+<Base>
+  <SiteHeader variant="floating" />
+  <main class="home" data-home>
+    <!-- HERO -->
+    <section class="hero" data-hero>
+      <Ribbon class="hero__ribbon" />
+
+      <div class="hero__illo hero__illo--left" data-illo="left" aria-hidden="true">
+        <div class="hero__float"><IlloPicker data-intro /></div>
+      </div>
+      <div class="hero__illo hero__illo--right" data-illo="right" aria-hidden="true">
+        <div class="hero__float"><IlloHoney data-intro /></div>
+      </div>
+
+      <div class="hero__content" data-hero-content>
+        <div class="hero__logo" data-hero-logo data-intro><LogoMark /></div>
+        <FunTitle as="h1" class="hero__title display" manual data-hero-title data-intro text={'Trouvez les [fermes]\nprès de chez vous !'} />
+        <p class="hero__sub" data-hero-sub data-intro>
+          Mangez frais, consommez local. Farmlize vous connecte directement avec les producteurs, maraîchers, fromagers et
+          artisans de votre région pour des produits sains et de saison.
+        </p>
+        <a href="/commencer" class="btn hero__cta" data-hero-cta data-intro>
+          <Icon name="arrow" size={20} class="icon-arrow" /> Commencer l’aventure
+        </a>
+      </div>
+
+      <a href="#comment" class="hero__scroll" data-hero-scroll data-intro>
+        <span>Découvrir</span>
+        <i></i>
+      </a>
+    </section>
+
+    <!-- COMMENT ÇA MARCHE -->
+    <section class="how container" id="comment">
+      {
+        [
+          ['Fraises', 'how__float--1', '-7px', '3.2s', '-12deg'],
+          ['Carottes', 'how__float--2', '-9px', '3.8s', '18deg'],
+          ['Poires', 'how__float--3', '-6px', '4.2s', '8deg'],
+          ['Tomates', 'how__float--4', '-8px', '3.5s', '-6deg'],
+        ].map(([n, c, a, d, r]) => (
+          <span class={`how__float ${c}`} aria-hidden="true" data-how-float>
+            <svg class="riso ri-bob" viewBox="0 0 60 60" style={`--a:${a}; --dur:${d}; rotate:${r}`} set:html={seasonArt(n)} />
+          </span>
+        ))
+      }
+      <div class="how__head">
+        <FunTitle class="title how__title" text="Du champ {Carottes} à votre [table|leaf], en trois étapes." />
+      </div>
+      <ol class="how__steps" data-stagger>
+        <svg class="how__path" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true" data-stagger-skip>
+          <path data-how-path d="M -30 150 C 140 -20, 300 10, 410 110 S 690 360, 810 250 S 1060 20, 1240 130" vector-effect="non-scaling-stroke"></path>
+        </svg>
+        <div class="how__bee" aria-hidden="true" data-how-bee data-stagger-skip>
+          <svg class="riso" viewBox="-30 -24 60 48">
+            <g class="how__wings">
+              <ellipse cx="-4" cy="-12" rx="10" ry="7" transform="rotate(-25 -4 -12)" fill={ink.paper}></ellipse>
+              <ellipse cx="8" cy="-12" rx="9" ry="6" transform="rotate(20 8 -12)" fill={ink.sky}></ellipse>
+            </g>
+            <path d="M-22 0 L-30 -2 L-22 4 Z" fill={ink.brown}></path>
+            <ellipse cx="0" cy="2" rx="22" ry="14" fill={ink.yellow}></ellipse>
+            <path d="M-8 -11.5 C -4 -4 -4 8 -8 15 L -2 15.6 C 2 8 2 -4 -2 -13 Z" fill={ink.brown}></path>
+            <path d="M6 -11 C 10 -4 10 8 6 14.5 L 12 13 C 15 7 15 -3 12 -9 Z" fill={ink.brown}></path>
+            <circle cx="17" cy="-2" r="2.4" fill={ink.brown}></circle>
+          </svg>
+        </div>
+        <li class="step print" style="--c: var(--coral); --off: var(--coral)">
+          <div class="step__art">
+            <svg viewBox="0 0 240 180" class="step__svg riso">
+              <clipPath id="step-clip-1"><path d="M22 96 C 12 46, 76 12, 132 14 C 196 16, 232 50, 226 96 C 220 146, 158 170, 110 166 C 56 162, 30 140, 22 96 Z"></path></clipPath>
+              <path class="step__blob" data-alt="M18 92 C 22 40, 86 18, 140 20 C 200 24, 228 62, 220 104 C 210 150, 150 168, 104 160 C 50 152, 14 132, 18 92 Z" d="M22 96 C 12 46, 76 12, 132 14 C 196 16, 232 50, 226 96 C 220 146, 158 170, 110 166 C 56 162, 30 140, 22 96 Z" fill="var(--c)"></path>
+              <g clip-path="url(#step-clip-1)">
+                <path d="M0 134 C 70 106, 160 106, 240 130 L 240 180 L 0 180 Z" fill={ink.green}></path>
+                <path d="M0 152 C 80 132, 170 134, 240 150" stroke={ink.leaf} stroke-width="5" fill="none"></path>
+                <path d="M0 134 C 70 106, 160 106, 240 130 L 240 180 L 0 180 Z" fill="url(#ri-k-b)" filter="url(#ri-dot)"></path>
+              </g>
+              <g class="step__pin"><g class="ri-bob" style="--a:-6px; --dur:2.4s">
+                <path d="M120 30 C 98 30, 82 46, 82 68 C 82 96, 120 128, 120 128 C 120 128, 158 96, 158 68 C 158 46, 142 30, 120 30 Z" fill={ink.blue}></path>
+                <path d="M120 30 C 98 30, 82 46, 82 68 C 82 96, 120 128, 120 128 C 120 128, 158 96, 158 68 C 158 46, 142 30, 120 30 Z" fill="url(#ri-k-r)" filter="url(#ri-dot)"></path>
+                <circle cx="120" cy="66" r="14" fill={ink.yellow}></circle>
+              </g></g>
+            </svg>
+          </div>
+          <span class="step__num serif" aria-hidden="true">01</span>
+          <h3 class="step__title">Dites-nous où vous êtes</h3>
+          <p>Votre commune ou votre code postal suffit. Ou laissez-nous vous localiser, en un clic.</p>
+        </li>
+        <li class="step print" style="--c: var(--butter); --off: var(--butter)">
+          <div class="step__art">
+            <svg viewBox="0 0 240 180" class="step__svg riso">
+              <clipPath id="step-clip-2"><path d="M18 88 C 18 40, 80 14, 136 18 C 200 22, 230 56, 222 102 C 214 148, 150 168, 104 162 C 52 156, 18 132, 18 88 Z"></path></clipPath>
+              <path class="step__blob" data-alt="M24 96 C 14 48, 70 16, 128 16 C 190 16, 226 50, 224 94 C 222 144, 160 170, 112 166 C 60 162, 32 140, 24 96 Z" d="M18 88 C 18 40, 80 14, 136 18 C 200 22, 230 56, 222 102 C 214 148, 150 168, 104 162 C 52 156, 18 132, 18 88 Z" fill="var(--c)"></path>
+              <g class="ri-bob" style="--a:-5px; --dur:2.6s"><use href="#ico-fromages" x="24" y="56" width="86" height="86" class="step__p1"></use></g>
+              <g class="ri-sway" style="--a:5deg; --dur:3s; --d:-.8s"><use href="#ico-legumes" x="80" y="22" width="92" height="92" class="step__p2"></use></g>
+              <g class="ri-bob" style="--a:-5px; --dur:2.9s; --d:-1.3s"><use href="#ico-miel" x="140" y="62" width="80" height="80" class="step__p3"></use></g>
+            </svg>
+          </div>
+          <span class="step__num serif" aria-hidden="true">02</span>
+          <h3 class="step__title">Choisissez vos envies</h3>
+          <p>Légumes, fromages, miel, viandes… Sélectionnez ce qui vous fait envie, on s’occupe du reste.</p>
+        </li>
+        <li class="step print" style="--c: var(--leaf); --off: var(--leaf)">
+          <div class="step__art">
+            <svg viewBox="0 0 240 180" class="step__svg riso">
+              <clipPath id="step-clip-3"><path d="M24 92 C 14 50, 70 16, 124 16 C 190 16, 228 52, 224 96 C 220 142, 164 168, 114 166 C 62 164, 32 132, 24 92 Z"></path></clipPath>
+              <clipPath id="step-sun-3"><circle cx="176" cy="52" r="21"></circle></clipPath>
+              <path class="step__blob" data-alt="M20 100 C 18 52, 78 20, 132 20 C 192 22, 230 58, 222 100 C 214 146, 156 166, 108 164 C 56 160, 22 140, 20 100 Z" d="M24 92 C 14 50, 70 16, 124 16 C 190 16, 228 52, 224 96 C 220 142, 164 168, 114 166 C 62 164, 32 132, 24 92 Z" fill="var(--c)"></path>
+              <g class="ri-bob" style="--a:-5px; --dur:3.4s">
+                <circle cx="176" cy="52" r="21" fill={ink.yellow}></circle>
+                <g clip-path="url(#step-sun-3)" fill="var(--c)">
+                  <rect x="150" y="58" width="52" height="3"></rect><rect x="150" y="64" width="52" height="4"></rect><rect x="150" y="71" width="52" height="6"></rect>
+                </g>
+              </g>
+              <g class="ri-drift" style="--a:14px; --dur:7s">
+                <rect x="44" y="44" width="46" height="14" rx="7" fill={ink.paper}></rect>
+                <rect x="56" y="35" width="24" height="14" rx="7" fill={ink.paper}></rect>
+              </g>
+              <g class="ri-drift" style="--a:10px; --dur:9s; --d:-3s">
+                <rect x="164" y="82" width="36" height="11" rx="5.5" fill={ink.paper}></rect>
+              </g>
+              <g clip-path="url(#step-clip-3)">
+                <path d="M0 126 C 70 96, 160 98, 240 120 L 240 180 L 0 180 Z" fill={ink.blue}></path>
+                <path d="M0 146 C 80 124, 170 126, 240 142 M 0 164 C 80 144, 170 146, 240 162" stroke={ink.sky} stroke-width="5" fill="none"></path>
+                <path d="M0 126 C 70 96, 160 98, 240 120 L 240 180 L 0 180 Z" fill="url(#ri-k-b)" filter="url(#ri-dot)"></path>
+              </g>
+              <g class="step__barn" transform="translate(92 70)">
+                <rect x="0" y="22" width="56" height="38" fill={ink.orange}></rect>
+                <rect x="0" y="22" width="56" height="38" fill="url(#ri-r-r)" filter="url(#ri-dot)"></rect>
+                <path d="M-6 25 L28 -2 L62 25 Z" fill={ink.red}></path>
+                <path d="M10 17 L 28 3 M 20 21 L 38 6" stroke={ink.paper} stroke-width="3"></path>
+                <path d="M20 60 V 44 A 8 8 0 0 1 36 44 V 60 Z" fill={ink.brown}></path>
+                <rect x="42" y="30" width="8" height="8" fill={ink.paper}></rect>
+              </g>
+            </svg>
+          </div>
+          <span class="step__num serif" aria-hidden="true">03</span>
+          <h3 class="step__title">Filez à la ferme</h3>
+          <p>Horaires, itinéraire, produits du moment : tout pour rendre visite au producteur, sans détour.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- DE SAISON : le potager du mois -->
+    <SeasonGarden />
+
+    <!-- COUPS DE CŒUR -->
+    <section class="picks container">
+      {
+        [
+          ['picks__heart--1', ink.coral, '-6px', '3.1s', '-14deg'],
+          ['picks__heart--2', ink.pink, '-8px', '3.7s', '12deg'],
+        ].map(([c, color, a, d, r]) => (
+          <span class={`picks__heart ${c}`} aria-hidden="true" data-picks-float>
+            <svg class="riso ri-bob" viewBox="0 0 24 22" style={`--a:${a}; --dur:${d}; rotate:${r}`}>
+              <path d="M12 21 C 5 16 1 12 1 7.5 C 1 4 3.6 1.5 6.8 1.5 C 9 1.5 11 2.8 12 4.8 C 13 2.8 15 1.5 17.2 1.5 C 20.4 1.5 23 4 23 7.5 C 23 12 19 16 12 21 Z" fill={color}></path>
+              <path d="M5 7 C 5 5.4 6 4.4 7.4 4.2" stroke={ink.paper} stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+            </svg>
+          </span>
+        ))
+      }
+      <div class="picks__head">
+        <FunTitle class="title picks__title" text="Nos fermes {heart} ~coup de cœur~" />
+      </div>
+      <div class="picks__grid" data-stagger>
+        {
+          picks.map((f, i) => (
+            <div class="pick">
+              <span class="pick__stamp" aria-hidden="true" style={`--c:${[ink.coral, ink.yellow, ink.sky, ink.leaf][i % 4]}`}>
+                <svg viewBox="0 0 24 22">
+                  <path d="M12 21 C 5 16 1 12 1 7.5 C 1 4 3.6 1.5 6.8 1.5 C 9 1.5 11 2.8 12 4.8 C 13 2.8 15 1.5 17.2 1.5 C 20.4 1.5 23 4 23 7.5 C 23 12 19 16 12 21 Z" />
+                </svg>
+              </span>
+              <FarmCard farm={f} variant="tile" />
+            </div>
+          ))
+        }
+      </div>
+      <div class="picks__more" data-reveal>
+        <a href="/fermes" class="btn">Voir toutes les fermes <Icon name="arrow" size={18} class="icon-arrow" /></a>
+      </div>
+    </section>
+
+    <!-- PAYSAGE : la grande illustration animée -->
+    <section class="landscape">
+      <Ribbon class="landscape__ribbon" color="var(--butter)" shape="wave" reverse text="CIRCUIT COURT - DE SAISON - FAIT MAIN - PRÈS DE CHEZ VOUS - SANS INTERMÉDIAIRE - " speed={0.8} />
+      <IlloPanorama class="landscape__pano" data-pano />
+    </section>
+
+    <!-- CATÉGORIES -->
+    <section class="cats container">
+      <FunTitle class="title cats__title" text={'Qu’est-ce qui vous fait [envie|pink] ?'} />
+      <div class="cats__cloud" data-stagger>
+        {
+          categories.map((c, i) => (
+            <a href={`/fermes?cats=${c.id}`} class="bubble" style={`--c:${c.color}; --t:${c.tint}`} data-bubble>
+              <span class="bubble__float">
+                <svg class="bubble__shape riso" viewBox="0 0 200 200" aria-hidden="true">
+                  <path class="bubble__blob" d={blobs[i % 4][0]} data-alt={blobs[i % 4][1]} fill="var(--c)" />
+                  <circle class="bubble__ring" cx="100" cy="100" r="76" fill="none" stroke="var(--t)" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round" />
+                </svg>
+                <span class="bubble__icon" data-bubble-icon>
+                  <Produce cat={c.id} size="100%" />
+                </span>
+              </span>
+              <span class="bubble__label">
+                {c.label} <Icon name="arrow-up-right" size={16} />
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- PRODUCTEURS -->
+    <section class="join" data-join>
+      {
+        [
+          ['Courges', 'join__float--1', '-8px', '3.4s', '-10deg'],
+          ['Poireaux', 'join__float--2', '-6px', '3.9s', '14deg'],
+          ['Pommes', 'join__float--3', '-7px', '3.1s', '6deg'],
+          ['Brocolis', 'join__float--4', '-9px', '4.3s', '-16deg'],
+        ].map(([n, c, a, d, r]) => (
+          <span class={`join__float ${c}`} aria-hidden="true" data-join-float>
+            <svg class="riso ri-bob" viewBox="0 0 60 60" style={`--a:${a}; --dur:${d}; rotate:${r}`} set:html={seasonArt(n)} />
+          </span>
+        ))
+      }
+      <div class="join__content">
+        <FunTitle class="display join__title" text={'Votre ferme mérite\nd’être ~trouvée~.'} />
+        <p class="join__lead" data-reveal>
+          Inscription gratuite, fiche prête en dix minutes. Rejoignez les maraîchers, éleveurs et artisans qui vendent déjà en
+          direct grâce à Farmlize.
+        </p>
+        <a href="/producteurs" class="btn" data-reveal>
+          Ajouter ma ferme <Icon name="arrow" size={18} class="icon-arrow" />
+        </a>
+      </div>
+      <div class="join__scene" aria-hidden="true">
+        <svg class="join__hill riso" viewBox="0 0 1600 240" preserveAspectRatio="none">
+          <path d="M0 240 V 130 C 260 64 520 42 800 42 C 1080 42 1340 64 1600 130 V 240 Z" fill={ink.green}></path>
+          <path d="M0 168 C 260 102 520 80 800 80 C 1080 80 1340 102 1600 168 M0 206 C 260 140 520 118 800 118 C 1080 118 1340 140 1600 206" stroke={ink.leaf} stroke-width="6" fill="none" vector-effect="non-scaling-stroke"></path>
+        </svg>
+        <IlloFarmer class="join__farmer" data-join-farmer />
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    min-height: max(100svh, 720px);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    /* de l'air sous la banderole */
+    padding: clamp(220px, 27vh, 270px) var(--gutter) 70px;
+  }
+  :global(.hero__ribbon) {
+    position: absolute !important;
+    left: 0;
+    right: 0;
+    top: clamp(4px, 1.2vw, 24px);
+  }
+  .hero__illo {
+    position: absolute;
+    bottom: 0;
+    width: clamp(200px, 25vw, 400px);
+    will-change: transform;
+  }
+  .hero__illo :global(.illo) {
+    width: 100%;
+    height: auto;
+  }
+  .hero__illo--left {
+    left: clamp(-60px, -1vw, 0px);
+    width: clamp(190px, 24vw, 380px);
+    transform-origin: bottom center;
+  }
+  .hero__illo--right {
+    right: clamp(-40px, 0.5vw, 30px);
+    width: clamp(200px, 28vw, 440px);
+  }
+  .hero__float {
+    transform-origin: 50% 100%;
+  }
+  .hero__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 700px;
+  }
+  .hero__logo {
+    margin: 0 0 clamp(22px, 3.2vh, 34px);
+    font-size: clamp(30px, 3.1vw, 52px);
+    color: var(--ink);
+  }
+  :global(.hero__title) {
+    font-size: clamp(44px, 5.4vw, 88px);
+    font-variation-settings: 'opsz' 96, 'wdth' 90;
+  }
+  .hero__sub {
+    max-width: 470px;
+    margin: 18px 0 28px;
+    color: var(--ink-2);
+    font-size: clamp(15px, 1.15vw, 17px);
+    line-height: 1.42;
+  }
+  .hero__scroll {
+    position: absolute;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    z-index: 2;
+  }
+  .hero__scroll i {
+    position: relative;
+    width: 1.5px;
+    height: 44px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .hero__scroll i::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    animation: scrollcue 2.2s var(--ease) infinite;
+  }
+  @keyframes scrollcue {
+    0% {
+      transform: translateY(-100%);
+    }
+    60%,
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  /* ---------- Comment ---------- */
+  .how {
+    position: relative;
+    padding: clamp(80px, 12vw, 160px) 0 clamp(60px, 8vw, 120px);
+  }
+  /* fruits et légumes qui flottent autour du titre */
+  .how__float {
+    position: absolute;
+    z-index: 0;
+    width: clamp(48px, 5.6vw, 88px);
+    pointer-events: none;
+  }
+  .how__float svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .how__float--1 {
+    left: 3%;
+    top: clamp(60px, 8vw, 110px);
+  }
+  .how__float--2 {
+    right: 4%;
+    top: clamp(40px, 6vw, 90px);
+  }
+  .how__float--3 {
+    left: 13%;
+    top: clamp(170px, 17vw, 250px);
+    width: clamp(36px, 4vw, 62px);
+  }
+  .how__float--4 {
+    right: 14%;
+    top: clamp(180px, 18vw, 260px);
+    width: clamp(36px, 4vw, 62px);
+  }
+  .how__head {
+    max-width: 820px;
+    margin: 0 auto clamp(40px, 6vw, 72px);
+    text-align: center;
+  }
+  :global(.how__title),
+  :global(.picks__title),
+  :global(.cats__title) {
+    font-size: clamp(36px, 4.6vw, 68px);
+  }
+  .how__steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(20px, 3vw, 40px);
+  }
+  .step {
+    position: relative;
+    padding: 26px 26px 32px;
+    border-radius: var(--r-l);
+    box-shadow: var(--print-rest);
+    transition:
+      transform 0.5s var(--ease),
+      box-shadow 0.5s var(--ease);
+  }
+  .step:hover {
+    transform: translate(-2px, -4px);
+    box-shadow: var(--print-hover);
+  }
+  .step__art {
+    margin: -6px -6px 18px;
+  }
+  .step__svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  /* numéro en tampon de couleur */
+  .step__num {
+    position: absolute;
+    top: -20px;
+    right: 22px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--c) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow: 2px 3px 0 0 var(--ink);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    rotate: -10deg;
+    transition: rotate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .step:hover .step__num {
+    rotate: 8deg;
+  }
+  /* les cartes flottent, chacune à son rythme, en zigzag */
+  .how__steps {
+    position: relative;
+    align-items: start;
+  }
+  .step {
+    z-index: 1;
+  }
+  .step:nth-of-type(1) {
+    rotate: -1.4deg;
+    --float-dur: 5.2s;
+  }
+  .step:nth-of-type(2) {
+    margin-top: clamp(24px, 5vw, 64px);
+    rotate: 1deg;
+    --float-dur: 6.1s;
+    --float-delay: -2s;
+  }
+  .step:nth-of-type(3) {
+    margin-top: clamp(8px, 1.6vw, 20px);
+    rotate: -0.8deg;
+    --float-dur: 5.6s;
+    --float-delay: -3.4s;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .step {
+      animation: how-float var(--float-dur, 5s) var(--float-delay, 0s) ease-in-out infinite alternate;
+    }
+  }
+  @keyframes how-float {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: 0 -12px;
+    }
+  }
+  /* le chemin pointillé et l'abeille qui le suit */
+  .how__path {
+    position: absolute;
+    left: -3%;
+    top: -80px;
+    z-index: 0;
+    width: 106%;
+    height: calc(100% + 140px);
+    overflow: visible;
+    pointer-events: none;
+  }
+  .how__path path {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1 12;
+    opacity: 0.4;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .how__path path {
+      animation: how-dash 1.6s linear infinite;
+    }
+  }
+  @keyframes how-dash {
+    to {
+      stroke-dashoffset: -13;
+    }
+  }
+  .how__bee {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    width: 52px;
+    pointer-events: none;
+  }
+  .how__bee svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .how__wings {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .how__wings {
+      animation: how-wings 0.16s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes how-wings {
+    to {
+      scale: 1 0.55;
+    }
+  }
+  .step__title {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 32, 'wdth' 90;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 6px 0 10px;
+  }
+  .step p {
+    margin: 0;
+    color: var(--ink-2);
+  }
+
+  /* ---------- Coups de cœur ---------- */
+  .picks {
+    position: relative;
+    padding: clamp(80px, 11vw, 150px) 0 clamp(40px, 6vw, 80px);
+  }
+  /* petits cœurs qui flottent autour du titre */
+  .picks__heart {
+    position: absolute;
+    z-index: 0;
+    width: clamp(30px, 3.4vw, 50px);
+    pointer-events: none;
+  }
+  .picks__heart svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .picks__heart--1 {
+    left: 14%;
+    top: clamp(70px, 9vw, 120px);
+  }
+  .picks__heart--2 {
+    right: 12%;
+    top: clamp(50px, 7vw, 100px);
+    width: clamp(38px, 4.4vw, 64px);
+  }
+  /* les tuiles flottent, inclinées, en zigzag, avec un tampon cœur */
+  .pick {
+    position: relative;
+    z-index: 1;
+  }
+  .pick:nth-of-type(1) {
+    rotate: -1.6deg;
+    --fd: 5.4s;
+  }
+  .pick:nth-of-type(2) {
+    margin-top: clamp(14px, 3vw, 40px);
+    rotate: 1.2deg;
+    --fd: 6.1s;
+    --fdl: -2s;
+  }
+  .pick:nth-of-type(3) {
+    margin-top: clamp(4px, 1vw, 12px);
+    rotate: -0.9deg;
+    --fd: 5.7s;
+    --fdl: -3.4s;
+  }
+  .pick:nth-of-type(4) {
+    margin-top: clamp(18px, 3.6vw, 48px);
+    rotate: 1.5deg;
+    --fd: 6.4s;
+    --fdl: -1.2s;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pick {
+      animation: how-float var(--fd, 5.5s) var(--fdl, 0s) ease-in-out infinite alternate;
+    }
+  }
+  .pick__stamp {
+    position: absolute;
+    z-index: 3;
+    top: -16px;
+    left: 16px;
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--c) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow: 2px 3px 0 0 var(--ink);
+    rotate: -12deg;
+    pointer-events: none;
+    transition:
+      rotate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+      scale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .pick__stamp svg {
+    width: 24px;
+    height: auto;
+    fill: var(--white);
+  }
+  .pick:hover .pick__stamp {
+    rotate: 10deg;
+    scale: 1.1;
+  }
+  .picks__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 44px;
+    text-align: center;
+  }
+  .picks__more {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(48px, 6vw, 76px);
+  }
+  .picks__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: start;
+    gap: 26px 22px;
+  }
+
+  /* ---------- Paysage ---------- */
+  .landscape {
+    position: relative;
+    padding-top: clamp(30px, 5vw, 70px);
+  }
+  :global(.landscape__ribbon) {
+    z-index: 2;
+    margin-bottom: clamp(-150px, -9vw, -50px);
+  }
+  :global(.landscape__pano) {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---------- Catégories : un nuage de bulles qui flottent ---------- */
+  .cats {
+    position: relative;
+    padding: clamp(90px, 11vw, 170px) 0 clamp(110px, 13vw, 200px);
+  }
+  :global(.cats__title) {
+    margin-bottom: clamp(56px, 7vw, 100px);
+    text-align: center;
+  }
+  .cats__cloud {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(40px, 5vw, 80px) clamp(16px, 3vw, 48px);
+    align-items: start;
+  }
+  .bubble {
+    --s: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* tailles et hauteurs variées : un nuage, pas une grille */
+  .bubble:nth-child(8n + 1) {
+    --s: 1;
+    margin-top: 0;
+    --fd: 4.2s;
+  }
+  .bubble:nth-child(8n + 2) {
+    --s: 0.84;
+    margin-top: clamp(30px, 5vw, 80px);
+    --fd: 5s;
+    --fdl: -1.2s;
+  }
+  .bubble:nth-child(8n + 3) {
+    --s: 1.08;
+    margin-top: clamp(-10px, -1vw, 0px);
+    --fd: 4.6s;
+    --fdl: -2.4s;
+  }
+  .bubble:nth-child(8n + 4) {
+    --s: 0.9;
+    margin-top: clamp(40px, 6vw, 96px);
+    --fd: 5.4s;
+    --fdl: -0.6s;
+  }
+  .bubble:nth-child(8n + 5) {
+    --s: 0.88;
+    margin-top: clamp(-20px, -2vw, -8px);
+    --fd: 5.1s;
+    --fdl: -3s;
+  }
+  .bubble:nth-child(8n + 6) {
+    --s: 1.06;
+    margin-top: clamp(20px, 3vw, 48px);
+    --fd: 4.4s;
+    --fdl: -1.8s;
+  }
+  .bubble:nth-child(8n + 7) {
+    --s: 0.82;
+    margin-top: clamp(-12px, -1vw, 0px);
+    --fd: 5.6s;
+    --fdl: -2.8s;
+  }
+  .bubble:nth-child(8n + 8) {
+    --s: 1;
+    margin-top: clamp(24px, 4vw, 60px);
+    --fd: 4.8s;
+    --fdl: -0.3s;
+  }
+  .bubble__float {
+    position: relative;
+    display: block;
+    width: calc(clamp(140px, 17vw, 240px) * var(--s));
+    aspect-ratio: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bubble__float {
+      animation: bubble-float var(--fd, 4.6s) var(--fdl, 0s) ease-in-out infinite alternate;
+    }
+    .bubble__ring {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: ri-spin 30s linear infinite;
+    }
+  }
+  @keyframes bubble-float {
+    from {
+      translate: 0 0;
+      rotate: -3deg;
+    }
+    to {
+      translate: 0 -16px;
+      rotate: 3deg;
+    }
+  }
+  .bubble__shape {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(5px 6px 0 rgba(53, 34, 0, 0.12));
+  }
+  .bubble__icon {
+    position: absolute;
+    inset: 22%;
+    display: block;
+    transition: scale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .bubble__icon :global(.produce) {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .bubble:hover .bubble__icon,
+  .bubble:focus-visible .bubble__icon {
+    scale: 1.12;
+  }
+  .bubble__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px 8px 16px;
+    border-radius: 999px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      3px 4px 0 0 var(--c);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    white-space: nowrap;
+    rotate: -2deg;
+    transition:
+      rotate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      translate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 0.3s,
+      color 0.3s;
+  }
+  .bubble:nth-child(even) .bubble__label {
+    rotate: 2deg;
+  }
+  .bubble:hover .bubble__label,
+  .bubble:focus-visible .bubble__label {
+    rotate: 0deg;
+    translate: 0 -6px;
+    background-color: var(--ink);
+    color: var(--cream);
+  }
+  .bubble:focus-visible {
+    outline: none;
+  }
+
+  /* ---------- Producteur : grande section centrée ---------- */
+  .join {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: clamp(780px, 100svh, 1040px);
+    padding-top: clamp(90px, 11vw, 150px);
+    overflow: hidden;
+    text-align: center;
+  }
+  .join__content {
+    position: relative;
+    z-index: 2;
+    margin-bottom: clamp(30px, 4vw, 64px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 880px;
+    padding-inline: var(--gutter);
+  }
+  :global(.join__title) {
+    font-size: clamp(48px, 7.4vw, 118px);
+  }
+  .join__lead {
+    max-width: 500px;
+    margin: 24px 0 30px;
+    font-size: var(--fs-lead);
+    color: var(--ink-2);
+  }
+  .join__scene {
+    position: relative;
+    width: 100%;
+    margin-top: auto;
+    height: clamp(300px, 32vw, 460px);
+  }
+  .join__hill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 60%;
+  }
+  :global(.join__farmer) {
+    position: absolute;
+    left: 50%;
+    bottom: 14%;
+    width: clamp(180px, 19vw, 280px);
+    height: auto;
+    translate: -50% 0;
+  }
+  .join__float {
+    position: absolute;
+    z-index: 1;
+    width: clamp(46px, 5.4vw, 86px);
+    pointer-events: none;
+  }
+  .join__float svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .join__float--1 {
+    left: 10%;
+    top: 16%;
+  }
+  @media (max-width: 560px) {
+    .join__float {
+      display: none;
+    }
+  }
+  .join__float--2 {
+    right: 11%;
+    top: 12%;
+  }
+  .join__float--3 {
+    left: 18%;
+    top: 46%;
+    width: clamp(36px, 4vw, 62px);
+  }
+  .join__float--4 {
+    right: 17%;
+    top: 42%;
+    width: clamp(40px, 4.6vw, 70px);
+  }
+
+  @media (max-width: 1080px) {
+    .picks__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .cats__cloud {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (max-width: 860px) {
+    .how__steps {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .step:nth-of-type(n) {
+      margin-top: 0;
+    }
+    .how__path,
+    .how__bee,
+    .how__float--3,
+    .how__float--4 {
+      display: none;
+    }
+    .join__float--3,
+    .join__float--4 {
+      display: none;
+    }
+    .hero__illo--left {
+      left: -40px;
+      width: 36vw;
+      opacity: 0.95;
+    }
+    .hero__illo--right {
+      right: -30px;
+      width: 36vw;
+    }
+    .hero__content {
+      margin-top: 40px;
+      margin-bottom: 18vh;
+    }
+  }
+  @media (max-width: 560px) {
+    .picks__grid {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      margin-inline: calc(var(--gutter) * -1);
+      padding: 6px var(--gutter) 16px;
+      gap: 14px;
+      scrollbar-width: none;
+    }
+    .picks__grid > :global(*) {
+      flex: 0 0 82%;
+      scroll-snap-align: start;
+    }
+    .cats__cloud {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: 12px;
+    }
+    .bubble__float {
+      width: calc(clamp(118px, 36vw, 170px) * var(--s));
+    }
+    .bubble__label {
+      font-size: 14px;
+    }
+    .picks__head {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .hero__scroll {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, ScrollTrigger, SplitText, onPage, reduced, revealOnScroll, splitReveal, magnetic } from '../lib/motion';
+  import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin';
+  import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+  import { fxTimeline } from '../lib/fx-title';
+  gsap.registerPlugin(MorphSVGPlugin, MotionPathPlugin);
+
+  onPage('[data-home]', async (root, ctx) => {
+    await document.fonts.ready;
+    const cleanups: (() => void)[] = [];
+
+    ctx.add(() => {
+      const logo = root.querySelector<HTMLElement>('[data-hero-logo]')!;
+      const title = root.querySelector<HTMLElement>('[data-hero-title]')!;
+      const sub = root.querySelector<HTMLElement>('[data-hero-sub]')!;
+      const cta = root.querySelector<HTMLElement>('[data-hero-cta]')!;
+      const scrollCue = root.querySelector<HTMLElement>('[data-hero-scroll]')!;
+      const illos = root.querySelectorAll<HTMLElement>('[data-illo] .illo');
+
+      if (reduced()) {
+        gsap.set([logo, title, sub, cta, scrollCue, ...illos], { autoAlpha: 1 });
+      } else {
+        // --- Intro du hero
+        gsap.set([logo, title], { autoAlpha: 1 });
+        const logoLetters = logo.querySelectorAll('path');
+        const tl = gsap.timeline({ delay: 0.25 });
+        tl.from(logoLetters, { y: 260, duration: 1, stagger: 0.045 })
+          .add(fxTimeline(title, true), 0.6)
+          .fromTo(sub, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 1 }, 1.05)
+          .fromTo(cta, { autoAlpha: 0, y: 16, scale: 0.96 }, { autoAlpha: 1, y: 0, scale: 1, duration: 1 }, 1.15)
+          .fromTo(scrollCue, { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 }, 1.6)
+          .fromTo(
+            illos,
+            { autoAlpha: 0, yPercent: 40, rotation: (i: number) => (i ? 6 : -6) },
+            { autoAlpha: 1, yPercent: 0, rotation: 0, duration: 1.6, stagger: 0.12, ease: 'expo.out' },
+            0.35,
+          );
+
+        // --- Flottement doux des illustrations
+        root.querySelectorAll<HTMLElement>('.hero__float').forEach((el, i) => {
+          gsap.to(el, {
+            rotation: i ? -1.6 : 1.4,
+            y: i ? -10 : -14,
+            duration: 3.4 + i * 0.6,
+            ease: 'sine.inOut',
+            yoyo: true,
+            repeat: -1,
+            delay: 1.8,
+          });
+        });
+
+        // --- Parallaxe souris
+        const hero = root.querySelector<HTMLElement>('[data-hero]')!;
+        const left = root.querySelector<HTMLElement>('[data-illo="left"]')!;
+        const right = root.querySelector<HTMLElement>('[data-illo="right"]')!;
+        const lx = gsap.quickTo(left, 'x', { duration: 1.2, ease: 'power3.out' });
+        const rx = gsap.quickTo(right, 'x', { duration: 1.2, ease: 'power3.out' });
+        const onMove = (e: PointerEvent) => {
+          const nx = e.clientX / window.innerWidth - 0.5;
+          lx(nx * -18);
+          rx(nx * 22);
+        };
+        hero.addEventListener('pointermove', onMove);
+        cleanups.push(() => hero.removeEventListener('pointermove', onMove));
+
+        // --- Sortie du hero au scroll
+        gsap.to('[data-hero-content]', {
+          yPercent: -18,
+          autoAlpha: 0.2,
+          ease: 'none',
+          scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
+        });
+        gsap.to(left, { yPercent: 14, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
+        gsap.to(right, { yPercent: 22, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
+
+        cleanups.push(magnetic(cta, 0.18));
+
+        // --- Titres de section
+        root.querySelectorAll<HTMLElement>('[data-split]').forEach((el) =>
+          SplitText.create(el, {
+            type: 'lines,words',
+            mask: 'lines',
+            autoSplit: true,
+            onSplit: (self) => {
+              gsap.set(el, { autoAlpha: 1 });
+              return gsap.from(self.words, {
+                yPercent: 110,
+                duration: 1.1,
+                stagger: 0.05,
+                scrollTrigger: { trigger: el, start: 'top 85%', once: true },
+              });
+            },
+          }),
+        );
+
+        // --- Illustrations des étapes
+        gsap.from('.step__pin', {
+          y: -50,
+          autoAlpha: 0,
+          duration: 1.2,
+          ease: 'bounce.out',
+          scrollTrigger: { trigger: '.how__steps', start: 'top 70%', once: true },
+        });
+        gsap.from(['.step__p1', '.step__p2', '.step__p3'], {
+          scale: 0,
+          transformOrigin: '50% 50%',
+          duration: 1,
+          stagger: 0.12,
+          ease: 'back.out(2)',
+          scrollTrigger: { trigger: '.how__steps', start: 'top 70%', once: true },
+        });
+        gsap.from('.step__barn', {
+          scaleY: 0,
+          transformOrigin: '50% 100%',
+          duration: 1,
+          ease: 'back.out(2)',
+          scrollTrigger: { trigger: '.how__steps', start: 'top 70%', once: true },
+        });
+
+        // --- L'abeille suit le pointillé au rythme du scroll
+        const beePath = root.querySelector<SVGPathElement>('[data-how-path]');
+        const bee = root.querySelector<HTMLElement>('[data-how-bee]');
+        if (beePath && bee && getComputedStyle(bee).display !== 'none') {
+          gsap.to(bee, {
+            ease: 'none',
+            motionPath: { path: beePath, align: beePath, alignOrigin: [0.5, 0.5] },
+            scrollTrigger: { trigger: '.how__steps', start: 'top 85%', end: 'bottom 35%', scrub: 1.2 },
+          });
+        }
+        // --- Les fruits autour du titre dérivent un peu au scroll (parallaxe)
+        root.querySelectorAll<HTMLElement>('[data-how-float]').forEach((el, i) => {
+          gsap.fromTo(
+            el,
+            { y: 40 + i * 12 },
+            { y: -40 - i * 12, ease: 'none', scrollTrigger: { trigger: '.how', start: 'top bottom', end: 'bottom top', scrub: true } },
+          );
+        });
+
+        // --- Les ronds des étapes respirent (et le paysage qu'ils découpent suit), seulement à l'écran
+        const breathe = gsap.timeline({ paused: true });
+        root.querySelectorAll<SVGPathElement>('.step__blob').forEach((blob, i) => {
+          const clip = blob.ownerSVGElement?.querySelector<SVGPathElement>('clipPath path');
+          breathe.to(clip ? [blob, clip] : blob, { morphSVG: blob.dataset.alt!, duration: 3.4 + i * 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1 }, i * 0.5);
+        });
+        ScrollTrigger.create({
+          trigger: '.how__steps',
+          start: 'top bottom',
+          end: 'bottom top',
+          onToggle: (self) => (self.isActive ? breathe.play() : breathe.pause()),
+        });
+
+        // --- Paysage : chaque calque glisse à sa vitesse (parallaxe)
+        root.querySelectorAll<SVGElement>('[data-pano-layer]').forEach((layer) => {
+          const f = Number(layer.dataset.panoLayer);
+          if (!f) return;
+          gsap.fromTo(layer, { y: 110 * f }, { y: -40 * f, ease: 'none', scrollTrigger: { trigger: '[data-pano]', start: 'top bottom', end: 'bottom top', scrub: true } });
+        });
+
+        // --- Catégories : les bulles dérivent chacune à leur vitesse au scroll, se déforment au survol
+        root.querySelectorAll<HTMLElement>('[data-bubble]').forEach((bubble, i) => {
+          const depth = [0.6, 1.2, 0.4, 1, 0.9, 0.5, 1.3, 0.7][i % 8];
+          gsap.fromTo(
+            bubble.querySelector('.bubble__float'),
+            { y: 50 * depth },
+            { y: -50 * depth, ease: 'none', scrollTrigger: { trigger: '.cats__cloud', start: 'top bottom', end: 'bottom top', scrub: true } },
+          );
+          const blob = bubble.querySelector<SVGPathElement>('.bubble__blob')!;
+          const icon = bubble.querySelector<HTMLElement>('[data-bubble-icon]')!;
+          const shape = blob.getAttribute('d')!;
+          const enter = () => {
+            gsap.to(blob, { morphSVG: blob.dataset.alt!, duration: 0.9, ease: 'elastic.out(1, 0.45)', overwrite: true });
+            gsap.fromTo(icon, { y: 0, rotation: 0 }, { keyframes: [{ y: -18, rotation: -10, duration: 0.25, ease: 'power2.out' }, { y: 0, rotation: 0, duration: 0.6, ease: 'bounce.out' }] });
+          };
+          const leave = () => gsap.to(blob, { morphSVG: shape, duration: 0.8, ease: 'elastic.out(1, 0.5)', overwrite: true });
+          bubble.addEventListener('mouseenter', enter);
+          bubble.addEventListener('mouseleave', leave);
+          cleanups.push(() => {
+            bubble.removeEventListener('mouseenter', enter);
+            bubble.removeEventListener('mouseleave', leave);
+          });
+        });
+
+        // --- Producteur : le fermier sort de la colline en montant au scroll, en entier avant d'être au centre
+        gsap.from('[data-join-farmer]', {
+          yPercent: 55,
+          rotation: -5,
+          ease: 'none',
+          scrollTrigger: { trigger: '.join__scene', start: 'top bottom', end: 'top 55%', scrub: 0.8 },
+        });
+        // --- Cœurs des coups de cœur et légumes du producteur : légère parallaxe
+        (
+          [
+            ['[data-picks-float]', '.picks'],
+            ['[data-join-float]', '.join'],
+          ] as const
+        ).forEach(([sel, trigger]) =>
+          root.querySelectorAll<HTMLElement>(sel).forEach((el, i) =>
+            gsap.fromTo(el, { y: 36 + i * 10 }, { y: -36 - i * 10, ease: 'none', scrollTrigger: { trigger, start: 'top bottom', end: 'bottom top', scrub: true } }),
+          ),
+        );
+      }
+
+      revealOnScroll(root);
+    });
+
+    return () => cleanups.forEach((c) => c());
+  });
+</script>

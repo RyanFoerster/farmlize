@@ -1,0 +1,309 @@
+---
+/**
+ * Onboarding, étape 2 : le potager posé en bas de l'écran (la suite de la campagne de l'étape 1).
+ * Une butte de terre et ses sillons, des rangs de légumes qui ondulent (fanes de carottes, salades,
+ * choux, radis, fraisiers, poireaux, tomates, tournesols), une abeille et un papillon qui butinent.
+ * Le panier de l'onboarding vient se poser dessus.
+ */
+import { ink, shade, starPath } from '../../lib/riso';
+
+const { class: cls, ...rest } = Astro.props;
+const { brown: K, paper: W, blue: B, sky: S, orange: O, red: R, coral: C, pink: P, yellow: Y, green: G, leaf: L, taupe: T } = ink;
+const VB = '0 0 1600 220';
+
+// chaque plante ondule depuis sa base, à son rythme
+const sway = (i: number, a = 3) => `class="ri-sway" style="--a:${a}deg;--dur:${2.8 + (i % 4) * 0.5}s;--d:-${(i * 0.7) % 3}s"`;
+
+const carrot = (x: number, y: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <g ${sway(i, 5)}>
+      <path d="M0 0 C -4 -14 -14 -26 -22 -34" stroke="${G}" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M0 0 C 0 -16 2 -30 0 -44" stroke="${L}" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M0 0 C 4 -14 14 -24 22 -30" stroke="${G}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </g>
+    <path d="M-11 6 C -11 -4 11 -4 11 6 Z" fill="${O}"/>
+  </g>`;
+
+const lettuce = (x: number, y: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <g ${sway(i, 2)}>
+      <ellipse cx="0" cy="-12" rx="28" ry="18" fill="${G}"/>
+      <ellipse cx="-8" cy="-16" rx="16" ry="13" fill="${L}"/>
+      <ellipse cx="10" cy="-15" rx="14" ry="12" fill="${L}"/>
+      <path d="M-4 -24 C 0 -16 0 -8 -2 0 M8 -22 C 10 -14 10 -6 8 0" stroke="${G}" stroke-width="2" fill="none"/>
+    </g>
+  </g>`;
+
+const cabbage = (x: number, y: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <g ${sway(i, 2)}>
+      <path d="M-34 -6 C -40 -26 -20 -36 -6 -24 Z" fill="${G}"/>
+      <path d="M34 -6 C 40 -26 20 -36 6 -24 Z" fill="${G}"/>
+      <circle cx="0" cy="-18" r="20" fill="${S}"/>
+      <path d="M0 -36 C -8 -24 -8 -10 0 0 M0 -36 C 8 -24 8 -10 0 0" stroke="${B}" stroke-width="2.5" fill="none"/>
+    </g>
+  </g>`;
+
+const radish = (x: number, y: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <g ${sway(i, 6)}>
+      <path d="M0 0 C -10 -10 -18 -22 -14 -32 C -4 -26 0 -14 0 0 Z" fill="${L}"/>
+      <path d="M0 0 C 10 -12 20 -20 18 -30 C 6 -26 0 -14 0 0 Z" fill="${G}"/>
+    </g>
+    <path d="M-10 6 C -10 -6 10 -6 10 6 Z" fill="${P}"/>
+  </g>`;
+
+const strawberry = (x: number, y: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <g ${sway(i, 3)}>
+      <path d="M0 0 C -20 -4 -30 -18 -24 -28 C -12 -26 -4 -14 0 0 Z" fill="${G}"/>
+      <path d="M0 0 C 20 -4 30 -18 24 -28 C 12 -26 4 -14 0 0 Z" fill="${L}"/>
+      <path d="M0 0 C -4 -16 0 -30 6 -36 C 8 -22 6 -10 0 0 Z" fill="${G}"/>
+      <path d="M-16 -2 C -24 -2 -26 -12 -18 -14 C -12 -14 -10 -6 -16 -2 Z" fill="${R}"/>
+      <path d="M18 0 C 10 0 8 -10 16 -12 C 22 -12 24 -4 18 0 Z" fill="${C}"/>
+    </g>
+  </g>`;
+
+const leek = (x: number, y: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <rect x="-6" y="-26" width="12" height="28" rx="4" fill="${W}"/>
+    <g ${sway(i, 4)} transform="translate(0 -24)">
+      <path d="M0 0 C -6 -20 -18 -38 -30 -50" stroke="${G}" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M0 0 C 2 -22 4 -42 0 -62" stroke="${L}" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M0 0 C 8 -18 20 -32 30 -42" stroke="${G}" stroke-width="9" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>`;
+
+const tomato = (x: number, y: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <rect x="-2.5" y="-96" width="5" height="98" fill="${T}"/>
+    <g ${sway(i, 3)}>
+      <path d="M0 -10 C -18 -20 -22 -40 -10 -52 M0 -30 C 18 -40 22 -60 10 -72 M0 -56 C -14 -66 -14 -82 -4 -90" stroke="${G}" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <circle cx="-14" cy="-34" r="9" fill="${R}"/><circle cx="12" cy="-50" r="8" fill="${C}"/><circle cx="-8" cy="-70" r="7" fill="${R}"/>
+    </g>
+  </g>`;
+
+const sunflower = (x: number, y: number, h: number, i: number) => {
+  const petals = Array.from({ length: 12 }, (_, k) => `<ellipse cx="0" cy="-${h + 15}" rx="5" ry="11" fill="${k % 2 ? O : Y}" transform="rotate(${k * 30} 0 -${h})"/>`).join('');
+  return `
+  <g transform="translate(${x} ${y})">
+    <g ${sway(i, 2.5)}>
+      <path d="M0 0 C 3 -${h * 0.4} -3 -${h * 0.7} 0 -${h}" stroke="${G}" stroke-width="5" fill="none"/>
+      <path d="M0 -${h * 0.45} C -14 -${h * 0.5} -22 -${h * 0.62} -24 -${h * 0.72} C -12 -${h * 0.7} -4 -${h * 0.6} 0 -${h * 0.45} Z" fill="${L}"/>
+      ${petals}
+      <circle cx="0" cy="-${h}" r="9" fill="${K}"/>
+    </g>
+  </g>`;
+};
+
+const back = [
+  tomato(380, 128, 0),
+  leek(150, 132, 1),
+  sunflower(1330, 128, 92, 2),
+  tomato(1170, 124, 3),
+  leek(1490, 130, 4),
+  sunflower(270, 130, 70, 5),
+  leek(760, 126, 6),
+  sunflower(960, 132, 78, 7),
+  tomato(580, 126, 8),
+].join('');
+const front = [
+  carrot(60, 162, 0),
+  strawberry(200, 176, 1),
+  lettuce(330, 168, 2),
+  carrot(500, 172, 3),
+  cabbage(640, 178, 4),
+  lettuce(770, 182, 5),
+  radish(890, 170, 6),
+  carrot(990, 176, 7),
+  cabbage(1110, 174, 8),
+  lettuce(1240, 168, 9),
+  strawberry(1360, 176, 10),
+  carrot(1450, 166, 11),
+  radish(1560, 172, 12),
+].join('');
+---
+
+<div class:list={['pot', cls]} aria-hidden="true" {...rest}>
+<svg class="pot__plants riso" viewBox={VB} preserveAspectRatio="xMidYMax slice">
+  <!-- rang du fond (derrière la butte) -->
+  <g set:html={back}></g>
+
+  <!-- la butte de terre et ses sillons -->
+  <path d="M0 136 C 300 116 600 120 800 128 C 1000 136 1300 118 1600 130 V220 H0 Z" fill={L}></path>
+  <path d="M0 150 C 300 132 600 136 800 144 C 1000 152 1300 134 1600 146 V220 H0 Z" fill={T}></path>
+  <g stroke={K} stroke-width="4" fill="none" opacity=".28" stroke-linecap="round">
+    <path d="M0 182 C 300 166 600 170 800 178 C 1000 186 1300 168 1600 180"></path>
+    <path d="M0 206 C 300 192 600 196 800 204 C 1000 212 1300 194 1600 206"></path>
+  </g>
+  <path d="M0 150 C 300 132 600 136 800 144 C 1000 152 1300 134 1600 146 V220 H0 Z" {...shade('k', 'b')}></path>
+  {[[120, 140], [450, 132], [700, 138], [1050, 142], [1420, 136]].map(([x, y], i) => <path d={starPath(x, y, 6, 2.6, 6)} fill={i % 2 ? C : Y} />)}
+
+  <!-- rang de devant -->
+  <g set:html={front}></g>
+</svg>
+
+<!--
+  L'abeille et le papillon butinent, dans un calque à part qui monte plus haut que le potager :
+  ils peuvent sortir du cadre sans être coupés. Même largeur, même ancrage en bas et même échelle
+  que le calque des plantes (viewBox prolongé de 140 unités vers le haut, hauteur × 360/220).
+-->
+<svg class="pot__air riso" viewBox="0 -140 1600 360" preserveAspectRatio="xMidYMax slice">
+  <g class="pot__bee">
+    <g transform="translate(560 70)">
+      <g class="pot__wings">
+        <ellipse cx="-4" cy="-12" rx="10" ry="7" transform="rotate(-25 -4 -12)" fill={W}></ellipse>
+        <ellipse cx="8" cy="-12" rx="9" ry="6" transform="rotate(20 8 -12)" fill={S}></ellipse>
+      </g>
+      <path d="M-22 0 L-30 -2 L-22 4 Z" fill={K}></path>
+      <ellipse cx="0" cy="2" rx="22" ry="14" fill={Y}></ellipse>
+      <path d="M-8 -11.5 C -4 -4 -4 8 -8 15 L -2 15.6 C 2 8 2 -4 -2 -13 Z" fill={K}></path>
+      <path d="M6 -11 C 10 -4 10 8 6 14.5 L 12 13 C 15 7 15 -3 12 -9 Z" fill={K}></path>
+      <circle cx="17" cy="-2" r="2.4" fill={K}></circle>
+    </g>
+  </g>
+  <g class="pot__fly">
+    <g transform="translate(1040 60)">
+      <g class="pot__wing pot__wing--l">
+        <path d="M0 -2 C -8 -16 -20 -14 -18 -4 C -17 2 -8 3 0 -2 Z" fill={P}></path>
+        <path d="M0 0 C -6 5 -11 13 -6 13.5 C -2 14 0 8 0 0 Z" fill={C}></path>
+      </g>
+      <g class="pot__wing pot__wing--r">
+        <path d="M0 -2 C 8 -16 20 -14 18 -4 C 17 2 8 3 0 -2 Z" fill={P}></path>
+        <path d="M0 0 C 6 5 11 13 6 13.5 C 2 14 0 8 0 0 Z" fill={C}></path>
+      </g>
+      <rect x="-1.4" y="-8" width="2.8" height="18" rx="1.4" fill={K}></rect>
+    </g>
+  </g>
+</svg>
+</div>
+
+<style>
+  .pot {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .pot__plants,
+  .pot__air {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    overflow: visible;
+  }
+  .pot__plants {
+    height: 100%;
+  }
+  .pot__air {
+    height: calc(100% * 360 / 220);
+    pointer-events: none;
+  }
+  /* l'abeille et le papillon se retournent sur eux-mêmes */
+  .pot__bee,
+  .pot__fly {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pot__bee {
+      animation: pot-bee 11s ease-in-out infinite;
+    }
+    .pot__wings {
+      transform-box: fill-box;
+      transform-origin: 50% 100%;
+      animation: pot-buzz 0.09s linear infinite alternate;
+    }
+    .pot__fly {
+      animation: pot-fly 14s ease-in-out infinite;
+    }
+    .pot__wing {
+      transform-box: fill-box;
+      animation: pot-flap 0.22s ease-in-out infinite alternate;
+    }
+    .pot__wing--l {
+      transform-origin: 100% 50%;
+    }
+    .pot__wing--r {
+      transform-origin: 0% 50%;
+    }
+  }
+  /* l'abeille fait des boucles au-dessus des rangs, se pose un instant, repart */
+  @keyframes pot-bee {
+    0% {
+      translate: 0 0;
+      scale: 1 1;
+    }
+    18% {
+      translate: 180px -34px;
+      scale: 1 1;
+    }
+    32% {
+      translate: 330px 24px;
+      scale: 1 1;
+    }
+    40% {
+      translate: 330px 30px;
+      scale: 1 1;
+    }
+    49% {
+      translate: 470px -20px;
+      scale: 1 1;
+    }
+    50% {
+      translate: 470px -20px;
+      scale: -1 1;
+    }
+    68% {
+      translate: 260px -50px;
+      scale: -1 1;
+    }
+    84% {
+      translate: 80px 16px;
+      scale: -1 1;
+    }
+    99% {
+      translate: 0 0;
+      scale: -1 1;
+    }
+    100% {
+      translate: 0 0;
+      scale: 1 1;
+    }
+  }
+  @keyframes pot-buzz {
+    to {
+      scale: 1 0.55;
+    }
+  }
+  /* le papillon voltige de fleur en fleur */
+  @keyframes pot-fly {
+    0% {
+      translate: 0 0;
+    }
+    20% {
+      translate: -160px -30px;
+    }
+    40% {
+      translate: -300px 20px;
+    }
+    55% {
+      translate: -200px -40px;
+    }
+    75% {
+      translate: 120px -10px;
+    }
+    90% {
+      translate: 240px 30px;
+    }
+    100% {
+      translate: 0 0;
+    }
+  }
+  @keyframes pot-flap {
+    to {
+      scale: 0.3 1;
+    }
+  }
+</style>

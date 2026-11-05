@@ -1,0 +1,58 @@
+---
+/**
+ * Le panier de l'onboarding : il est vide au départ et se remplit des catégories choisies.
+ * Chaque produit (icône de catégorie) est déjà dans le dessin, caché ; la page le fait apparaître,
+ * le range dans le premier emplacement libre (data-bk-back = derrière, data-bk-front = devant)
+ * et le retire quand on le désélectionne. Le corps tressé est dessiné par-dessus : les produits
+ * semblent posés dedans, seule leur moitié haute dépasse.
+ */
+import { ink, shade } from '../../lib/riso';
+import { categories } from '../../data/categories';
+
+const { class: cls, ...rest } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 7);
+const { brown: K, orange: O, red: R, yellow: Y } = ink;
+---
+
+<svg class:list={['illo', 'riso', cls]} viewBox="0 0 460 340" aria-hidden="true" {...rest}>
+  <defs>
+    <clipPath id={`bkf-body-${uid}`}><path d="M62 156 H398 L370 318 C 368 330 360 336 348 336 H112 C 100 336 92 330 90 318 Z"></path></clipPath>
+  </defs>
+
+  <!-- anse -->
+  <path d="M96 160 C 96 22 364 22 364 160" stroke={R} stroke-width="18" fill="none" stroke-linecap="round"></path>
+
+  <!-- l'intérieur du panier (l'ouverture, dans l'ombre) -->
+  <ellipse cx="230" cy="160" rx="176" ry="20" fill={K} opacity="0.4"></ellipse>
+
+  <!-- les produits : rangée du fond, puis rangée de devant -->
+  <g data-bk-back></g>
+  <g data-bk-front>
+    {
+      categories.map((c) => (
+        <g class="bk-item" data-bk={c.id} visibility="hidden">
+          <use href={`#ico-${c.id}`} x="-48" y="-48" width="96" height="96" />
+        </g>
+      ))
+    }
+  </g>
+
+  <!-- corps tressé -->
+  <path d="M62 156 H398 L370 318 C 368 330 360 336 348 336 H112 C 100 336 92 330 90 318 Z" fill={O}></path>
+  <g clip-path={`url(#bkf-body-${uid})`}>
+    <g fill={R}>
+      <rect x="40" y="196" width="380" height="14"></rect>
+      <rect x="40" y="236" width="380" height="14"></rect>
+      <rect x="40" y="276" width="380" height="14"></rect>
+      <rect x="40" y="316" width="380" height="14"></rect>
+    </g>
+    <g stroke={Y} stroke-width="5" stroke-linecap="round">
+      {Array.from({ length: 11 }, (_, i) => 100 + i * 28).map((x) => <path d={`M${x} 214 v 16 M${x + 14} 254 v 16 M${x} 294 v 16`} />)}
+    </g>
+  </g>
+  <path d="M62 156 H398 L370 318 C 368 330 360 336 348 336 H112 C 100 336 92 330 90 318 Z" {...shade('k', 'b')}></path>
+  <rect x="48" y="146" width="364" height="30" rx="15" fill={R}></rect>
+  <g stroke={Y} stroke-width="4" stroke-linecap="round">
+    {Array.from({ length: 15 }, (_, i) => 70 + i * 23).map((x) => <path d={`M${x} 152 l 10 18`} />)}
+  </g>
+</svg>

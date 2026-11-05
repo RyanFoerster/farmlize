@@ -1,0 +1,289 @@
+---
+/**
+ * Transition entre les pages : le « rideau potager ».
+ * Deux feuilles de papier au bord festonné montent (la couleur de la page visée, puis le crème),
+ * la destination s'affiche avec son produit pendant qu'un tracteur traverse le bas de l'écran ;
+ * la page change sous le rideau, puis il repart vers le haut et révèle la nouvelle page.
+ * En arrière (bouton retour), le rideau descend du haut.
+ *
+ * Le rideau est accroché à <html> (et non au <body>) : il survit au remplacement de la page par le ClientRouter.
+ * Mouvement réduit : pas de rideau (la petite barre de progression du loader prend le relais).
+ */
+---
+
+<style is:global>
+  .fz-curtain {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    pointer-events: none;
+    visibility: hidden;
+    overflow: hidden;
+  }
+  .fz-curtain.is-on {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .fz-curtain__sheet {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+  }
+  .fz-curtain__sheet--back {
+    background: var(--fz-c, var(--coral)) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+  }
+  .fz-curtain__sheet--front {
+    display: grid;
+    place-items: center;
+    background: var(--cream) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+  }
+  /* bords festonnés, en haut et en bas de chaque feuille */
+  .fz-curtain__edge {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 40px;
+  }
+  .fz-curtain__edge--top {
+    bottom: calc(100% - 1px);
+  }
+  .fz-curtain__edge--bottom {
+    top: calc(100% - 1px);
+    scale: 1 -1;
+  }
+  .fz-curtain__sheet--back .fz-curtain__edge {
+    fill: var(--fz-c, var(--coral));
+  }
+  .fz-curtain__sheet--front .fz-curtain__edge {
+    fill: var(--cream);
+  }
+
+  .fz-curtain__center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    margin-top: -6vh;
+    padding: 0 var(--gutter);
+    text-align: center;
+  }
+  .fz-curtain__blob {
+    display: grid;
+    place-items: center;
+    width: clamp(110px, 13vw, 150px);
+    aspect-ratio: 1;
+    border-radius: 46% 54% 42% 58% / 56% 44% 56% 44%;
+    background: var(--fz-c, var(--coral));
+    box-shadow: 5px 6px 0 0 var(--ink);
+  }
+  .fz-curtain__blob svg {
+    width: 64%;
+    height: 64%;
+  }
+  .fz-curtain__label {
+    margin: 0;
+    overflow: hidden;
+    padding: 0.1em 0.12em 0.14em;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 96, 'wdth' 82;
+    font-size: clamp(40px, 6vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+  }
+  .fz-curtain__label span {
+    position: relative;
+    display: inline-block;
+    isolation: isolate;
+  }
+  /* coup de surligneur sous la destination */
+  .fz-curtain__label span::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: -0.12em;
+    right: -0.12em;
+    bottom: 0.06em;
+    height: 0.42em;
+    border-radius: 0.2em;
+    background: var(--fz-c, var(--butter));
+    rotate: -1.5deg;
+    transform-origin: left;
+    transform: scaleX(var(--mark, 0));
+  }
+
+  /* la colline et le tracteur qui traverse */
+  .fz-curtain__hill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: clamp(70px, 11vh, 110px);
+  }
+  .fz-curtain__tractor {
+    position: absolute;
+    left: 0;
+    bottom: clamp(24px, 4.4vh, 44px);
+    width: clamp(90px, 9vw, 130px);
+    height: auto;
+    overflow: visible;
+  }
+  .fz-curtain__smoke circle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: fz-curtain-smoke 1s ease-out infinite;
+  }
+  .fz-curtain__smoke circle:nth-child(2) {
+    animation-delay: -0.33s;
+  }
+  .fz-curtain__smoke circle:nth-child(3) {
+    animation-delay: -0.66s;
+  }
+  @keyframes fz-curtain-smoke {
+    from {
+      opacity: 0.9;
+      scale: 0.6;
+      translate: 0 8px;
+    }
+    to {
+      opacity: 0;
+      scale: 1.3;
+      translate: -8px -14px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, reduced } from '../lib/motion';
+  import { categoryById, type CategoryId } from '../data/categories';
+  import { farmBySlug } from '../data/farms';
+  import { ink } from '../lib/riso';
+
+  const { brown: K, paper: W, sky: S, orange: O, red: R, yellow: Y, green: G, leaf: L, taupe: T } = ink;
+
+  let scallop = 'M0 40 V 22';
+  for (let x = 0; x < 1440; x += 60) scallop += ` Q ${x + 30} 2 ${x + 60} 22`;
+  scallop += ' V 40 Z';
+  const edges = `<svg class="fz-curtain__edge fz-curtain__edge--top" viewBox="0 0 1440 40" preserveAspectRatio="none"><path d="${scallop}"/></svg><svg class="fz-curtain__edge fz-curtain__edge--bottom" viewBox="0 0 1440 40" preserveAspectRatio="none"><path d="${scallop}"/></svg>`;
+
+  const tractor = `
+    <g class="fz-curtain__smoke"><circle cx="18" cy="-64" r="6" fill="${S}"/><circle cx="10" cy="-80" r="8" fill="${S}"/><circle cx="2" cy="-98" r="10" fill="${S}"/></g>
+    <rect x="14" y="-58" width="7" height="22" fill="${K}"/>
+    <rect x="0" y="-38" width="74" height="26" rx="6" fill="${O}"/>
+    <rect x="44" y="-72" width="34" height="46" rx="4" fill="${R}"/>
+    <rect x="52" y="-66" width="18" height="18" rx="2" fill="${W}"/>
+    <g class="ri-spin" style="--dur:0.8s"><circle cx="58" cy="-8" r="24" fill="${K}"/><circle cx="58" cy="-8" r="9" fill="${Y}"/><path d="M58 -30 V14 M36 -8 H80" stroke="${T}" stroke-width="3"/></g>
+    <g class="ri-spin" style="--dur:0.5s"><circle cx="10" cy="0" r="13" fill="${K}"/><circle cx="10" cy="0" r="5" fill="${Y}"/><path d="M10 -12 V12 M-2 0 H22" stroke="${T}" stroke-width="2"/></g>`;
+
+  type Dest = { label: string; color: string; cat: CategoryId };
+  const cats: CategoryId[] = ['legumes', 'fruits', 'fromages', 'miel', 'pain', 'oeufs', 'lait', 'viandes'];
+  let spin = 0;
+
+  /** Ce qu'on annonce sur le rideau, selon la page visée. */
+  function destination(url: URL): Dest {
+    const p = url.pathname.replace(/\/+$/, '') || '/';
+    const any = cats[spin++ % cats.length];
+    if (p === '/') return { label: 'Accueil', color: 'var(--coral)', cat: any };
+    if (p === '/fermes') return url.searchParams.has('favoris') ? { label: 'Mes favoris', color: 'var(--rose)', cat: 'fruits' } : { label: 'La carte des fermes', color: 'var(--leaf)', cat: 'legumes' };
+    if (p.startsWith('/fermes/')) {
+      const farm = farmBySlug[p.split('/')[2]];
+      if (farm) return { label: farm.name, color: categoryById[farm.cats[0]].color, cat: farm.cats[0] };
+    }
+    if (p === '/saisons') return { label: 'De saison', color: 'var(--butter)', cat: 'fruits' };
+    if (p === '/producteurs') return { label: 'Ajouter ma ferme', color: 'var(--sky)', cat: 'fromages' };
+    if (p === '/commencer') return { label: 'C’est parti !', color: 'var(--rose)', cat: 'miel' };
+    return { label: 'Farmlize', color: 'var(--coral)', cat: any };
+  }
+
+  let el: HTMLElement | null = null;
+  const parts = () => {
+    if (!el?.isConnected) {
+      el = document.createElement('div');
+      el.className = 'fz-curtain';
+      el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = `
+        <div class="fz-curtain__sheet fz-curtain__sheet--back">${edges}</div>
+        <div class="fz-curtain__sheet fz-curtain__sheet--front">${edges}
+          <div class="fz-curtain__center">
+            <span class="fz-curtain__blob riso"><svg viewBox="0 0 100 100"><use href="#ico-legumes"/></svg></span>
+            <p class="fz-curtain__label"><span>Farmlize</span></p>
+          </div>
+          <svg class="fz-curtain__hill riso" viewBox="0 0 1440 110" preserveAspectRatio="none">
+            <path d="M0 110 V 46 C 360 8 1080 8 1440 46 V 110 Z" fill="${G}"/>
+            <path d="M0 76 C 360 44 1080 44 1440 76" stroke="${L}" stroke-width="6" fill="none"/>
+            <path d="M0 96 C 360 66 1080 66 1440 96" stroke="${L}" stroke-width="6" fill="none"/>
+          </svg>
+          <svg class="fz-curtain__tractor riso" viewBox="-14 -112 110 140">${tractor}</svg>
+        </div>`;
+      document.documentElement.append(el);
+    }
+    const q = <T extends Element>(s: string) => el!.querySelector<T>(s)!;
+    return {
+      root: el,
+      back: q<HTMLElement>('.fz-curtain__sheet--back'),
+      front: q<HTMLElement>('.fz-curtain__sheet--front'),
+      blob: q<HTMLElement>('.fz-curtain__blob'),
+      use: q<SVGUseElement>('.fz-curtain__blob use'),
+      label: q<HTMLElement>('.fz-curtain__label span'),
+      tractor: q<SVGElement>('.fz-curtain__tractor'),
+    };
+  };
+
+  let active = false;
+  let sign = 1;
+  const span = () => window.innerHeight + 80;
+
+  /** Le rideau monte (ou descend, en arrière) ; résolu dès que l'écran est couvert. */
+  function cover(to: URL, back: boolean) {
+    const p = parts();
+    const d = destination(to);
+    sign = back ? -1 : 1;
+    active = true;
+    gsap.killTweensOf([p.back, p.front, p.blob, p.label, p.tractor]);
+    p.root.style.setProperty('--fz-c', d.color);
+    p.use.setAttribute('href', `#ico-${d.cat}`);
+    p.label.textContent = d.label;
+    p.root.classList.add('is-on');
+    gsap.set([p.back, p.front], { y: sign * span() });
+    gsap.set(p.label, { '--mark': 0 });
+
+    const tl = gsap.timeline();
+    tl.to(p.back, { y: 0, duration: 0.5, ease: 'power3.inOut' })
+      .to(p.front, { y: 0, duration: 0.5, ease: 'power3.inOut' }, 0.08)
+      .fromTo(p.blob, { scale: 0, rotation: -120 }, { scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(2.2)' }, 0.3)
+      .fromTo(p.label, { yPercent: 115 }, { yPercent: 0, duration: 0.55, ease: 'fz.out' }, 0.36)
+      .to(p.label, { '--mark': 1, duration: 0.5, ease: 'fz.inOut' }, 0.6)
+      // le tracteur entre par la gauche et roule jusqu'au milieu…
+      .fromTo(p.tractor, { x: -160 }, { x: window.innerWidth * 0.42, duration: 1.1, ease: 'power1.out' }, 0.15);
+    return new Promise<void>((resolve) => tl.call(resolve, [], 0.6));
+  }
+
+  /** Le rideau repart et révèle la nouvelle page. */
+  function reveal() {
+    if (!active) return;
+    active = false;
+    const p = parts();
+    gsap
+      .timeline({ delay: 0.12, onComplete: () => p.root.classList.remove('is-on') })
+      // …puis file hors de l'écran pendant que le rideau se lève
+      .to(p.tractor, { x: window.innerWidth + 180, duration: 0.9, ease: 'power2.in' }, 0)
+      .to(p.front, { y: -sign * span(), duration: 0.7, ease: 'power3.inOut' }, 0.05)
+      .to(p.back, { y: -sign * span(), duration: 0.7, ease: 'power3.inOut' }, 0.14);
+  }
+
+  document.addEventListener('astro:before-preparation', (e: any) => {
+    if (reduced()) return;
+    const load = e.loader;
+    const back = e.direction === 'back';
+    e.loader = async () => {
+      await Promise.all([cover(e.to as URL, back), load()]);
+    };
+  });
+  // le rideau couvre tout : on saute l'animation du navigateur (elle se jouerait derrière)
+  document.addEventListener('astro:before-swap', (e: any) => {
+    if (active) e.viewTransition?.skipTransition?.();
+  });
+  document.addEventListener('astro:page-load', reveal);
+</script>

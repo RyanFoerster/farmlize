@@ -1,0 +1,1105 @@
+---
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import FarmCover from '../../components/FarmCover.astro';
+import FarmCard from '../../components/FarmCard.astro';
+import Icon from '../../components/Icon.astro';
+import Produce from '../../components/Produce.astro';
+import FunTitle from '../../components/FunTitle.astro';
+import Floaters from '../../components/Floaters.astro';
+import Ribbon from '../../components/Ribbon.astro';
+import { farms, type Farm } from '../../data/farms';
+import { categoryById } from '../../data/categories';
+import { communes } from '../../data/communes';
+import { distanceKm, dayLong, formatRanges } from '../../lib/geo';
+import { monthNames } from '../../data/seasons';
+import { ink } from '../../lib/riso';
+
+export function getStaticPaths() {
+  return farms.map((farm) => ({ params: { slug: farm.slug }, props: { farm } }));
+}
+
+const { farm } = Astro.props as { farm: Farm };
+const province = communes.reduce(
+  (best, c) => {
+    const d = distanceKm(c, farm);
+    return d < best.d ? { d, p: c.province } : best;
+  },
+  { d: Infinity, p: '' },
+).p;
+const similar = farms
+  .filter((f) => f.slug !== farm.slug)
+  .map((f) => ({ f, score: f.cats.filter((c) => farm.cats.includes(c)).length * 100 - distanceKm(f, farm) }))
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3)
+  .map((x) => x.f);
+const directions = `https://www.google.com/maps/dir/?api=1&destination=${farm.lat},${farm.lng}`;
+const initials = monthNames.map((m) => m[0]);
+
+// la couleur de la ferme : celle de sa première catégorie (surligneur du nom, bandeau, plaques des cartes)
+const main = categoryById[farm.cats[0]];
+const second = categoryById[farm.cats[1] ?? farm.cats[0]];
+// le dernier mot du nom passe au surligneur (les caractères de la syntaxe des titres sont retirés)
+const nameWords = farm.name.replace(/[[\]{}~*|]/g, '').split(' ');
+const lastWord = nameWords.pop();
+const titleText = `${nameWords.join(' ')} [${lastWord}|${main.color}]`.trim();
+const ribbonText = `${farm.cats.map((c) => categoryById[c].label).join(' - ')} - ${farm.commune} - EN DIRECT DE LA FERME - `.toUpperCase();
+const producerInitials = farm.producer.name
+  .split(' ')
+  .map((w) => w[0])
+  .slice(0, 2)
+  .join('');
+// bord festonné des bandes de couleur (comme le haut du footer)
+let scallop = 'M0 40 V 22';
+for (let x = 0; x < 1440; x += 60) scallop += ` Q ${x + 30} 2 ${x + 60} 22`;
+scallop += ' V 40 Z';
+const stampColors = [ink.coral, ink.yellow, ink.sky];
+---
+
+<Base title={farm.name} description={farm.tagline}>
+  <SiteHeader />
+  <main class="farm" data-farm={farm.slug} data-lat={farm.lat} data-lng={farm.lng} data-cat={farm.cats[0]}>
+    <!-- HERO -->
+    <section class="container farm-hero">
+      <div class="farm-hero__text">
+        <a href="/fermes" class="back" data-back><Icon name="arrow-left" size={18} /> Toutes les fermes</a>
+        <span class="loc-stamp" style={`--off:${main.color}`} data-anim><Icon name="pin" size={15} /> {farm.commune} · {province}</span>
+        <FunTitle as="h1" class="display farm-hero__name" text={titleText} />
+        <p class="farm-hero__tagline" data-anim>{farm.tagline}</p>
+        <div class="farm-hero__tags" data-anim>
+          {farm.cats.map((c) => <span class="tag tag--lg" style={`background:${categoryById[c].tint}`}>{categoryById[c].label}</span>)}
+          {farm.labels.map((l) => <span class="tag tag--lg tag--outline"><Icon name="check" size={14} stroke={2.4} /> {l}</span>)}
+        </div>
+        <div class="farm-hero__meta" data-anim>
+          <span class="meta-pill">
+            <Icon name="star" size={16} class="star" />
+            <strong>{farm.rating.toFixed(1).replace('.', ',')}</strong>
+            <span class="muted">({farm.reviews} avis)</span>
+          </span>
+          <span class="meta-pill" data-distance-pill hidden><Icon name="pin" size={16} /> <span data-distance></span></span>
+          <span class="meta-pill status-dot" data-status>Horaires</span>
+        </div>
+        <div class="farm-hero__actions" data-anim>
+          <a href={directions} target="_blank" rel="noopener" class="btn">
+            <Icon name="route" size={18} /> Itinéraire
+          </a>
+          <button type="button" class="round-btn fav-btn" data-fav={farm.slug} aria-pressed="false" aria-label="Ajouter aux favoris">
+            <Icon name="heart" size={22} />
+          </button>
+          <button type="button" class="round-btn" data-share aria-label="Partager">
+            <Icon name="share" size={20} />
+          </button>
+          <span class="share-toast" data-toast role="status" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="farm-hero__art" data-art style={`--off:${main.color}`}>
+        <div class="farm-hero__cover" transition:name={`cover-${farm.slug}`}>
+          <FarmCover farm={farm} variant="hero" />
+        </div>
+        {
+          farm.cats.map((c, i) => (
+            <span class={`float float--${i}`} data-float data-depth={[1.3, 0.7, 1][i % 3]}>
+              <span class="float__in print print--sm" style={`--off:${categoryById[c].color}; background-color:${categoryById[c].tint}`}>
+                <Produce cat={c} size="100%" />
+              </span>
+            </span>
+          ))
+        }
+      </div>
+    </section>
+
+    <Ribbon class="farm-ribbon" color={main.color} shape="wave" text={ribbonText} speed={0.8} />
+
+    <!-- L'HISTOIRE -->
+    <section class="farm-about">
+      <Floaters
+        items={[
+          { cat: farm.cats[0], x: 5, y: 26, rot: -12, depth: 1.2, desk: true },
+          { cat: second.id, x: 95, y: 72, size: 0.85, rot: 10, depth: 0.8, desk: true },
+        ]}
+      />
+      <div class="container">
+        <p class="farm-about__text" data-split>{farm.description}</p>
+      </div>
+    </section>
+
+    <!-- PRODUITS -->
+    <section class="container farm-products">
+      <div class="farm-products__head">
+        <FunTitle class="title farm-products__title" text={`Au comptoir de la [ferme|${main.color}]`} />
+        <ul class="season-legend" data-reveal aria-label="Légende du calendrier">
+          <li><i class="lg lg--on"></i> De saison</li>
+          <li><i class="lg"></i> Hors saison</li>
+          <li><i class="lg lg--now"></i> Ce mois-ci</li>
+        </ul>
+      </div>
+      <ul class="products" data-stagger>
+        {
+          farm.products.map((p, i) => (
+            <li class="product print print--sm" style={`--off:${categoryById[p.cat].color}; --tilt:${[-0.8, 0.6, -0.4, 0.9][i % 4]}deg`} data-months={p.months.join(' ')}>
+              <div class="product__head">
+                <span class="product__icon" style={`background:${categoryById[p.cat].tint}`}>
+                  <Produce cat={p.cat} size={44} />
+                </span>
+                <div class="product__body">
+                  <p class="product__name">{p.name}</p>
+                  <p class="product__season" data-season-label>
+                    {p.months.length === 12 ? 'Toute l’année' : 'Selon la saison'}
+                  </p>
+                </div>
+              </div>
+              <div class="months" aria-hidden="true">
+                {initials.map((m, k) => (
+                  <span class:list={['month', { 'is-on': p.months.includes(k + 1) }]} data-m={k + 1} title={monthNames[k]}>
+                    {m}
+                  </span>
+                ))}
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <!-- LE MOT DU PRODUCTEUR -->
+    <section class="farm-quote">
+      <svg class="farm-quote__edge farm-quote__edge--top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d={scallop}></path></svg>
+      <Floaters
+        items={[
+          { cat: farm.cats[0], x: 10, y: 30, rot: -14, depth: 1.1 },
+          { name: 'Fraises', x: 88, y: 26, size: 0.8, rot: 12, depth: 0.8, desk: true },
+          { name: 'Carottes', x: 84, y: 76, size: 0.9, rot: -8, depth: 1.3, desk: true },
+        ]}
+      />
+      <div class="container farm-quote__inner">
+        <svg class="farm-quote__mark riso ri-bob" style="--a:-6px; --dur:3.4s" viewBox="0 0 60 48" aria-hidden="true" data-quote-mark><path d="M0 48V28C0 12 8 2 24 0l2 7C16 10 12 16 12 24h12v24H0Zm34 0V28C34 12 42 2 58 0l2 7c-10 3-14 9-14 17h12v24H34Z" fill="currentColor"></path></svg>
+        <blockquote class="farm-quote__text" data-split>{farm.producer.quote}</blockquote>
+        <p class="farm-quote__who" data-reveal>
+          <span class="farm-quote__avatar" style={`--off:${main.color}`} aria-hidden="true">{producerInitials}</span>
+          <span><strong>{farm.producer.name}</strong> · à la ferme depuis {farm.producer.since}</span>
+        </p>
+      </div>
+      <svg class="farm-quote__edge farm-quote__edge--bottom" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d={scallop}></path></svg>
+    </section>
+
+    <!-- INFOS PRATIQUES -->
+    <section class="container farm-info">
+      <div class="info-card print" style="--off: var(--leaf); --tilt:-0.8deg" data-reveal>
+        <div class="info-card__head">
+          <h2 class="title info-card__title"><span class="info-card__ico" style="--c: var(--leaf)"><Icon name="clock" size={22} /></span> Horaires</h2>
+          <span class="meta-pill status-dot" data-status>…</span>
+        </div>
+        <table class="hours">
+          <tbody>
+            {
+              farm.hours.map((r, i) => (
+                <tr data-day={i}>
+                  <th scope="row">{dayLong[i]}</th>
+                  <td class:list={{ closed: !r.length }}>{formatRanges(r)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="info-card info-card--map print" style="--off: var(--sky); --tilt:0.7deg" data-reveal data-delay="0.1">
+        <div class="info-card__head">
+          <h2 class="title info-card__title"><span class="info-card__ico" style="--c: var(--sky)"><Icon name="pin" size={22} /></span> Adresse</h2>
+        </div>
+        <p class="address">
+          {farm.address}<br />
+          {farm.zip} {farm.commune}
+        </p>
+        <div class="mini-map">
+          <div class="mini-map__canvas" data-mini-map></div>
+        </div>
+        <a href={directions} target="_blank" rel="noopener" class="btn btn--ghost btn--sm mini-map__btn">
+          <Icon name="route" size={16} /> Ouvrir l’itinéraire
+        </a>
+      </div>
+    </section>
+
+    <!-- DANS LE MÊME ESPRIT -->
+    <section class="container farm-similar">
+      <FunTitle class="title farm-similar__title" text="Dans le même [esprit|sky]" />
+      <div class="similar-grid" data-stagger>
+        {
+          similar.map((f, i) => (
+            <div class="sim">
+              <span class="sim__stamp" aria-hidden="true" style={`--c:${stampColors[i % 3]}`}>
+                <svg viewBox="0 0 24 22">
+                  <path d="M12 21 C 5 16 1 12 1 7.5 C 1 4 3.6 1.5 6.8 1.5 C 9 1.5 11 2.8 12 4.8 C 13 2.8 15 1.5 17.2 1.5 C 20.4 1.5 23 4 23 7.5 C 23 12 19 16 12 21 Z" />
+                </svg>
+              </span>
+              <FarmCard farm={f} variant="tile" />
+            </div>
+          ))
+        }
+      </div>
+      <div class="farm-similar__more" data-reveal>
+        <a href="/fermes" class="btn">Explorer la carte <Icon name="map" size={18} /></a>
+      </div>
+    </section>
+
+    <div class="mobile-bar">
+      <a href={directions} target="_blank" rel="noopener" class="btn"><Icon name="route" size={18} /> Itinéraire</a>
+      <button type="button" class="round-btn fav-btn" data-fav={farm.slug} aria-pressed="false" aria-label="Ajouter aux favoris">
+        <Icon name="heart" size={22} />
+      </button>
+    </div>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  /* ---------- Hero ---------- */
+  .farm-hero {
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    gap: clamp(32px, 5vw, 80px);
+    align-items: center;
+    padding: clamp(24px, 4vw, 56px) 0 clamp(56px, 7vw, 100px);
+  }
+  .back {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    gap: 8px;
+    height: var(--ctl-sm);
+    margin-bottom: clamp(20px, 3vw, 36px);
+    font-weight: 600;
+    font-size: var(--fs-ctl);
+    color: var(--ink-2);
+    transition:
+      gap 0.4s var(--ease),
+      color 0.3s;
+  }
+  .back:hover {
+    gap: 14px;
+    color: var(--ink);
+  }
+  /* la commune sur une petite étiquette tamponnée */
+  .loc-stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      3px 4px 0 0 var(--off);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    rotate: -2deg;
+  }
+  .farm-hero__text > :global(.farm-hero__name) {
+    font-size: clamp(48px, 6.4vw, 104px);
+    margin: 22px 0 20px;
+  }
+  .farm-hero__tagline {
+    max-width: 520px;
+    margin: 0 0 26px;
+    font-size: var(--fs-lead);
+    line-height: 1.42;
+    color: var(--ink-2);
+  }
+  .farm-hero__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .farm-hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 30px;
+  }
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--white);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .meta-pill[hidden] {
+    display: none;
+  }
+  .meta-pill.status-dot.is-open {
+    background: #e4efe4;
+    box-shadow: inset 0 0 0 1.5px #bdd8c3;
+  }
+  .farm-hero__actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .round-btn {
+    display: grid;
+    place-items: center;
+    width: var(--ctl-lg);
+    height: var(--ctl-lg);
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    transition:
+      box-shadow 0.3s,
+      transform 0.4s var(--ease),
+      translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .round-btn:hover {
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      3px 4px 0 0 var(--butter);
+    translate: -1px -2px;
+  }
+  .share-toast {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 12px);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--moss);
+  }
+  .farm-hero__art {
+    position: relative;
+    aspect-ratio: 1.05;
+  }
+  /* la couverture imprimée de travers, avec sa plaque de couleur décalée */
+  .farm-hero__cover {
+    position: absolute;
+    inset: 6% 5% 6% 6%;
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 12px 14px 0 0 var(--off);
+    rotate: -1.5deg;
+  }
+  .float {
+    position: absolute;
+    z-index: 2;
+    width: clamp(70px, 9vw, 130px);
+  }
+  .float__in {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    padding: 16px;
+    border-radius: 50%;
+  }
+  .float--0 {
+    left: -2%;
+    top: 2%;
+  }
+  .float--0 .float__in {
+    rotate: -10deg;
+  }
+  .float--1 {
+    right: -2%;
+    top: 34%;
+    width: clamp(60px, 7vw, 104px);
+  }
+  .float--1 .float__in {
+    rotate: 8deg;
+  }
+  .float--2 {
+    left: 12%;
+    bottom: -3%;
+    width: clamp(56px, 6.4vw, 96px);
+  }
+  .tag--lg {
+    height: var(--ctl-sm);
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    gap: 6px;
+  }
+  .tag--outline {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  }
+
+  :global(.farm-ribbon) {
+    margin-top: clamp(-40px, -3vw, -10px);
+  }
+
+  /* ---------- L'histoire ---------- */
+  .farm-about {
+    position: relative;
+    padding: clamp(50px, 7vw, 100px) 0 clamp(50px, 6vw, 80px);
+  }
+  .farm-about__text {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    text-align: center;
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 40, 'wdth' 92;
+    font-weight: 500;
+    font-size: clamp(24px, 2.5vw, 38px);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  /* ---------- Produits ---------- */
+  .farm-products {
+    padding: clamp(40px, 5vw, 64px) 0 clamp(80px, 10vw, 130px);
+  }
+  .farm-products__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: clamp(36px, 4vw, 52px);
+    text-align: center;
+  }
+  :global(.farm-products__title),
+  :global(.farm-similar__title) {
+    font-size: clamp(36px, 4.4vw, 64px);
+  }
+  .season-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+  .season-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .lg {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: var(--sand);
+  }
+  .lg--on {
+    background: var(--leaf);
+  }
+  .lg--now {
+    background: var(--white);
+    box-shadow: inset 0 0 0 2px var(--ink);
+  }
+  .products {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 18px;
+  }
+  .product {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border-radius: var(--r-l);
+    rotate: var(--tilt, 0deg);
+    transition:
+      rotate 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+      translate 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.35s;
+  }
+  .product:hover {
+    rotate: 0deg;
+    translate: -2px -5px;
+    box-shadow: var(--print-hover);
+  }
+  .product__head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .product__icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+  }
+  .product__icon :global(.produce) {
+    transition:
+      rotate 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+      scale 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .product:hover .product__icon :global(.produce) {
+    rotate: -12deg;
+    scale: 1.15;
+  }
+  .product__body {
+    flex: 1;
+    min-width: 0;
+  }
+  .product__name {
+    margin: 0;
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 1.2;
+  }
+  .product__season {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .months {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 3px;
+  }
+  .month {
+    display: grid;
+    place-items: center;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--sand);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .month.is-on {
+    background: var(--leaf);
+    color: var(--ink);
+  }
+  .month.is-now {
+    box-shadow: inset 0 0 0 2px var(--ink);
+    color: var(--ink);
+  }
+  .product__season.is-now {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    margin-top: 4px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: var(--butter);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    rotate: -2deg;
+  }
+
+  /* ---------- Le mot du producteur : bande jaune festonnée ---------- */
+  .farm-quote {
+    position: relative;
+    margin: 40px 0;
+    padding: clamp(70px, 9vw, 130px) 0;
+    background: var(--butter) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+  }
+  .farm-quote__edge {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    fill: var(--butter);
+  }
+  .farm-quote__edge--top {
+    bottom: calc(100% - 2px);
+  }
+  .farm-quote__edge--bottom {
+    top: calc(100% - 2px);
+    scale: 1 -1;
+  }
+  .farm-quote__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1000px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .farm-quote__mark {
+    width: 64px;
+    color: var(--coral);
+    margin-bottom: 28px;
+    overflow: visible;
+  }
+  .farm-quote__text {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 72, 'wdth' 86;
+    font-size: clamp(32px, 4vw, 60px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .farm-quote__who {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin: 32px 0 0;
+    padding: 8px 18px 8px 8px;
+    border-radius: 999px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      3px 4px 0 0 var(--ink);
+    color: var(--ink-2);
+    rotate: -1.5deg;
+  }
+  .farm-quote__avatar {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--off);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  /* ---------- Infos pratiques ---------- */
+  .farm-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(22px, 2.6vw, 34px);
+    padding: clamp(90px, 10vw, 140px) 0 clamp(70px, 9vw, 120px);
+  }
+  .info-card {
+    padding: clamp(24px, 3vw, 40px);
+    border-radius: var(--r-xl);
+    rotate: var(--tilt, 0deg);
+  }
+  .info-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .info-card__title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: clamp(26px, 2.4vw, 34px);
+  }
+  .info-card__ico {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 46% 54% 42% 58% / 56% 44% 56% 44%;
+    background: var(--c);
+    rotate: -8deg;
+  }
+  .hours {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+  }
+  .hours th,
+  .hours td {
+    padding: 14px 4px;
+    border-top: 1px dashed var(--line-strong);
+    text-align: left;
+    font-weight: 500;
+  }
+  .hours td {
+    text-align: right;
+    color: var(--ink-2);
+  }
+  .hours td.closed {
+    color: var(--muted);
+  }
+  .hours tr.is-today th,
+  .hours tr.is-today td {
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .hours tr.is-today th::after {
+    content: 'aujourd’hui';
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--butter);
+    box-shadow: 0 0 0 1.5px var(--ink);
+    font-size: 11px;
+    font-weight: 700;
+    vertical-align: middle;
+    rotate: -4deg;
+  }
+  .address {
+    margin: 0 0 18px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .info-card--map {
+    display: flex;
+    flex-direction: column;
+  }
+  .mini-map {
+    position: relative;
+    flex: 1 0 auto;
+    height: clamp(240px, 24vw, 320px);
+    max-height: 420px;
+    border-radius: var(--r-l);
+    overflow: hidden;
+    background: #f1ecdf;
+    contain: strict;
+  }
+  /* la carte ne dépend jamais de son contenu pour sa taille */
+  .mini-map .mini-map__canvas {
+    position: absolute !important;
+    inset: 0;
+  }
+  .mini-map__btn {
+    margin-top: 16px;
+    align-self: flex-start;
+  }
+
+  /* ---------- Dans le même esprit ---------- */
+  .farm-similar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 clamp(90px, 11vw, 150px);
+  }
+  :global(.farm-similar__title) {
+    margin-bottom: clamp(40px, 5vw, 64px);
+    text-align: center;
+  }
+  .similar-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+    gap: 26px;
+  }
+  .sim {
+    position: relative;
+  }
+  .sim:nth-child(1) {
+    rotate: -1.4deg;
+  }
+  .sim:nth-child(2) {
+    margin-top: clamp(14px, 3vw, 40px);
+    rotate: 1.1deg;
+  }
+  .sim:nth-child(3) {
+    margin-top: clamp(4px, 1vw, 12px);
+    rotate: -0.8deg;
+  }
+  .sim__stamp {
+    position: absolute;
+    z-index: 3;
+    top: -16px;
+    left: 16px;
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--c) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow: 2px 3px 0 0 var(--ink);
+    rotate: -12deg;
+    transition:
+      rotate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      scale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .sim__stamp svg {
+    width: 24px;
+    height: auto;
+    fill: var(--white);
+  }
+  .sim:hover .sim__stamp {
+    rotate: 10deg;
+    scale: 1.1;
+  }
+  .farm-similar__more {
+    margin-top: clamp(44px, 5vw, 70px);
+  }
+
+  .mobile-bar {
+    display: none;
+  }
+
+  @media (max-width: 960px) {
+    .farm-hero {
+      grid-template-columns: 1fr;
+    }
+    .farm-hero__art {
+      order: -1;
+      max-width: 560px;
+      width: 100%;
+      margin-inline: auto;
+    }
+    .farm-info {
+      grid-template-columns: 1fr;
+    }
+    .similar-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 640px) {
+    .similar-grid {
+      grid-template-columns: 1fr;
+    }
+    .sim:nth-child(n) {
+      margin-top: 10px;
+    }
+    .farm-hero__actions .btn,
+    .farm-hero__actions .fav-btn {
+      display: none;
+    }
+    .mobile-bar {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      z-index: 40;
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 999px;
+      background: rgba(252, 250, 242, 0.9);
+      backdrop-filter: blur(12px);
+      box-shadow:
+        inset 0 0 0 1px var(--line),
+        var(--shadow-m);
+    }
+    .mobile-bar .btn {
+      flex: 1;
+      border-radius: 999px;
+    }
+  }
+</style>
+
+<script>
+  import * as maplibregl from 'maplibre-gl';
+  import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+  import { gsap, SplitText, ScrollTrigger, onPage, reduced, revealOnScroll } from '../../lib/motion';
+  import { farmBySlug } from '../../data/farms';
+  import { categoryById, type CategoryId } from '../../data/categories';
+  import { communeBySlug } from '../../data/communes';
+  import { distanceKm, formatKm, openStatus } from '../../lib/geo';
+  import { getPrefs } from '../../lib/store';
+  import { farmlizeStyle } from '../../lib/map-style';
+
+  maplibregl.setWorkerUrl(workerUrl);
+
+  onPage('[data-farm]', (root) => {
+    const farm = farmBySlug[root.dataset.farm!];
+    const offs: (() => void)[] = [];
+    let mini: maplibregl.Map | null = null;
+
+    // distance depuis la commune choisie
+    const prefs = getPrefs();
+    const commune = prefs.commune ? communeBySlug[prefs.commune] : null;
+    if (commune) {
+      root.querySelector<HTMLElement>('[data-distance-pill]')!.hidden = false;
+      root.querySelector('[data-distance]')!.textContent = `${formatKm(distanceKm(commune, farm))} de ${commune.name}`;
+    }
+
+    // statut d'ouverture + jour courant
+    const s = openStatus(farm.hours);
+    root.querySelectorAll<HTMLElement>('[data-status]').forEach((el) => {
+      el.textContent = s.label;
+      el.classList.toggle('is-open', s.open);
+    });
+    const today = (new Date().getDay() + 6) % 7;
+    root.querySelector(`tr[data-day="${today}"]`)?.classList.add('is-today');
+
+    // produits de saison
+    const month = new Date().getMonth() + 1;
+    root.querySelectorAll<HTMLElement>('.product').forEach((p) => {
+      const months = p.dataset.months!.split(' ').map(Number);
+      p.querySelector(`.month[data-m="${month}"]`)?.classList.add('is-now');
+      if (months.length < 12) {
+        const label = p.querySelector<HTMLElement>('[data-season-label]')!;
+        const now = months.includes(month);
+        label.textContent = now ? 'De saison en ce moment' : 'Hors saison ce mois-ci';
+        label.classList.toggle('is-now', now);
+      }
+    });
+
+    // retour : revenir à la liste si on vient de là
+    const back = root.querySelector<HTMLAnchorElement>('[data-back]')!;
+    const fromList = document.referrer.includes('/fermes') && !document.referrer.includes(`/fermes/`);
+    const onBack = (e: MouseEvent) => {
+      if (history.length > 1 && (fromList || sessionStorage.getItem('farmlize:explore-view'))) {
+        e.preventDefault();
+        history.back();
+      }
+    };
+    back.addEventListener('click', onBack);
+    offs.push(() => back.removeEventListener('click', onBack));
+
+    // partager
+    const share = root.querySelector<HTMLButtonElement>('[data-share]')!;
+    const toast = root.querySelector<HTMLElement>('[data-toast]')!;
+    const onShare = async () => {
+      const data = { title: `${farm.name} — Farmlize`, text: farm.tagline, url: location.href };
+      try {
+        if (navigator.share) await navigator.share(data);
+        else {
+          await navigator.clipboard.writeText(location.href);
+          toast.textContent = 'Lien copié !';
+          gsap.fromTo(toast, { autoAlpha: 0, y: -6 }, { autoAlpha: 1, y: 0, duration: 0.4, onComplete: () => void gsap.to(toast, { autoAlpha: 0, delay: 1.8 }) });
+        }
+      } catch {}
+    };
+    share.addEventListener('click', onShare);
+    offs.push(() => share.removeEventListener('click', onShare));
+
+    // animations
+    if (reduced()) {
+      gsap.set(root.querySelectorAll('[data-anim], [data-split]'), { autoAlpha: 1 });
+    } else {
+      const tl = gsap.timeline({ delay: 0.15 });
+      tl.fromTo(root.querySelectorAll('[data-anim]'), { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.07 }, 0.1)
+        .from('.float__in', { scale: 0, rotation: -60, duration: 1, ease: 'back.out(2.2)', stagger: 0.12 }, 0.5)
+        .from('.farm-hero__cover .cover-main, .farm-hero__cover .cover-extra', { scale: 0, transformOrigin: '50% 100%', duration: 1, ease: 'back.out(1.6)', stagger: 0.1 }, 0.4);
+
+      // pastilles produits : elles flottent, puis s'envolent chacune à sa vitesse au scroll
+      root.querySelectorAll<HTMLElement>('[data-float]').forEach((el, i) => {
+        gsap.to(el.firstElementChild, { y: i % 2 ? 10 : -12, duration: 3 + i * 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 1.4 });
+        const d = Number(el.dataset.depth || 1);
+        gsap.to(el, { y: -120 * d, rotation: i % 2 ? 14 : -14, ease: 'none', scrollTrigger: { trigger: '.farm-hero', start: 'top top', end: 'bottom top', scrub: true } });
+      });
+      // la couverture se redresse un peu en remontant
+      gsap.to('.farm-hero__cover', { rotation: 1.5, ease: 'none', scrollTrigger: { trigger: '.farm-hero', start: 'top top', end: 'bottom top', scrub: true } });
+      gsap.to('.farm-hero__cover .cover', {
+        yPercent: 8,
+        ease: 'none',
+        scrollTrigger: { trigger: '.farm-hero', start: 'top top', end: 'bottom top', scrub: true },
+      });
+
+      root.querySelectorAll<HTMLElement>('[data-split]').forEach((el) =>
+        SplitText.create(el, {
+          type: 'lines',
+          mask: 'lines',
+          autoSplit: true,
+          onSplit: (self) => {
+            gsap.set(el, { autoAlpha: 1 });
+            return gsap.from(self.lines, { yPercent: 105, duration: 1.1, stagger: 0.08, scrollTrigger: { trigger: el, start: 'top 85%', once: true } });
+          },
+        }),
+      );
+
+      // le guillemet tombe et rebondit quand la citation arrive
+      gsap.from('[data-quote-mark]', { y: -80, rotation: -40, scale: 0.4, duration: 1.1, ease: 'bounce.out', scrollTrigger: { trigger: '.farm-quote', start: 'top 75%', once: true } });
+
+      // les mois de saison se remplissent au scroll
+      ScrollTrigger.batch(root.querySelectorAll('.product'), {
+        start: 'top 90%',
+        once: true,
+        onEnter: (batch) =>
+          batch.forEach((p, i) =>
+            gsap.from(p.querySelectorAll('.month.is-on'), { scaleY: 0, transformOrigin: '50% 100%', duration: 0.5, stagger: 0.03, delay: 0.3 + i * 0.08, ease: 'back.out(2)' }),
+          ),
+      });
+
+      // les tampons cœur des fermes voisines se posent d'un coup
+      gsap.from(root.querySelectorAll('.sim__stamp'), {
+        scale: 0,
+        rotation: -120,
+        duration: 0.8,
+        ease: 'back.out(2.6)',
+        stagger: 0.12,
+        delay: 0.4,
+        scrollTrigger: { trigger: '.similar-grid', start: 'top 85%', once: true },
+      });
+    }
+    revealOnScroll(root);
+
+    // mini-carte
+    const initMini = async () => {
+      const el = root.querySelector<HTMLElement>('[data-mini-map]')!;
+      let style: any;
+      try {
+        style = await farmlizeStyle();
+      } catch {
+        return;
+      }
+      if (!root.isConnected) return;
+      mini = new maplibregl.Map({
+        container: el,
+        style,
+        center: [farm.lng, farm.lat],
+        zoom: 12.5,
+        interactive: false,
+        attributionControl: { compact: true },
+      });
+      const pin = document.createElement('div');
+      pin.className = 'mk';
+      pin.style.setProperty('--c', categoryById[farm.cats[0] as CategoryId].color);
+      pin.innerHTML = `<span class="mk__pin"><svg class="riso" viewBox="0 0 100 100" aria-hidden="true"><use href="#ico-${farm.cats[0]}"></use></svg></span>`;
+      new maplibregl.Marker({ element: pin, anchor: 'bottom' }).setLngLat([farm.lng, farm.lat]).addTo(mini);
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 80%',
+        once: true,
+        onEnter: () => {
+          mini?.easeTo({ zoom: 13.5, duration: reduced() ? 0 : 2200 });
+          // l'épingle tombe sur la ferme
+          if (!reduced()) gsap.from(pin.firstElementChild, { y: -60, scale: 0.4, duration: 0.9, ease: 'bounce.out', delay: 0.3 });
+        },
+      });
+    };
+    initMini();
+
+    return () => {
+      offs.forEach((o) => o());
+      mini?.remove();
+    };
+  });
+</script>
+
+<style is:global>
+  /* Styles du marqueur réutilisés sur la mini-carte */
+  .mk {
+    width: 48px;
+    height: 58px;
+  }
+  .mk__pin {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow:
+      0 0 0 3px #fff,
+      0 0 0 4.5px var(--ink),
+      0 10px 18px -6px rgba(53, 34, 0, 0.45);
+  }
+  .mk__pin::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 2px);
+    margin-left: -7px;
+    border: 7px solid transparent;
+    border-top: 9px solid var(--ink);
+    border-bottom: 0;
+  }
+  .mk__pin svg {
+    width: 32px;
+    height: 32px;
+  }
+</style>

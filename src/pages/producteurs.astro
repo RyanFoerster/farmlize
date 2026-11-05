@@ -1,0 +1,1193 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import Icon from '../components/Icon.astro';
+import Produce from '../components/Produce.astro';
+import FunTitle from '../components/FunTitle.astro';
+import Floaters from '../components/Floaters.astro';
+import Ribbon from '../components/Ribbon.astro';
+import IlloFarmer from '../components/illos/IlloFarmer.astro';
+import IlloBasket from '../components/illos/IlloBasket.astro';
+import { categories } from '../data/categories';
+import { communes } from '../data/communes';
+import { ink } from '../lib/riso';
+
+const labels = ['Bio', 'Libre-service', 'Paniers', 'Cueillette', 'Plein air', 'Visites', 'Livraison', 'Ateliers'];
+const faq = [
+  {
+    q: 'Combien ça coûte ?',
+    a: "Rien. L'inscription et la fiche sont gratuites pendant toute la phase de lancement. Pas de commission sur vos ventes : vos clients vous paient directement, à la ferme.",
+  },
+  {
+    q: 'Je ne vends qu’à certaines périodes, est-ce un problème ?',
+    a: 'Pas du tout. Vous indiquez vos horaires et la saisonnalité de chaque produit : votre fiche affiche automatiquement ce qui est disponible ce mois-ci.',
+  },
+  {
+    q: 'Qui peut s’inscrire ?',
+    a: 'Toute personne qui produit ou transforme en Belgique et vend en direct : maraîchers, éleveurs, fromagers, apiculteurs, boulangers paysans, vergers, distributeurs à la ferme…',
+  },
+  {
+    q: 'Puis-je modifier ma fiche ensuite ?',
+    a: 'Oui, à tout moment : horaires, produits, photos, fermetures exceptionnelles. Les changements sont visibles immédiatement.',
+  },
+];
+
+// formes organiques (chaque paire a la même structure : elles se déforment de l'une à l'autre)
+const heroBlob = [
+  'M200 22 C 296 18 382 86 378 196 C 374 300 302 382 196 378 C 92 374 20 300 24 198 C 28 98 104 26 200 22 Z',
+  'M208 30 C 312 40 386 112 370 210 C 354 310 280 380 184 370 C 84 360 14 286 30 186 C 46 88 112 20 208 30 Z',
+];
+const perkBlobs: [string, string][] = [
+  ['M60 6 C 92 6 116 30 114 62 C 112 94 88 116 58 114 C 26 112 4 88 6 58 C 8 28 30 6 60 6 Z', 'M64 4 C 96 10 118 36 112 66 C 106 98 80 118 52 112 C 22 106 2 80 8 52 C 14 22 34 0 64 4 Z'],
+  ['M56 6 C 88 2 114 26 116 58 C 118 92 92 116 60 116 C 28 116 4 94 4 62 C 4 30 26 10 56 6 Z', 'M60 8 C 92 8 116 34 112 64 C 108 96 86 114 56 112 C 24 110 6 86 8 56 C 10 28 30 8 60 8 Z'],
+  ['M62 4 C 96 4 118 32 114 64 C 110 96 84 118 54 114 C 24 110 4 86 6 56 C 8 26 30 4 62 4 Z', 'M58 8 C 90 4 116 28 116 60 C 116 94 90 116 58 114 C 28 112 6 92 6 60 C 6 30 28 12 58 8 Z'],
+];
+const perks = [
+  { icon: 'sparkle', color: 'var(--butter)', title: 'Gratuit, sans commission', text: 'Vos clients vous paient directement. Farmlize ne prend rien au passage.' },
+  { icon: 'map', color: 'var(--coral)', title: 'Visible sur la carte', text: 'Votre ferme apparaît dès qu’un habitant cherche vos produits dans votre région.' },
+  { icon: 'calendar', color: 'var(--leaf)', title: 'Toujours à jour', text: 'Horaires, saisons, fermetures exceptionnelles : tout se modifie en un instant.' },
+] as const;
+const steps = [
+  { color: 'var(--coral)', title: 'Présentez votre ferme', text: 'Son nom, sa commune, ce qui la rend unique. Deux minutes suffisent.', cat: 'legumes' },
+  { color: 'var(--butter)', title: 'Ajoutez vos produits', text: 'Choisissez vos catégories, vos labels et la saisonnalité de chaque produit.', cat: 'fromages' },
+  { color: 'var(--leaf)', title: 'On valide, vous êtes en ligne', text: 'Notre équipe vérifie votre fiche sous 48 h, puis vos voisins peuvent vous trouver.', cat: 'miel' },
+] as const;
+const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
+---
+
+<Base title="Ajouter ma ferme" description="Inscrivez gratuitement votre ferme sur Farmlize et vendez en direct aux habitants de votre région.">
+  <SiteHeader />
+  <main class="prod" data-prod>
+    <!-- HERO -->
+    <section class="container p-hero">
+      <div class="p-hero__text">
+        <FunTitle as="h1" class="display p-hero__title" text={'Votre ferme mérite\nd’être ~trouvée~.'} />
+        <p class="lead" data-reveal>
+          Maraîchers, éleveurs, fromagers, apiculteurs : rejoignez la carte des fermes locales de Belgique. Inscription
+          gratuite, fiche prête en dix minutes, et des voisins qui viennent enfin jusqu’à vous.
+        </p>
+        <div class="p-hero__actions" data-reveal>
+          <a href="#inscription" class="btn">Inscrire ma ferme <Icon name="arrow" size={18} class="icon-arrow" /></a>
+          <a href="#comment" class="link-underline">Comment ça marche</a>
+        </div>
+      </div>
+      <div class="p-hero__art" aria-hidden="true">
+        <svg class="p-hero__blob riso" viewBox="0 0 400 400" data-anim-illo data-hero-blob-svg>
+          <defs><clipPath id="p-sun"><circle cx="300" cy="96" r="54"></circle></clipPath></defs>
+          <path d={heroBlob[0]} data-alt={heroBlob[1]} fill="var(--butter)" data-hero-blob></path>
+          <path d={heroBlob[0]} data-alt={heroBlob[1]} fill="url(#ri-o-b)" filter="url(#ri-dot)" data-hero-blob></path>
+          <g class="ri-bob" style="--a:-6px; --dur:4s">
+            <circle cx="300" cy="96" r="54" fill={ink.orange}></circle>
+            <g clip-path="url(#p-sun)" fill="var(--butter)">
+              <rect x="240" y="106" width="120" height="5"></rect>
+              <rect x="240" y="118" width="120" height="8"></rect>
+              <rect x="240" y="133" width="120" height="12"></rect>
+            </g>
+          </g>
+        </svg>
+        <IlloFarmer class="p-hero__img" data-anim-illo data-hero-farmer />
+        <span class="p-bubble p-bubble--1" data-bubble data-depth="1.3"><span class="p-bubble__in print print--sm" style="--off: var(--coral)"><Produce cat="legumes" size="100%" /></span></span>
+        <span class="p-bubble p-bubble--2" data-bubble data-depth="0.7"><span class="p-bubble__in print print--sm" style="--off: var(--sky)"><Produce cat="fromages" size="100%" /></span></span>
+        <span class="p-bubble p-bubble--3" data-bubble data-depth="1"><span class="p-bubble__in print print--sm" style="--off: var(--leaf)"><Produce cat="miel" size="100%" /></span></span>
+      </div>
+    </section>
+
+    <!-- AVANTAGES -->
+    <section class="p-perks">
+      <Floaters
+        items={[
+          { name: 'Pommes', x: 6, y: 18, rot: -10, depth: 1.2 },
+          { name: 'Carottes', x: 94, y: 12, rot: 16, depth: 0.8 },
+        ]}
+      />
+      <div class="container">
+        <FunTitle class="title p-perks__title" text={'Simple, gratuit\net {Fraises} [local|leaf].'} />
+        <div class="p-perks__grid" data-stagger>
+          {
+            perks.map((p, i) => (
+              <article class="perk print" style={`--off:${p.color}; --c:${p.color}; --tilt:${[-1.4, 0.9, -0.6][i]}deg`} data-perk>
+                <span class="perk__icon">
+                  <svg class="perk__blob riso" viewBox="0 0 120 120" aria-hidden="true">
+                    <path d={perkBlobs[i][0]} data-alt={perkBlobs[i][1]} fill="var(--c)" data-perk-blob />
+                  </svg>
+                  <span class="perk__glyph" data-perk-glyph>
+                    <Icon name={p.icon} size={30} />
+                  </span>
+                </span>
+                <h2 class="perk__title">{p.title}</h2>
+                <p>{p.text}</p>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <Ribbon class="p-ribbon" color="var(--butter)" shape="wave" text="GRATUIT - SANS COMMISSION - EN DIRECT - DE LA FERME À LA TABLE - " speed={0.8} />
+
+    <!-- COMMENT ÇA MARCHE -->
+    <section class="container p-how" id="comment">
+      <div class="p-how__head">
+        <FunTitle class="title p-how__title" text="Trois étapes, et votre ferme est sur la [carte|sky]." />
+      </div>
+      <ol class="timeline" data-timeline>
+        <span class="timeline__line"><span data-line></span></span>
+        {
+          steps.map((s, i) => (
+            <li class="tl-step" style={`--c:${s.color}`}>
+              <span class="tl-step__dot">{i + 1}</span>
+              <div class="tl-step__card print print--sm" style={`--off:${s.color}`}>
+                <span class="tl-step__art" aria-hidden="true">
+                  <Produce cat={s.cat} size="100%" />
+                </span>
+                <h3>{s.title}</h3>
+                <p>{s.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <!-- FORMULAIRE -->
+    <section class="container p-form" id="inscription">
+      <div class="form-card" data-form-card data-reveal="scale">
+        <div class="form-card__side">
+          <FunTitle class="title form-card__title" text={'Rejoindre\n[Farmlize|coral]'} />
+          <ol class="form-steps" data-form-steps>
+            <li class="is-on"><span>1</span> Votre ferme</li>
+            <li><span>2</span> Vos produits</li>
+            <li><span>3</span> Vos coordonnées</li>
+          </ol>
+          <div class="form-card__plate riso">
+            <IlloBasket class="form-card__basket" data-form-basket />
+          </div>
+        </div>
+
+        <form class="form" data-form novalidate>
+          <div class="form__progress"><span data-progress-bar></span></div>
+
+          <fieldset class="form__step" data-fstep="1">
+            <legend class="sr-only">Votre ferme</legend>
+            <label class="f-field">
+              <span>Nom de la ferme</span>
+              <input name="farm" required placeholder="ex. Ferme du Grand Pré" autocomplete="organization" />
+              <em class="f-error">Comment s’appelle votre ferme ?</em>
+            </label>
+            <label class="f-field">
+              <span>Commune</span>
+              <input name="commune" required list="communes-list" placeholder="ex. Gembloux" autocomplete="address-level2" />
+              <datalist id="communes-list">
+                {communes.map((c) => <option value={c.name}>{c.zip} · {c.province}</option>)}
+              </datalist>
+              <em class="f-error">Indiquez la commune de la ferme.</em>
+            </label>
+            <label class="f-field">
+              <span>En une phrase, qu’est-ce qui rend votre ferme unique&nbsp;? <small>(facultatif)</small></span>
+              <textarea name="pitch" rows="3" placeholder="ex. Légumes anciens cultivés à la main, sans serre chauffée."></textarea>
+            </label>
+          </fieldset>
+
+          <fieldset class="form__step" data-fstep="2" hidden>
+            <legend class="f-legend">Que vendez-vous&nbsp;?</legend>
+            <div class="f-cats" data-f-cats>
+              {
+                categories.map((c) => (
+                  <button type="button" class="f-cat" data-fcat={c.id} aria-pressed="false" style={`--c:${c.color}; --t:${c.tint}`}>
+                    <Produce cat={c.id} size={40} />
+                    <span>{c.label}</span>
+                  </button>
+                ))
+              }
+            </div>
+            <em class="f-error f-error--block" data-cats-error>Choisissez au moins une catégorie.</em>
+            <p class="f-legend">Sur place</p>
+            <div class="f-labels">
+              {
+                labels.map((l) => (
+                  <button type="button" class="chip" data-flabel={l} aria-pressed="false">
+                    {l}
+                  </button>
+                ))
+              }
+            </div>
+          </fieldset>
+
+          <fieldset class="form__step" data-fstep="3" hidden>
+            <legend class="sr-only">Vos coordonnées</legend>
+            <div class="f-row">
+              <label class="f-field">
+                <span>Prénom & nom</span>
+                <input name="name" required autocomplete="name" placeholder="ex. Céline Dupont" />
+                <em class="f-error">Comment vous appelez-vous ?</em>
+              </label>
+              <label class="f-field">
+                <span>Téléphone <small>(facultatif)</small></span>
+                <input name="phone" type="tel" autocomplete="tel" placeholder="ex. 0470 12 34 56" />
+              </label>
+            </div>
+            <label class="f-field">
+              <span>E-mail</span>
+              <input name="email" type="email" required autocomplete="email" placeholder="vous@exemple.be" />
+              <em class="f-error">Une adresse e-mail valide, s’il vous plaît.</em>
+            </label>
+            <label class="f-check">
+              <input type="checkbox" name="consent" required />
+              <span>J’accepte d’être recontacté·e par l’équipe Farmlize au sujet de ma fiche.</span>
+            </label>
+            <em class="f-error f-error--block" data-consent-error>Merci de cocher cette case pour continuer.</em>
+          </fieldset>
+
+          <div class="form__success" data-success hidden>
+            <div class="success__art riso" data-success-art><Produce cat="legumes" size={96} /></div>
+            <h3 class="title">Merci, <span data-success-name>et à très vite</span>&nbsp;!</h3>
+            <p class="lead">
+              Votre demande pour <strong data-success-farm>votre ferme</strong> est bien arrivée. Notre équipe vous
+              recontacte sous 48 h pour finaliser la fiche.
+            </p>
+            <p class="form__proto">Prototype : aucune donnée n’a été envoyée.</p>
+            <a href="/fermes" class="btn">Voir la carte des fermes <Icon name="arrow" size={18} class="icon-arrow" /></a>
+          </div>
+
+          <div class="form__nav" data-form-nav>
+            <button type="button" class="btn btn--ghost btn--sm" data-fprev hidden>Retour</button>
+            <button type="button" class="btn btn--sm" data-fnext>Continuer <Icon name="arrow" size={16} class="icon-arrow" /></button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="p-faq">
+      <Floaters
+        items={[
+          { name: 'Poires', x: 5, y: 22, rot: -8, depth: 1.1, desk: true },
+          { name: 'Courges', x: 95, y: 44, size: 0.85, rot: 12, depth: 0.9, desk: true },
+          { name: 'Cerises', x: 6, y: 76, size: 0.75, rot: 10, depth: 1.4, desk: true },
+        ]}
+      />
+      <div class="container p-faq__inner">
+        <FunTitle class="title p-faq__title" text="Vos questions, {heart} nos [réponses|pink]." />
+        <div class="faq" data-stagger>
+          {
+            faq.map((f, i) => (
+              <details class="faq__item print print--sm" data-faq style={`--off:${faqOff[i % 4]}`}>
+                <summary>
+                  {f.q}
+                  <span class="faq__plus" aria-hidden="true">
+                    <Icon name="plus" size={20} />
+                  </span>
+                </summary>
+                <div class="faq__body">
+                  <p>{f.a}</p>
+                </div>
+              </details>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  /* ---------- Hero ---------- */
+  .p-hero {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: clamp(32px, 5vw, 72px);
+    align-items: center;
+    padding: clamp(40px, 6vw, 90px) 0 clamp(56px, 7vw, 100px);
+  }
+  :global(.p-hero__title) {
+    font-size: clamp(48px, 6.6vw, 108px);
+  }
+  .p-hero .lead {
+    max-width: 540px;
+    margin: clamp(22px, 2.4vw, 32px) 0 32px;
+  }
+  .p-hero__actions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .p-hero__art {
+    position: relative;
+    display: grid;
+    place-items: end center;
+    min-height: 540px;
+  }
+  .p-hero__blob {
+    position: absolute;
+    inset: 4% -2% 0 4%;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  :global(.p-hero__img) {
+    position: relative;
+    width: min(76%, 360px);
+    height: auto;
+  }
+  .p-bubble {
+    position: absolute;
+    z-index: 2;
+    width: clamp(70px, 7.4vw, 108px);
+  }
+  .p-bubble__in {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    padding: 16px;
+    border-radius: 50%;
+  }
+  .p-bubble--1 {
+    left: 0;
+    top: 22%;
+  }
+  .p-bubble--1 .p-bubble__in {
+    rotate: -8deg;
+  }
+  .p-bubble--2 {
+    right: -2%;
+    top: 8%;
+  }
+  .p-bubble--2 .p-bubble__in {
+    rotate: 6deg;
+  }
+  .p-bubble--3 {
+    right: 6%;
+    bottom: 14%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .p-bubble__in {
+      animation: p-bob 3.4s ease-in-out infinite alternate;
+    }
+    .p-bubble--2 .p-bubble__in {
+      animation-duration: 4s;
+      animation-delay: -1.2s;
+    }
+    .p-bubble--3 .p-bubble__in {
+      animation-duration: 3.7s;
+      animation-delay: -2s;
+    }
+  }
+  @keyframes p-bob {
+    to {
+      translate: 0 -12px;
+    }
+  }
+
+  /* ---------- Avantages ---------- */
+  .p-perks {
+    position: relative;
+    padding: clamp(40px, 6vw, 90px) 0 clamp(70px, 9vw, 130px);
+  }
+  :global(.p-perks__title) {
+    max-width: 760px;
+    margin: 0 auto clamp(44px, 5vw, 72px);
+    font-size: clamp(36px, 4.6vw, 68px);
+    text-align: center;
+  }
+  .p-perks__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(20px, 2.4vw, 32px);
+  }
+  .perk {
+    padding: 30px 30px 32px;
+    border-radius: var(--r-l);
+    rotate: var(--tilt, 0deg);
+    transition:
+      rotate 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+      translate 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.35s;
+  }
+  .perk:nth-child(2) {
+    margin-top: clamp(20px, 3vw, 44px);
+  }
+  .perk:hover {
+    rotate: 0deg;
+    translate: -2px -6px;
+    box-shadow: var(--print-hover);
+  }
+  .perk__icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    margin-bottom: 24px;
+  }
+  .perk__blob {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .perk__glyph {
+    position: relative;
+    display: grid;
+    color: var(--ink);
+  }
+  .perk__title {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 32, 'wdth' 90;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .perk p {
+    margin: 0;
+    color: var(--ink-2);
+  }
+
+  :global(.p-ribbon) {
+    margin: clamp(-30px, -2vw, -10px) 0 clamp(30px, 4vw, 60px);
+  }
+
+  /* ---------- Comment ça marche ---------- */
+  .p-how {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: clamp(32px, 6vw, 100px);
+    padding: clamp(40px, 5vw, 70px) 0 clamp(80px, 10vw, 140px);
+  }
+  :global(.p-how__title) {
+    font-size: clamp(36px, 4.4vw, 64px);
+  }
+  .p-how__head {
+    position: sticky;
+    top: 130px;
+    align-self: start;
+  }
+  .timeline {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(36px, 4vw, 56px);
+  }
+  /* rail pointillé, puis un trait d'encre qui le recouvre au scroll */
+  .timeline__line {
+    position: absolute;
+    left: 29px;
+    top: 30px;
+    bottom: 30px;
+    width: 3px;
+    background: repeating-linear-gradient(to bottom, var(--line-strong) 0 6px, transparent 6px 14px);
+  }
+  .timeline__line span {
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    background: var(--ink);
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+  .tl-step {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 26px;
+  }
+  .tl-step__dot {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 62px;
+    height: 62px;
+    margin-top: 10px;
+    border-radius: 50%;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      3px 4px 0 0 var(--line-strong);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 24px;
+    transition:
+      background-color 0.4s,
+      box-shadow 0.4s;
+  }
+  .tl-step.is-done .tl-step__dot {
+    background-color: var(--c);
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      3px 4px 0 0 var(--ink);
+  }
+  .tl-step__card {
+    position: relative;
+    flex: 1;
+    padding: 24px 26px 26px;
+    border-radius: var(--r-l);
+  }
+  .tl-step:nth-child(odd) .tl-step__card {
+    rotate: 0.8deg;
+  }
+  .tl-step:nth-child(even) .tl-step__card {
+    rotate: -0.8deg;
+  }
+  .tl-step__art {
+    position: absolute;
+    right: 18px;
+    top: -26px;
+    width: 64px;
+    rotate: 10deg;
+  }
+  .tl-step h3 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 32, 'wdth' 90;
+    font-size: clamp(24px, 2.2vw, 30px);
+    letter-spacing: -0.02em;
+    margin: 0 70px 8px 0;
+  }
+  .tl-step p {
+    margin: 0;
+    color: var(--ink-2);
+    max-width: 440px;
+  }
+
+  /* ---------- Formulaire ---------- */
+  .p-form {
+    padding-bottom: clamp(80px, 10vw, 140px);
+    scroll-margin-top: 110px;
+  }
+  .form-card {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    border-radius: var(--r-xl);
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      8px 10px 0 0 var(--coral);
+    overflow: hidden;
+  }
+  .form-card__side {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(28px, 4vw, 52px);
+    background: var(--ink) url('/textures/paper-grain-light.png') 0 0 / 240px 240px;
+    color: var(--cream);
+    overflow: hidden;
+  }
+  :global(.form-card__title) {
+    font-size: clamp(34px, 3.6vw, 52px);
+    margin: 4px 0 34px;
+    color: var(--cream);
+  }
+  .form-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .form-steps li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 600;
+    color: rgba(252, 250, 242, 0.45);
+    transition: color 0.4s;
+  }
+  .form-steps li span {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+    font-size: 14px;
+    transition:
+      background 0.4s,
+      color 0.4s,
+      box-shadow 0.4s,
+      rotate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .form-steps li.is-on {
+    color: var(--cream);
+  }
+  .form-steps li.is-done span {
+    background: var(--butter);
+    color: var(--ink);
+    box-shadow: 2px 3px 0 0 var(--coral);
+    rotate: -10deg;
+  }
+  .form-card__plate {
+    display: grid;
+    place-items: center;
+    width: min(90%, 300px);
+    aspect-ratio: 1;
+    margin: auto auto -90px;
+    border-radius: 50%;
+    background: var(--butter);
+  }
+  :global(.form-card__basket) {
+    width: 72%;
+    height: auto;
+    margin-top: -18%;
+  }
+  .form {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(28px, 4vw, 52px);
+    min-height: 560px;
+  }
+  /* barre de progression rayée qui défile, comme une bande d'imprimerie */
+  .form__progress {
+    height: 8px;
+    border-radius: 8px;
+    background: var(--sand);
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+  .form__progress span {
+    display: block;
+    height: 100%;
+    width: 33.33%;
+    border-radius: inherit;
+    background: repeating-linear-gradient(-45deg, var(--coral) 0 8px, #f08a74 8px 16px) 0 0 / 22.6px 100%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .form__progress span {
+      animation: p-stripes 0.9s linear infinite;
+    }
+  }
+  @keyframes p-stripes {
+    to {
+      background-position: 22.6px 0;
+    }
+  }
+  .form__step {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .form__step[hidden] {
+    display: none;
+  }
+  .f-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .f-field > span {
+    font-weight: 600;
+    font-size: var(--fs-ctl);
+  }
+  .f-field small {
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .f-field input,
+  .f-field textarea {
+    width: 100%;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 1.5px solid var(--line);
+    background: var(--cream);
+    font-size: 16px;
+    outline: none;
+    resize: vertical;
+    transition:
+      border-color 0.3s,
+      box-shadow 0.35s,
+      background 0.3s,
+      translate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  /* au focus, le champ se « décolle » avec sa plaque de couleur décalée */
+  .f-field input:focus,
+  .f-field textarea:focus {
+    border-color: var(--ink);
+    background: var(--white);
+    box-shadow: 4px 5px 0 0 var(--butter);
+    translate: -2px -2px;
+  }
+  .f-error {
+    display: none;
+    font-style: normal;
+    font-size: 13px;
+    font-weight: 600;
+    color: #c4462f;
+  }
+  .is-invalid .f-error,
+  .f-error--block.is-shown {
+    display: block;
+  }
+  .is-invalid input {
+    border-color: #e39a86;
+    box-shadow: 4px 5px 0 0 #f6c9bd;
+  }
+  .f-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .f-legend {
+    font-weight: 700;
+    font-size: 17px;
+    margin: 0;
+    padding: 0;
+  }
+  .f-cats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .f-cat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px 10px 10px;
+    border-radius: 18px;
+    background: var(--cream);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    font-weight: 600;
+    text-align: left;
+    transition:
+      background 0.35s,
+      box-shadow 0.35s,
+      rotate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      translate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .f-cat:hover {
+    box-shadow:
+      inset 0 0 0 1.5px var(--line-strong),
+      3px 4px 0 0 var(--t);
+  }
+  .f-cat[aria-pressed='true'] {
+    background: var(--t);
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      4px 5px 0 0 var(--c);
+    translate: -2px -2px;
+    rotate: -1.2deg;
+  }
+  .f-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .f-check {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 15px;
+    color: var(--ink-2);
+    cursor: pointer;
+  }
+  .f-check input {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--ink);
+  }
+  .form__nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 32px;
+  }
+  .form__nav [data-fnext] {
+    margin-left: auto;
+  }
+  .form__success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex: 1;
+    gap: 6px;
+  }
+  .form__success[hidden] {
+    display: none;
+  }
+  .form__success .title {
+    font-size: clamp(32px, 3.4vw, 48px);
+    margin-top: 18px;
+  }
+  .form__success .lead {
+    max-width: 420px;
+    margin: 6px 0 4px;
+  }
+  .form__proto {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 22px;
+  }
+  .success__art {
+    display: grid;
+    place-items: center;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--butter);
+  }
+  :global(.confetti) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 120;
+    pointer-events: none;
+    width: 44px;
+    height: 44px;
+  }
+
+  /* ---------- FAQ ---------- */
+  .p-faq {
+    position: relative;
+    padding-bottom: clamp(90px, 11vw, 160px);
+  }
+  .p-faq__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 880px;
+  }
+  :global(.p-faq__title) {
+    margin-bottom: clamp(36px, 4vw, 56px);
+    font-size: clamp(36px, 4.4vw, 64px);
+    text-align: center;
+  }
+  .faq {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .faq__item {
+    padding: 0 26px;
+    border-radius: 22px;
+    transition:
+      box-shadow 0.35s,
+      translate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .faq__item:hover,
+  .faq__item[open] {
+    box-shadow: var(--print-hover);
+    translate: -2px -3px;
+  }
+  .faq__item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 0;
+    font-weight: 700;
+    font-size: clamp(17px, 1.5vw, 20px);
+    cursor: pointer;
+    list-style: none;
+  }
+  .faq__item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq__plus {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--cream);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    transition:
+      transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background 0.3s,
+      box-shadow 0.3s;
+  }
+  .faq__item[open] .faq__plus {
+    transform: rotate(135deg);
+    background: var(--off);
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .faq__body {
+    overflow: hidden;
+  }
+  .faq__body p {
+    margin: 0;
+    padding: 0 60px 24px 0;
+    color: var(--ink-2);
+    font-size: 17px;
+  }
+
+  @media (max-width: 960px) {
+    .p-hero,
+    .p-how,
+    .form-card {
+      grid-template-columns: 1fr;
+    }
+    .p-hero__art {
+      min-height: 400px;
+    }
+    .p-perks__grid {
+      grid-template-columns: 1fr;
+    }
+    .perk:nth-child(2) {
+      margin-top: 0;
+    }
+    .p-how__head {
+      position: static;
+    }
+    .form-card__plate {
+      display: none;
+    }
+  }
+  @media (max-width: 560px) {
+    .f-row,
+    .f-cats {
+      grid-template-columns: 1fr;
+    }
+    .faq__item {
+      padding: 0 18px;
+    }
+    .faq__body p {
+      padding-right: 0;
+    }
+  }
+</style>
+
+<script>
+  import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin';
+  import { gsap, ScrollTrigger, onPage, reduced, revealOnScroll } from '../lib/motion';
+  import { categories } from '../data/categories';
+
+  gsap.registerPlugin(MorphSVGPlugin);
+
+  onPage('[data-prod]', (root) => {
+    const offs: (() => void)[] = [];
+    const on = (el: EventTarget, ev: string, fn: (e: any) => void) => {
+      el.addEventListener(ev, fn);
+      offs.push(() => el.removeEventListener(ev, fn));
+    };
+
+    if (reduced()) gsap.set(root.querySelectorAll('[data-anim-illo]'), { autoAlpha: 1 });
+    else {
+      // --- hero : la tache de soleil s'étale, le fermier monte, les produits sautent en place
+      gsap
+        .timeline({ delay: 0.15 })
+        .fromTo('[data-hero-blob-svg]', { scale: 0.5, rotation: -25, autoAlpha: 0 }, { scale: 1, rotation: 0, autoAlpha: 1, duration: 1.4, ease: 'back.out(1.5)', transformOrigin: '50% 50%' })
+        .fromTo('[data-hero-farmer]', { yPercent: 28, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 1.3, ease: 'expo.out' }, 0.25)
+        .from('.p-bubble__in', { scale: 0, rotation: -60, duration: 0.9, ease: 'back.out(2.4)', stagger: 0.12 }, 0.7);
+      // la tache respire
+      root.querySelectorAll<SVGPathElement>('[data-hero-blob]').forEach((p) =>
+        gsap.to(p, { morphSVG: p.dataset.alt!, duration: 4.5, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
+      );
+      // au scroll : les produits s'envolent chacun à sa vitesse, le fermier descend un peu
+      root.querySelectorAll<HTMLElement>('[data-bubble]').forEach((b) => {
+        const d = Number(b.dataset.depth || 1);
+        gsap.to(b, { y: -110 * d, rotation: d > 1 ? -12 : 10, ease: 'none', scrollTrigger: { trigger: '.p-hero', start: 'top top', end: 'bottom top', scrub: true } });
+      });
+      gsap.to('[data-hero-farmer]', { yPercent: 8, ease: 'none', scrollTrigger: { trigger: '.p-hero', start: 'top top', end: 'bottom top', scrub: true } });
+
+      // --- avantages : la tache se déforme et l'icône saute au survol
+      root.querySelectorAll<HTMLElement>('[data-perk]').forEach((card) => {
+        const blob = card.querySelector<SVGPathElement>('[data-perk-blob]')!;
+        const glyph = card.querySelector<HTMLElement>('[data-perk-glyph]')!;
+        const shape = blob.getAttribute('d')!;
+        const enter = () => {
+          gsap.to(blob, { morphSVG: blob.dataset.alt!, duration: 0.9, ease: 'elastic.out(1, 0.45)', overwrite: true });
+          gsap.fromTo(glyph, { y: 0, rotation: 0 }, { keyframes: [{ y: -14, rotation: -14, duration: 0.25, ease: 'power2.out' }, { y: 0, rotation: 0, duration: 0.6, ease: 'bounce.out' }] });
+        };
+        const leave = () => gsap.to(blob, { morphSVG: shape, duration: 0.8, ease: 'elastic.out(1, 0.5)', overwrite: true });
+        on(card, 'mouseenter', enter);
+        on(card, 'mouseleave', leave);
+      });
+
+      // --- étapes : le trait d'encre suit le scroll, chaque pastille se remplit et rebondit quand il l'atteint
+      const steps = [...root.querySelectorAll<HTMLElement>('.tl-step')];
+      gsap.to('[data-line]', {
+        scaleY: 1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '[data-timeline]',
+          start: 'top 60%',
+          end: 'bottom 60%',
+          scrub: 0.6,
+          onUpdate: (self) =>
+            steps.forEach((s, i) => {
+              const done = self.progress >= i / (steps.length - 1) - 0.02;
+              if (done === s.classList.contains('is-done')) return;
+              s.classList.toggle('is-done', done);
+              if (done) gsap.fromTo(s.querySelector('.tl-step__dot'), { scale: 0.6, rotation: -40 }, { scale: 1, rotation: 0, duration: 0.8, ease: 'back.out(3)' });
+            }),
+        },
+      });
+      gsap.fromTo(
+        root.querySelectorAll('.tl-step__card'),
+        { autoAlpha: 0, x: 50, rotation: 4 },
+        { autoAlpha: 1, x: 0, rotation: 0, stagger: 0.15, duration: 1, ease: 'back.out(1.4)', scrollTrigger: { trigger: '[data-timeline]', start: 'top 75%', once: true } },
+      );
+      gsap.from(root.querySelectorAll('.tl-step__art'), {
+        scale: 0,
+        rotation: -60,
+        stagger: 0.15,
+        duration: 0.8,
+        delay: 0.4,
+        ease: 'back.out(2.4)',
+        scrollTrigger: { trigger: '[data-timeline]', start: 'top 75%', once: true },
+      });
+    }
+    revealOnScroll(root);
+
+    // --- FAQ animée
+    root.querySelectorAll<HTMLDetailsElement>('[data-faq]').forEach((d) => {
+      const summary = d.querySelector('summary')!;
+      const body = d.querySelector<HTMLElement>('.faq__body')!;
+      on(summary, 'click', (e: MouseEvent) => {
+        e.preventDefault();
+        if (reduced()) return void (d.open = !d.open);
+        if (d.open) {
+          gsap.to(body, { height: 0, duration: 0.45, ease: 'fz.inOut', onComplete: () => void ((d.open = false), gsap.set(body, { clearProps: 'height' })) });
+        } else {
+          d.open = true;
+          gsap.fromTo(body, { height: 0 }, { height: 'auto', duration: 0.55, ease: 'fz.inOut', onComplete: () => ScrollTrigger.refresh() });
+          gsap.fromTo(body.querySelector('p'), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.5, delay: 0.1 });
+        }
+      });
+    });
+
+    // --- formulaire en 3 étapes (prototype : rien n'est envoyé)
+    const form = root.querySelector<HTMLFormElement>('[data-form]')!;
+    const fsteps = [...root.querySelectorAll<HTMLElement>('[data-fstep]')];
+    const sideSteps = [...root.querySelectorAll<HTMLElement>('[data-form-steps] li')];
+    const prev = root.querySelector<HTMLButtonElement>('[data-fprev]')!;
+    const next = root.querySelector<HTMLButtonElement>('[data-fnext]')!;
+    const bar = root.querySelector<HTMLElement>('[data-progress-bar]')!;
+    const cats = new Set<string>();
+    let current = 0;
+
+    root.querySelectorAll<HTMLButtonElement>('[data-fcat]').forEach((b) =>
+      on(b, 'click', () => {
+        const id = b.dataset.fcat!;
+        const isOn = !cats.has(id);
+        isOn ? cats.add(id) : cats.delete(id);
+        b.setAttribute('aria-pressed', String(isOn));
+        gsap.fromTo(b.querySelector('svg'), { scale: 0.6, rotation: -25 }, { scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(3)' });
+        root.querySelector('[data-cats-error]')!.classList.remove('is-shown');
+      }),
+    );
+    root.querySelectorAll<HTMLButtonElement>('[data-flabel]').forEach((b) =>
+      on(b, 'click', () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'))),
+    );
+
+    const validate = (i: number) => {
+      let ok = true;
+      fsteps[i].querySelectorAll<HTMLInputElement>('input[required]:not([type="checkbox"])').forEach((input) => {
+        const valid = input.type === 'email' ? /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.value.trim()) : input.value.trim().length > 1;
+        input.closest('.f-field')!.classList.toggle('is-invalid', !valid);
+        if (!valid) {
+          if (ok) input.focus();
+          ok = false;
+          gsap.fromTo(input, { x: -6 }, { x: 0, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+        }
+      });
+      if (i === 1 && !cats.size) {
+        root.querySelector('[data-cats-error]')!.classList.add('is-shown');
+        gsap.fromTo('[data-f-cats]', { x: -6 }, { x: 0, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
+        ok = false;
+      }
+      if (i === 2) {
+        const consent = form.querySelector<HTMLInputElement>('[name="consent"]')!;
+        root.querySelector('[data-consent-error]')!.classList.toggle('is-shown', !consent.checked);
+        if (!consent.checked) ok = false;
+      }
+      return ok;
+    };
+
+    const show = (i: number, dir: number) => {
+      const from = fsteps[current];
+      const to = fsteps[i];
+      const swap = () => {
+        from.hidden = true;
+        to.hidden = false;
+        current = i;
+        prev.hidden = i === 0;
+        next.innerHTML = i === fsteps.length - 1 ? 'Envoyer ma demande' : 'Continuer';
+        sideSteps.forEach((s, j) => {
+          s.classList.toggle('is-on', j <= i);
+          s.classList.toggle('is-done', j < i);
+        });
+        gsap.to(bar, { width: `${((i + 1) / fsteps.length) * 100}%`, duration: 0.7, ease: 'back.out(1.6)' });
+        if (!reduced()) {
+          gsap.fromTo(to.children, { autoAlpha: 0, x: 30 * dir }, { autoAlpha: 1, x: 0, duration: 0.5, stagger: 0.05 });
+          // le panier saute à chaque étape franchie
+          if (dir > 0) gsap.fromTo('[data-form-basket]', { y: 0, rotation: 0 }, { keyframes: [{ y: -26, rotation: -6, duration: 0.25, ease: 'power2.out' }, { y: 0, rotation: 0, duration: 0.6, ease: 'bounce.out' }] });
+        }
+      };
+      if (reduced()) return swap();
+      gsap.to(from.children, { autoAlpha: 0, x: -30 * dir, duration: 0.25, stagger: 0.02, ease: 'power2.in', onComplete: () => (gsap.set(from.children, { clearProps: 'all' }), swap()) });
+    };
+
+    const confetti = () => {
+      const r = form.getBoundingClientRect();
+      for (let k = 0; k < 26; k++) {
+        const c = categories[k % categories.length].id;
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        el.setAttribute('viewBox', '0 0 100 100');
+        el.classList.add('confetti', 'riso');
+        el.innerHTML = `<use href="#ico-${c}"></use>`;
+        document.body.appendChild(el);
+        const x = r.left + r.width / 2 + gsap.utils.random(-60, 60);
+        const y = r.top + r.height * 0.35;
+        gsap.set(el, { x, y, scale: gsap.utils.random(0.5, 1) });
+        gsap
+          .timeline({ onComplete: () => el.remove() })
+          .to(el, { x: x + gsap.utils.random(-420, 420), duration: 2.4, ease: 'power1.out' }, 0)
+          .to(el, { y: y - gsap.utils.random(160, 360), duration: 0.7, ease: 'power2.out' }, 0)
+          .to(el, { y: window.innerHeight + 80, duration: 1.7, ease: 'power2.in' }, 0.7)
+          .to(el, { rotation: gsap.utils.random(-540, 540), duration: 2.4, ease: 'none' }, 0);
+      }
+    };
+
+    const submit = () => {
+      const data = new FormData(form);
+      const success = root.querySelector<HTMLElement>('[data-success]')!;
+      root.querySelector('[data-success-farm]')!.textContent = String(data.get('farm') || 'votre ferme');
+      const first = String(data.get('name') || '').split(' ')[0];
+      if (first) root.querySelector('[data-success-name]')!.textContent = first;
+      fsteps.forEach((s) => (s.hidden = true));
+      root.querySelector<HTMLElement>('[data-form-nav]')!.hidden = true;
+      sideSteps.forEach((s) => s.classList.add('is-on', 'is-done'));
+      success.hidden = false;
+      gsap.to(bar, { width: '100%', duration: 0.6 });
+      if (!reduced()) {
+        gsap.fromTo(success.children, { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08 });
+        gsap.fromTo('[data-success-art]', { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 1, ease: 'back.out(2)' });
+        gsap.fromTo('[data-form-basket]', { y: 0 }, { y: -24, duration: 0.3, yoyo: true, repeat: 3, ease: 'power2.out' });
+        confetti();
+      }
+    };
+
+    on(next, 'click', () => {
+      if (!validate(current)) return;
+      if (current < fsteps.length - 1) show(current + 1, 1);
+      else submit();
+    });
+    on(prev, 'click', () => current > 0 && show(current - 1, -1));
+    on(form, 'submit', (e: SubmitEvent) => e.preventDefault());
+    on(form, 'input', (e: Event) => (e.target as HTMLElement).closest('.f-field')?.classList.remove('is-invalid'));
+    on(form, 'keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+        e.preventDefault();
+        next.click();
+      }
+    });
+
+    return () => offs.forEach((o) => o());
+  });
+</script>

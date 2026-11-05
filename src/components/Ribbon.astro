@@ -1,0 +1,137 @@
+---
+interface Props {
+  color?: string;
+  text?: string;
+  /** zigzag d'origine (hero) ou variante plus douce */
+  shape?: 'hero' | 'wave';
+  reverse?: boolean;
+  speed?: number;
+  class?: string;
+}
+const {
+  color = 'var(--coral)',
+  text = 'FERMES LOCALES - LÉGUMES - FRUITS - FROMAGES - VIANDES - VIN - MIEL - PAINS - ŒUFS - BIO - SAIN - ',
+  shape = 'hero',
+  reverse = false,
+  speed = 1,
+  class: cls,
+} = Astro.props;
+
+// Zigzag de la maquette, mais avec des virages arrondis : la bande et le texte
+// tournent en douceur au lieu de casser net à chaque angle.
+const points: [number, number][] =
+  shape === 'hero'
+    ? [[-260, 392], [320, 132], [582, 200], [1076, 128], [1616, 214], [2260, -40]]
+    : [[-260, 120], [400, 220], [900, 140], [1400, 230], [2260, 90]];
+
+function roundedPath(pts: [number, number][], radius: number) {
+  const dist = (a: [number, number], b: [number, number]) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const toward = (from: [number, number], to: [number, number], r: number) => {
+    const k = r / dist(from, to);
+    return `${(from[0] + (to[0] - from[0]) * k).toFixed(1)} ${(from[1] + (to[1] - from[1]) * k).toFixed(1)}`;
+  };
+  let path = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const [prev, p, next] = [pts[i - 1], pts[i], pts[i + 1]];
+    // le rayon ne dépasse jamais la moitié des segments voisins
+    const r = Math.min(radius, dist(prev, p) * 0.48, dist(p, next) * 0.48);
+    path += ` L ${toward(p, prev, r)} Q ${p[0]} ${p[1]} ${toward(p, next, r)}`;
+  }
+  const last = pts[pts.length - 1];
+  return `${path} L ${last[0]} ${last[1]}`;
+}
+
+const d = roundedPath(points, 190);
+const id = `rib-${Math.random().toString(36).slice(2, 8)}`;
+const repeated = text.repeat(5);
+---
+
+<div class:list={['ribbon', `ribbon--${shape}`, cls]} data-ribbon data-reverse={reverse ? '' : undefined} data-speed={speed} aria-hidden="true">
+  <svg viewBox="0 0 2000 340" preserveAspectRatio="xMidYMid meet">
+    <path id={id} d={d} fill="none"></path>
+    <use href={`#${id}`} class="ribbon__band" stroke={color} stroke-width="74" stroke-linejoin="round" fill="none"></use>
+    <text class="ribbon__text" dy="0.36em">
+      <textPath href={`#${id}`} startOffset="0">{repeated}</textPath>
+    </text>
+  </svg>
+</div>
+
+<style>
+  .ribbon {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .ribbon svg {
+    max-width: none;
+    width: max(100%, 1100px);
+    margin-left: 50%;
+    transform: translateX(-50%);
+    overflow: visible;
+  }
+  .ribbon__text {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 33px;
+    letter-spacing: 0.02em;
+    fill: var(--ink);
+  }
+</style>
+
+<script>
+  import { gsap, ScrollTrigger, reduced, loaderDone } from '../lib/motion';
+
+  const live: (() => void)[] = [];
+
+  document.addEventListener('astro:page-load', async () => {
+    await loaderDone();
+    await document.fonts.ready;
+    document.querySelectorAll<HTMLElement>('[data-ribbon]').forEach((el) => {
+      const tp = el.querySelector('textPath') as SVGTextPathElement;
+      const text = el.querySelector('text') as SVGTextElement;
+      const band = el.querySelector('.ribbon__band') as SVGUseElement;
+      const path = el.querySelector('path') as SVGPathElement;
+      const reverse = el.hasAttribute('data-reverse');
+      const speed = Number(el.dataset.speed || 1);
+
+      const unit = text.getComputedTextLength() / 5;
+      if (!unit || reduced()) return;
+
+      const from = reverse ? -unit : 0;
+      const to = reverse ? 0 : -unit;
+      tp.setAttribute('startOffset', String(from));
+      const loop = gsap.fromTo(tp, { attr: { startOffset: from } }, { attr: { startOffset: to }, duration: (unit / 60) / speed, ease: 'none', repeat: -1 });
+
+      // le ruban accélère légèrement avec la vitesse de scroll, puis revient doucement à son rythme
+      const boost = { v: 1 };
+      const speedTo = gsap.quickTo(boost, 'v', { duration: 0.6, ease: 'power3.out', onUpdate: () => loop.timeScale(boost.v) });
+      const settle = gsap.delayedCall(0.2, () => speedTo(1)).pause();
+      const st = ScrollTrigger.create({
+        onUpdate(self) {
+          speedTo(1 + Math.min(Math.abs(self.getVelocity()) / 900, 2.2));
+          settle.restart(true);
+        },
+      });
+
+      // apparition : la bande se dessine puis le texte arrive
+      if (el.closest('[data-hero]')) {
+        const len = path.getTotalLength();
+        gsap.set(band, { attr: { 'stroke-dasharray': len, 'stroke-dashoffset': len } });
+        gsap.to(band, { attr: { 'stroke-dashoffset': 0 }, duration: 1.6, ease: 'fz.inOut', delay: 0.15 });
+        gsap.fromTo(text, { opacity: 0 }, { opacity: 1, duration: 0.8, delay: 1.1 });
+      }
+
+      live.push(() => {
+        loop.kill();
+        st.kill();
+        settle.kill();
+        gsap.killTweensOf(boost);
+      });
+    });
+  });
+
+  document.addEventListener('astro:before-swap', () => {
+    live.splice(0).forEach((k) => k());
+  });
+</script>

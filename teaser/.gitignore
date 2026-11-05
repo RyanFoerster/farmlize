@@ -1,0 +1,4 @@
+node_modules/
+out/
+# clips capturés (régénérés par le script de capture)
+public/clips/

@@ -1,0 +1,163 @@
+---
+/**
+ * Planche des illustrations (page interne, non liée dans la navigation) :
+ * toutes les pièces du style « risographie » au même endroit, pour les relire et les présenter.
+ */
+import Base from '../layouts/Base.astro';
+import Produce from '../components/Produce.astro';
+import FarmCover from '../components/FarmCover.astro';
+import IlloPicker from '../components/illos/IlloPicker.astro';
+import IlloHoney from '../components/illos/IlloHoney.astro';
+import IlloWalker from '../components/illos/IlloWalker.astro';
+import IlloBasket from '../components/illos/IlloBasket.astro';
+import IlloFarmer from '../components/illos/IlloFarmer.astro';
+import IlloScarecrow from '../components/illos/IlloScarecrow.astro';
+import { categories } from '../data/categories';
+import { farms } from '../data/farms';
+import { seasonItems } from '../data/seasons';
+import { seasonArt } from '../lib/season-art';
+---
+
+<Base title="Planche d’illustrations" smooth={false}>
+  <main class="planche container">
+    <h1 class="title">Planche d’illustrations</h1>
+
+    <h2 class="planche__h">Illustrations</h2>
+    <div class="planche__illos">
+      <figure><IlloPicker /><figcaption>Hero — la cueilleuse</figcaption></figure>
+      <figure><IlloHoney /><figcaption>Hero — le pot de miel</figcaption></figure>
+      <figure><IlloFarmer /><figcaption>Producteur — la cagette</figcaption></figure>
+      <figure><IlloWalker /><figcaption>Onboarding — la carte</figcaption></figure>
+      <figure><IlloBasket /><figcaption>Le panier</figcaption></figure>
+      <figure><IlloScarecrow /><figcaption>404 — l’épouvantail</figcaption></figure>
+    </div>
+
+    <h2 class="planche__h">Produits</h2>
+    <div class="planche__icons">
+      {
+        categories.map((c) => (
+          <figure style={`background:${c.tint}`}>
+            <Produce cat={c.id} size={180} />
+            <figcaption>{c.label}</figcaption>
+          </figure>
+        ))
+      }
+    </div>
+    <div class="planche__icons planche__icons--sm">
+      {categories.map((c) => <Produce cat={c.id} size={44} />)}
+    </div>
+
+    <h2 class="planche__h">Calendrier des saisons</h2>
+    <div class="planche__season">
+      {
+        seasonItems.map((it) => (
+          <figure>
+            <svg class="riso" viewBox="0 0 60 60" aria-hidden="true" set:html={seasonArt(it.name)} />
+            <figcaption>{it.name}</figcaption>
+          </figure>
+        ))
+      }
+    </div>
+
+    <h2 class="planche__h">Couvertures de ferme</h2>
+    <div class="planche__covers">
+      {farms.slice(0, 8).map((f) => <div class="planche__cover"><FarmCover farm={f} /></div>)}
+    </div>
+    <div class="planche__covers planche__covers--hero">
+      {farms.slice(8, 10).map((f) => <div class="planche__cover"><FarmCover farm={f} variant="hero" /></div>)}
+    </div>
+  </main>
+</Base>
+
+<style>
+  .planche {
+    padding: 60px var(--gutter) 120px;
+  }
+  .planche__h {
+    margin: 56px 0 20px;
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .planche__icons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .planche__icons figure {
+    margin: 0;
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    padding: 24px 12px 16px;
+    border-radius: 24px;
+  }
+  .planche__icons figcaption {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .planche__illos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    align-items: end;
+  }
+  .planche__illos figure {
+    margin: 0;
+    display: grid;
+    gap: 12px;
+    padding: 28px 28px 18px;
+    border-radius: 28px;
+    background: var(--white);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+  }
+  .planche__illos figcaption {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  .planche__season {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 10px;
+  }
+  .planche__season figure {
+    margin: 0;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 14px 8px 10px;
+    border-radius: 18px;
+    background: var(--white);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+  }
+  .planche__season svg {
+    width: 84px;
+    height: 84px;
+  }
+  .planche__season figcaption {
+    font-size: 12.5px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .planche__covers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .planche__covers--hero {
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 14px;
+  }
+  .planche__cover {
+    aspect-ratio: 4 / 3;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  .planche__icons--sm {
+    display: flex;
+    gap: 18px;
+    margin-top: 18px;
+  }
+</style>

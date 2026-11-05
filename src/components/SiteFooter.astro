@@ -1,0 +1,394 @@
+---
+/**
+ * Footer : bord ondulé (comme de la terre sous la colline), grain clair, parallaxe,
+ * fruits et légumes qui flottent, et le gros logo dont les lettres montent au scroll
+ * avant d'accueillir quelques petits habitants (et une abeille qui tourne autour).
+ */
+import LogoMark from './LogoMark.astro';
+import Icon from './Icon.astro';
+import FunTitle from './FunTitle.astro';
+import { ink } from '../lib/riso';
+import { seasonArt } from '../lib/season-art';
+
+const year = new Date().getFullYear();
+
+// bord supérieur festonné
+let wave = 'M0 40 V 22';
+for (let x = 0; x < 1440; x += 60) wave += ` Q ${x + 30} 2 ${x + 60} 22`;
+wave += ' V 40 Z';
+
+// habitants perchés sur les lettres (x en % de la largeur du logo)
+const perched = [
+  { name: 'Fraises', x: 5.6, size: 7.2, rot: -10 },
+  { name: 'Pommes', x: 40.4, size: 6.6, rot: 8 },
+  { name: 'Carottes', x: 59.6, size: 7.6, rot: 18 },
+  { name: 'Poires', x: 72.6, size: 6.8, rot: -6 },
+];
+// fruits et légumes qui flottent dans le fond (parallaxe)
+const floaters = [
+  { name: 'Courges', cls: 'f1', depth: 1.2 },
+  { name: 'Radis', cls: 'f2', depth: 0.7 },
+  { name: 'Cerises', cls: 'f3', depth: 1.5 },
+  { name: 'Brocolis', cls: 'f4', depth: 0.9 },
+];
+---
+
+<footer class="site-footer" data-footer>
+  <svg class="site-footer__wave" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d={wave}></path></svg>
+
+  {
+    floaters.map((f) => (
+      <span class={`site-footer__float site-footer__float--${f.cls}`} aria-hidden="true" data-footer-float data-depth={f.depth}>
+        <svg class="riso ri-bob" viewBox="0 0 60 60" style={`--a:-8px; --dur:${3 + f.depth}s`} set:html={seasonArt(f.name)} />
+      </span>
+    ))
+  }
+
+  <div class="container site-footer__top" data-footer-top>
+    <div class="site-footer__pitch">
+      <FunTitle as="p" class="title" text={'Mangez frais,\nconsommez [local|coral].'} />
+      <a href="/commencer" class="btn btn--light">
+        Trouver une ferme <Icon name="arrow" size={18} class="icon-arrow" />
+      </a>
+    </div>
+    <div class="site-footer__cols">
+      <div>
+        <p class="eyebrow">Explorer</p>
+        <a href="/fermes">Toutes les fermes</a>
+        <a href="/saisons">Calendrier des saisons</a>
+        <a href="/fermes?favoris=1">Mes favoris</a>
+      </div>
+      <div>
+        <p class="eyebrow">Producteurs</p>
+        <a href="/producteurs">Ajouter ma ferme</a>
+        <a href="/producteurs#comment">Comment ça marche</a>
+      </div>
+      <div>
+        <p class="eyebrow">Régions</p>
+        <a href="/fermes?lieu=namur">Namur</a>
+        <a href="/fermes?lieu=wavre">Brabant wallon</a>
+        <a href="/fermes?lieu=liege">Liège</a>
+        <a href="/fermes?lieu=bruxelles">Bruxelles</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="site-footer__mark" aria-hidden="true">
+    <div class="site-footer__logo" data-footer-mark>
+      <LogoMark title="" />
+      {
+        perched.map((p) => (
+          <span class="site-footer__perch" style={`left:${p.x}%; width:${p.size}%; --r:${p.rot}deg`} data-footer-perch>
+            <svg class="riso" viewBox="0 0 60 60" set:html={seasonArt(p.name)} />
+          </span>
+        ))
+      }
+      <span class="site-footer__bee" data-footer-bee>
+        <svg class="riso" viewBox="-30 -24 60 48">
+          <g class="site-footer__wings">
+            <ellipse cx="-4" cy="-12" rx="10" ry="7" transform="rotate(-25 -4 -12)" fill={ink.paper}></ellipse>
+            <ellipse cx="8" cy="-12" rx="9" ry="6" transform="rotate(20 8 -12)" fill={ink.sky}></ellipse>
+          </g>
+          <path d="M-22 0 L-30 -2 L-22 4 Z" fill={ink.paper}></path>
+          <ellipse cx="0" cy="2" rx="22" ry="14" fill={ink.yellow}></ellipse>
+          <path d="M-8 -11.5 C -4 -4 -4 8 -8 15 L -2 15.6 C 2 8 2 -4 -2 -13 Z" fill={ink.brown}></path>
+          <path d="M6 -11 C 10 -4 10 8 6 14.5 L 12 13 C 15 7 15 -3 12 -9 Z" fill={ink.brown}></path>
+          <circle cx="17" cy="-2" r="2.4" fill={ink.brown}></circle>
+        </svg>
+      </span>
+    </div>
+  </div>
+
+  <div class="container site-footer__bottom">
+    <span>© {year} Farmlize — prototype</span>
+    <span>Fait avec soin en Belgique · Wallonie, Bruxelles & Flandre</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    margin-top: 8px;
+    padding-top: clamp(64px, 9vw, 120px);
+    background: var(--ink) url('/textures/paper-grain-light.png') 0 0 / 240px 240px;
+    color: var(--cream);
+    overflow-x: clip;
+  }
+  .site-footer__wave {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -38px;
+    width: 100%;
+    height: 40px;
+    fill: var(--ink);
+  }
+  .site-footer__top {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 48px;
+  }
+  .site-footer__pitch :global(.title) {
+    font-size: clamp(36px, 4.6vw, 64px);
+    margin-bottom: 32px;
+    color: var(--cream);
+  }
+  .site-footer__cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .site-footer__cols div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .site-footer__cols .eyebrow {
+    color: rgba(252, 250, 242, 0.5);
+    margin: 0 0 6px;
+  }
+  .site-footer__cols a {
+    width: fit-content;
+    color: rgba(252, 250, 242, 0.86);
+    transition:
+      color 0.3s,
+      translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .site-footer__cols a:hover {
+    color: var(--butter);
+    translate: 6px 0;
+  }
+
+  /* fruits et légumes qui flottent dans le fond */
+  .site-footer__float {
+    position: absolute;
+    z-index: 1;
+    width: clamp(40px, 4.6vw, 72px);
+    pointer-events: none;
+  }
+  .site-footer__float svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .site-footer__float--f1 {
+    left: 44%;
+    top: 14%;
+  }
+  .site-footer__float--f2 {
+    right: 4%;
+    top: 8%;
+    width: clamp(32px, 3.4vw, 54px);
+  }
+  .site-footer__float--f3 {
+    left: 3%;
+    top: 44%;
+    width: clamp(34px, 3.8vw, 58px);
+  }
+  .site-footer__float--f4 {
+    right: 40%;
+    top: 48%;
+    width: clamp(30px, 3.2vw, 50px);
+  }
+
+  /* le gros logo et ses habitants */
+  .site-footer__mark {
+    margin-top: clamp(48px, 7vw, 96px);
+    display: flex;
+    justify-content: center;
+  }
+  .site-footer__logo {
+    position: relative;
+    width: min(92vw, 1320px);
+    color: var(--cream);
+    margin-bottom: -0.5%;
+  }
+  .site-footer__logo :global(.logo-mark) {
+    width: 100%;
+    height: auto;
+  }
+  .site-footer__perch {
+    position: absolute;
+    bottom: 94%;
+    translate: -50% 0;
+    rotate: var(--r);
+    transform-origin: 50% 100%;
+    pointer-events: none;
+  }
+  .site-footer__perch svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .site-footer__bee {
+    position: absolute;
+    left: 86%;
+    top: -18%;
+    width: clamp(34px, 3.4vw, 54px);
+    pointer-events: none;
+  }
+  .site-footer__bee svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .site-footer__wings {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .site-footer__perch svg {
+      animation: footer-perch 2.6s ease-in-out infinite alternate;
+    }
+    .site-footer__perch:nth-of-type(2n) svg {
+      animation-duration: 3.2s;
+      animation-delay: -1s;
+    }
+    .site-footer__bee {
+      animation: footer-bee 7s linear infinite;
+    }
+    .site-footer__wings {
+      animation: footer-wings 0.16s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes footer-perch {
+    from {
+      rotate: -5deg;
+    }
+    to {
+      rotate: 5deg;
+    }
+  }
+  /* l'abeille fait des boucles au-dessus des dernières lettres */
+  @keyframes footer-bee {
+    0% {
+      translate: 0 0;
+      scale: 1 1;
+    }
+    25% {
+      translate: -90% -60%;
+    }
+    50% {
+      translate: -180% 0;
+      scale: 1 1;
+    }
+    51% {
+      scale: -1 1;
+    }
+    75% {
+      translate: -90% 50%;
+    }
+    99% {
+      translate: 0 0;
+      scale: -1 1;
+    }
+    100% {
+      scale: 1 1;
+    }
+  }
+  @keyframes footer-wings {
+    to {
+      scale: 1 0.55;
+    }
+  }
+
+  .site-footer__bottom {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 22px 0 28px;
+    font-size: 13px;
+    color: rgba(252, 250, 242, 0.55);
+    border-top: 1px solid rgba(252, 250, 242, 0.12);
+  }
+  @media (max-width: 860px) {
+    .site-footer__top {
+      grid-template-columns: 1fr;
+    }
+    .site-footer__cols {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .site-footer__float--f1,
+    .site-footer__float--f4 {
+      display: none;
+    }
+  }
+  @media (max-width: 560px) {
+    .site-footer__float--f3 {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, reduced } from '../lib/motion';
+
+  const live: (() => void)[] = [];
+
+  document.addEventListener('astro:page-load', () => {
+    const footer = document.querySelector<HTMLElement>('[data-footer]');
+    const mark = footer?.querySelector<HTMLElement>('[data-footer-mark]');
+    if (!footer || !mark || reduced()) return;
+    const tweens: gsap.core.Animation[] = [];
+
+    // le contenu remonte doucement quand on arrive au footer (parallaxe)
+    tweens.push(
+      gsap.fromTo(
+        footer.querySelector('[data-footer-top]'),
+        { y: 90 },
+        { y: 0, ease: 'none', scrollTrigger: { trigger: footer, start: 'top bottom', end: 'top 25%', scrub: 0.8 } },
+      ),
+    );
+    // fruits et légumes du fond, chacun à sa profondeur
+    footer.querySelectorAll<HTMLElement>('[data-footer-float]').forEach((el) => {
+      const d = Number(el.dataset.depth || 1);
+      tweens.push(
+        gsap.fromTo(el, { y: 120 * d }, { y: -30 * d, ease: 'none', scrollTrigger: { trigger: footer, start: 'top bottom', end: 'bottom bottom', scrub: true } }),
+      );
+    });
+    // les lettres montent, chacune avec son petit décalage et sa rotation
+    tweens.push(
+      gsap.fromTo(
+        mark.querySelectorAll('.logo-mark path'),
+        { y: (i: number) => [250, 300, 220, 280, 240, 310, 230, 270][i] ?? 260, rotation: (i: number) => (i % 2 ? 6 : -6), transformOrigin: '50% 100%' },
+        { y: 0, rotation: 0, stagger: 0.05, ease: 'fz.out', scrollTrigger: { trigger: mark, start: 'top 98%', end: 'bottom bottom', scrub: 1 } },
+      ),
+    );
+    // puis les habitants s'installent sur les lettres, et l'abeille arrive
+    const perch = gsap
+      .timeline({ paused: true })
+      .fromTo(
+        mark.querySelectorAll('[data-footer-perch]'),
+        { y: -60, scale: 0, autoAlpha: 0 },
+        { y: 0, scale: 1, autoAlpha: 1, duration: 0.8, ease: 'bounce.out', stagger: 0.08 },
+      )
+      .fromTo(mark.querySelector('[data-footer-bee]'), { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, duration: 0.5, ease: 'back.out(2)' }, 0.3);
+    tweens.push(perch);
+    tweens.push(
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: mark,
+          start: 'bottom bottom',
+          onEnter: () => perch.play(),
+          onLeaveBack: () => perch.reverse(),
+        },
+      }),
+    );
+    live.push(() =>
+      tweens.forEach((t) => {
+        t.scrollTrigger?.kill();
+        t.kill();
+      }),
+    );
+  });
+
+  document.addEventListener('astro:before-swap', () => live.splice(0).forEach((k) => k()));
+</script>

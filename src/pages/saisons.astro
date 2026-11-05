@@ -1,0 +1,688 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import Icon from '../components/Icon.astro';
+import FunTitle from '../components/FunTitle.astro';
+import Floaters from '../components/Floaters.astro';
+import Ribbon from '../components/Ribbon.astro';
+import IlloBasket from '../components/illos/IlloBasket.astro';
+import { seasonItems, monthNames } from '../data/seasons';
+import { seasonArt } from '../lib/season-art';
+import { ink } from '../lib/riso';
+
+const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+---
+
+<Base title="De saison" description="Le calendrier des fruits et légumes de saison en Belgique, mois par mois.">
+  <SiteHeader />
+  <main class="seasons" data-seasons>
+    <!-- HERO -->
+    <section class="s-hero">
+      <Floaters
+        items={[
+          { name: 'Fraises', x: 9, y: 30, rot: -12, depth: 1.2 },
+          { name: 'Poireaux', x: 90, y: 24, rot: 14, depth: 0.8 },
+          { name: 'Pommes', x: 17, y: 80, size: 0.75, rot: 8, depth: 1.5, desk: true },
+          { name: 'Courges', x: 84, y: 76, size: 0.85, rot: -8, depth: 1.1, desk: true },
+        ]}
+      />
+      <div class="container s-hero__inner">
+        <FunTitle as="h1" class="display s-hero__title" text={'Qu’est-ce qui {Carottes} [pousse|leaf]\nen ce moment ?'} />
+        <p class="lead s-hero__lead" data-reveal>
+          Manger de saison, c’est plus de goût, moins de kilomètres et un vrai coup de pouce aux producteurs d’ici.
+          Choisissez un mois pour voir ce que les champs belges ont à offrir.
+        </p>
+      </div>
+    </section>
+
+    <!-- SÉLECTEUR DE MOIS (collant seulement le temps du tableau) -->
+    <div class="s-zone">
+    <section class="s-picker" data-reveal>
+      <div class="container s-picker__inner">
+        <button type="button" class="s-arrow print print--sm" data-prev aria-label="Mois précédent"><Icon name="arrow-left" size={20} /></button>
+        <div class="s-months print print--sm" role="tablist" aria-label="Mois" data-months>
+          <span class="s-months__indicator" data-indicator></span>
+          {
+            monthNames.map((m, i) => (
+              <button type="button" role="tab" class="s-month" data-month={i + 1} aria-selected="false">
+                <span class="s-month__long">{m}</span>
+                <span class="s-month__short">{m.slice(0, 3)}</span>
+              </button>
+            ))
+          }
+        </div>
+        <button type="button" class="s-arrow print print--sm" data-next aria-label="Mois suivant"><Icon name="arrow" size={20} /></button>
+      </div>
+    </section>
+
+    <!-- LE MOIS -->
+    <section class="container s-board">
+      <div class="s-board__head">
+        <div class="s-board__title">
+          <span class="s-board__sun" aria-hidden="true" data-sun-wrap>
+          <svg class="riso" viewBox="0 0 200 200" data-sun>
+            <defs><clipPath id="s-sun"><circle cx="100" cy="100" r="96"></circle></clipPath></defs>
+            <circle cx="100" cy="100" r="96" fill={ink.yellow} data-sun-fill></circle>
+            <circle cx="100" cy="100" r="96" fill="url(#ri-o-b)" filter="url(#ri-dot)"></circle>
+            <g clip-path="url(#s-sun)" fill="var(--cream)">
+              <rect x="0" y="128" width="200" height="6"></rect>
+              <rect x="0" y="146" width="200" height="9"></rect>
+              <rect x="0" y="166" width="200" height="13"></rect>
+              <rect x="0" y="188" width="200" height="16"></rect>
+            </g>
+          </svg>
+          </span>
+          <h2 class="display s-board__month"><span data-month-title>Novembre</span></h2>
+        </div>
+        <div class="s-board__side">
+          <p class="s-board__count"><strong data-count>0</strong> produits de saison</p>
+          <div class="s-kind" role="group" aria-label="Type">
+            <button type="button" class="chip is-on" data-kind="all" aria-pressed="true">Tout</button>
+            <button type="button" class="chip" data-kind="legume" aria-pressed="false">Légumes</button>
+            <button type="button" class="chip" data-kind="fruit" aria-pressed="false">Fruits</button>
+          </div>
+        </div>
+      </div>
+
+      <ul class="s-grid" data-grid>
+        {
+          items.map((it, i) => (
+            <li
+              class="s-item print print--sm"
+              data-kind={it.kind}
+              data-months={it.months.join(' ')}
+              style={`--c:${it.color}; --off:${it.color}; --tilt:${[-1.2, 0.8, -0.4, 1.1, -0.9, 0.5][i % 6]}deg`}
+            >
+              <svg class="s-item__art riso" viewBox="0 0 60 60" aria-hidden="true" set:html={seasonArt(it.name)} />
+              <span class="s-item__name">{it.name}</span>
+              <span class="s-item__badge" data-badge />
+              <span class="s-item__bar" aria-hidden="true">
+                {Array.from({ length: 12 }, (_, m) => (
+                  <i class:list={{ on: it.months.includes(m + 1) }} data-m={m + 1} />
+                ))}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+    </div>
+
+    <!-- ENVIE DE LES GOÛTER : grande section centrée, le panier sort de la colline -->
+    <section class="s-cta" data-cta-section>
+      <Ribbon class="s-cta__ribbon" color="var(--leaf)" shape="wave" text="MANGEZ DE SAISON - PLUS DE GOÛT - MOINS DE KILOMÈTRES - CIRCUIT COURT - " speed={0.7} />
+      <Floaters
+        items={[
+          { name: 'Cerises', x: 12, y: 34, rot: -10, depth: 1.1 },
+          { name: 'Brocolis', x: 88, y: 30, rot: 12, depth: 0.8 },
+          { name: 'Tomates', x: 21, y: 58, size: 0.7, rot: 6, depth: 1.4, desk: true },
+          { name: 'Radis', x: 80, y: 56, size: 0.8, rot: -14, depth: 1.2, desk: true },
+        ]}
+      />
+      <div class="s-cta__content">
+        <FunTitle class="display s-cta__title" text={'Envie de les\n[goûter|butter] ?'} />
+        <p class="lead s-cta__lead" data-reveal>Trouvez les fermes qui récoltent ces produits près de chez vous.</p>
+        <a href="/fermes?cats=legumes,fruits" class="btn" data-reveal data-cta>
+          Voir les fermes <Icon name="arrow" size={18} class="icon-arrow" />
+        </a>
+      </div>
+      <div class="s-cta__scene" aria-hidden="true">
+        <svg class="s-cta__hill riso" viewBox="0 0 1600 240" preserveAspectRatio="none">
+          <path d="M0 240 V 130 C 260 64 520 42 800 42 C 1080 42 1340 64 1600 130 V 240 Z" fill={ink.green}></path>
+          <path d="M0 168 C 260 102 520 80 800 80 C 1080 80 1340 102 1600 168 M0 206 C 260 140 520 118 800 118 C 1080 118 1340 140 1600 206" stroke={ink.leaf} stroke-width="6" fill="none" vector-effect="non-scaling-stroke"></path>
+        </svg>
+        <IlloBasket class="s-cta__basket" data-cta-basket />
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  /* ---------- Hero ---------- */
+  .s-hero {
+    position: relative;
+    padding: clamp(56px, 9vw, 130px) 0 clamp(36px, 5vw, 64px);
+  }
+  .s-hero__inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  :global(.s-hero__title) {
+    max-width: 980px;
+    font-size: clamp(46px, 6.4vw, 104px);
+  }
+  .s-hero__lead {
+    max-width: 600px;
+    margin: clamp(22px, 2.6vw, 34px) 0 0;
+  }
+
+  /* ---------- Sélecteur ---------- */
+  .s-picker {
+    position: sticky;
+    top: 92px;
+    z-index: 20;
+    padding: 12px 0;
+  }
+  .s-picker__inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .s-arrow {
+    --off: var(--butter);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    transition:
+      box-shadow 0.3s,
+      translate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .s-arrow:hover {
+    box-shadow: var(--print-hover);
+    translate: -1px -2px;
+  }
+  .s-arrow:active {
+    translate: 2px 3px;
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .s-months {
+    --off: var(--butter);
+    position: relative;
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    padding: 6px;
+    border-radius: 999px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .s-months__indicator {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 0;
+    width: 0;
+    border-radius: 999px;
+    background: var(--ink);
+    pointer-events: none;
+  }
+  .s-month {
+    position: relative;
+    z-index: 1;
+    height: var(--ctl-md);
+    padding: 0 6px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink-2);
+    transition: color 0.35s;
+    white-space: nowrap;
+  }
+  .s-month:hover {
+    color: var(--ink);
+  }
+  .s-month[aria-selected='true'] {
+    color: var(--cream);
+  }
+  .s-month__short {
+    display: none;
+  }
+  @media (max-width: 1180px) {
+    .s-month__long {
+      display: none;
+    }
+    .s-month__short {
+      display: inline;
+    }
+  }
+
+  /* ---------- Le mois ---------- */
+  .s-board {
+    padding: clamp(48px, 6vw, 84px) 0 clamp(70px, 9vw, 130px);
+  }
+  .s-board__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: clamp(36px, 4vw, 56px);
+  }
+  .s-board__title {
+    position: relative;
+    isolation: isolate;
+  }
+  /* un soleil rayé derrière le nom du mois ; sa couleur suit la saison */
+  .s-board__sun {
+    position: absolute;
+    z-index: -1;
+    left: clamp(-30px, -2vw, -12px);
+    top: 50%;
+    width: clamp(120px, 15vw, 230px);
+    translate: 0 -58%;
+  }
+  .s-board__sun svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .s-board__month {
+    font-size: clamp(64px, 10vw, 168px);
+    color: var(--ink);
+    line-height: 0.9;
+    /* le masque laisse respirer les jambages : rien n'est rogné, la mise en page ne bouge pas */
+    overflow: hidden;
+    padding: 0.16em 0.06em 0.12em;
+    margin: -0.16em -0.06em -0.12em;
+  }
+  .s-board__month span {
+    display: inline-block;
+  }
+  .s-board__side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+  }
+  /* le compteur sur une étiquette en papier, comme dans le potager de la home */
+  .s-board__count {
+    margin: 0;
+    padding: 8px 16px;
+    border-radius: 14px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      3px 4px 0 0 var(--leaf);
+    color: var(--ink-2);
+    rotate: -2deg;
+  }
+  .s-board__count strong {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--ink);
+  }
+  .s-kind {
+    display: flex;
+    gap: 8px;
+  }
+
+  .s-grid {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px 14px;
+  }
+  .s-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    row-gap: 8px;
+    align-items: center;
+    padding: 14px 16px 16px 14px;
+    border-radius: 20px;
+    rotate: var(--tilt, 0deg);
+    transition:
+      rotate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      translate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.35s;
+  }
+  .s-item:hover {
+    rotate: 0deg;
+    translate: -2px -4px;
+    box-shadow: var(--print-hover);
+  }
+  .s-item__art {
+    grid-row: 1 / 3;
+    width: 56px;
+    height: 56px;
+    overflow: visible;
+    transition:
+      rotate 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+      scale 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .s-item:hover .s-item__art {
+    rotate: -12deg;
+    scale: 1.16;
+  }
+  .s-item__name {
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+  .s-item__badge {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    rotate: 3deg;
+    box-shadow: 0 0 0 1.5px var(--ink);
+  }
+  .s-item__badge:empty {
+    display: none;
+  }
+  .s-item__badge.is-new {
+    background: var(--butter);
+  }
+  .s-item__badge.is-last {
+    background: var(--coral);
+    color: var(--white);
+  }
+  .s-item__bar {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 2px;
+  }
+  .s-item__bar i {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--sand);
+  }
+  .s-item__bar i.on {
+    background: var(--c);
+    opacity: 0.8;
+  }
+  .s-item__bar i.now {
+    outline: 1.5px solid var(--ink);
+    outline-offset: 1px;
+  }
+
+  /* ---------- Envie de les goûter ---------- */
+  .s-cta {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: clamp(720px, 92svh, 960px);
+    overflow: hidden;
+    text-align: center;
+  }
+  :global(.s-cta__ribbon) {
+    margin-bottom: clamp(40px, 6vw, 90px);
+  }
+  .s-cta__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 880px;
+    padding-inline: var(--gutter);
+  }
+  :global(.s-cta__title) {
+    font-size: clamp(52px, 8vw, 128px);
+  }
+  .s-cta__lead {
+    max-width: 460px;
+    margin: 24px 0 30px;
+  }
+  .s-cta__scene {
+    position: relative;
+    width: 100%;
+    margin-top: auto;
+    height: clamp(260px, 28vw, 400px);
+  }
+  .s-cta__hill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 62%;
+  }
+  :global(.s-cta__basket) {
+    position: absolute;
+    left: 50%;
+    bottom: 20%;
+    width: clamp(220px, 24vw, 340px);
+    height: auto;
+    translate: -50% 0;
+  }
+
+  @media (max-width: 640px) {
+    .s-picker {
+      top: 80px;
+    }
+    .s-arrow {
+      display: none;
+    }
+    .s-months {
+      grid-template-columns: repeat(12, minmax(52px, 1fr));
+    }
+    .s-board__side {
+      align-items: flex-start;
+    }
+    .s-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .s-item {
+      grid-template-columns: 1fr;
+      text-align: left;
+    }
+    .s-item__art {
+      grid-row: auto;
+    }
+  }
+</style>
+
+<script>
+  import { Flip } from 'gsap/Flip';
+  import { gsap, ScrollTrigger, onPage, reduced, revealOnScroll, magnetic } from '../lib/motion';
+  import { monthNames } from '../data/seasons';
+  import { ink } from '../lib/riso';
+
+  gsap.registerPlugin(Flip);
+
+  /** Couleur du soleil selon la saison : bleu l'hiver, vert au printemps, jaune l'été, orange l'automne. */
+  const sunInk = (m: number) => ([12, 1, 2].includes(m) ? ink.sky : [3, 4, 5].includes(m) ? ink.leaf : [6, 7, 8].includes(m) ? ink.yellow : ink.orange);
+
+  onPage('[data-seasons]', (root) => {
+    const offs: (() => void)[] = [];
+    const on = (el: EventTarget, ev: string, fn: (e: any) => void) => {
+      el.addEventListener(ev, fn);
+      offs.push(() => el.removeEventListener(ev, fn));
+    };
+    const items = [...root.querySelectorAll<HTMLElement>('.s-item')];
+    const grid = root.querySelector<HTMLElement>('[data-grid]')!;
+    const monthsWrap = root.querySelector<HTMLElement>('[data-months]')!;
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-month]')];
+    const indicator = root.querySelector<HTMLElement>('[data-indicator]')!;
+    const title = root.querySelector<HTMLElement>('[data-month-title]')!;
+    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
+    const sun = root.querySelector<SVGElement>('[data-sun]')!;
+    const sunFill = root.querySelector<SVGCircleElement>('[data-sun-fill]')!;
+    let month = new Date().getMonth() + 1;
+    let kind = 'all';
+    let first = true;
+    // les cartes du premier affichage arrivent au scroll ; tant qu'elles n'ont pas toutes été montrées, on garde la main
+    let pending: ScrollTrigger[] = [];
+    const flushPending = () => {
+      pending.forEach((st) => st.kill());
+      pending = [];
+      gsap.set(items, { autoAlpha: 1, y: 0, scale: 1, rotation: 0 });
+    };
+
+    const moveIndicator = (animate = true) => {
+      const tab = tabs[month - 1];
+      const vars = { x: tab.offsetLeft, width: tab.offsetWidth };
+      if (animate && !reduced()) gsap.to(indicator, { ...vars, duration: 0.6, ease: 'fz.inOut' });
+      else gsap.set(indicator, vars);
+      tab.scrollIntoView({ block: 'nearest', inline: 'center', behavior: animate ? 'smooth' : 'auto' });
+    };
+
+    const setTitle = (dir: number) => {
+      const name = monthNames[month - 1];
+      if (first || reduced()) {
+        title.textContent = name;
+        sunFill.setAttribute('fill', sunInk(month));
+        return;
+      }
+      gsap.killTweensOf(title);
+      gsap.to(title, {
+        yPercent: dir > 0 ? -130 : 130,
+        duration: 0.3,
+        ease: 'power2.in',
+        onComplete: () => {
+          title.textContent = name;
+          gsap.fromTo(title, { yPercent: dir > 0 ? 130 : -130 }, { yPercent: 0, duration: 0.6, ease: 'fz.out' });
+        },
+      });
+      // le soleil fait un tour sur lui-même et prend la couleur de la saison
+      gsap.fromTo(sun, { rotation: dir >= 0 ? -70 : 70, scale: 0.7 }, { rotation: 0, scale: 1, duration: 0.9, ease: 'back.out(2)', transformOrigin: '50% 50%', overwrite: true });
+      gsap.to(sunFill, { attr: { fill: sunInk(month) }, duration: 0.5 });
+    };
+
+    const render = (dir = 1) => {
+      if (!first) flushPending();
+      tabs.forEach((t, i) => t.setAttribute('aria-selected', String(i === month - 1)));
+      moveIndicator(!first);
+      setTitle(dir);
+
+      // un filtrage encore en cours est terminé net avant d'en lancer un autre
+      Flip.killFlipsOf(items, true);
+      const state = first || reduced() ? null : Flip.getState(items);
+      // hauteur de la grille avant le filtrage : on l'anime vers la nouvelle,
+      // sinon les cartes passent en absolu, la grille s'effondre et le footer remonte
+      const h0 = grid.offsetHeight;
+      let n = 0;
+      const prev = ((month + 10) % 12) + 1;
+      const next = (month % 12) + 1;
+      items.forEach((it) => {
+        const months = it.dataset.months!.split(' ').map(Number);
+        const show = months.includes(month) && (kind === 'all' || it.dataset.kind === kind);
+        it.style.display = show ? '' : 'none';
+        if (show) n++;
+        const badge = it.querySelector<HTMLElement>('[data-badge]')!;
+        const isNew = months.length < 12 && !months.includes(prev);
+        const isLast = months.length < 12 && !months.includes(next);
+        badge.textContent = isNew ? 'Nouveau' : isLast ? 'Derniers jours' : '';
+        badge.className = `s-item__badge${isNew ? ' is-new' : isLast ? ' is-last' : ''}`;
+        it.querySelectorAll('i').forEach((b) => b.classList.toggle('now', Number((b as HTMLElement).dataset.m) === month));
+      });
+
+      if (state) {
+        gsap.killTweensOf(grid);
+        gsap.set(grid, { clearProps: 'height' });
+        const h1 = grid.offsetHeight;
+        // la grille qui rétrécit le fait en douceur (le footer ne saute pas) ; quand elle grandit, elle grandit tout de suite
+        if (h1 < h0) gsap.fromTo(grid, { height: h0 }, { height: h1, duration: 0.6, ease: 'fz.inOut' });
+        Flip.from(state, {
+          duration: 0.6,
+          ease: 'fz.inOut',
+          // seules les cartes qui partent sortent du flux : les autres gardent leur taille de grille
+          absoluteOnLeave: true,
+          scale: false,
+          stagger: 0.01,
+          // la grille reprend sa hauteur naturelle à la fin, puis on recale Lenis et les ScrollTrigger
+          onComplete: () => {
+            gsap.killTweensOf(grid);
+            gsap.set(grid, { clearProps: 'height' });
+            (window as any).__lenis?.resize();
+            ScrollTrigger.refresh();
+          },
+          onEnter: (els) =>
+            gsap.fromTo(
+              els,
+              { autoAlpha: 0, scale: 0.5, y: -30, rotation: () => gsap.utils.random(-14, 14) },
+              { autoAlpha: 1, scale: 1, y: 0, rotation: 0, duration: 0.7, ease: 'back.out(2)', stagger: 0.025, delay: 0.15 },
+            ),
+          onLeave: (els) => gsap.to(els, { autoAlpha: 0, scale: 0.5, rotation: () => gsap.utils.random(-20, 20), duration: 0.3, ease: 'power2.in' }),
+        });
+      } else if (first && !reduced()) {
+        // premier affichage : les cartes tombent par rangées quand elles arrivent à l'écran
+        const shown = items.filter((i) => i.style.display !== 'none');
+        gsap.set(shown, { autoAlpha: 0 });
+        pending = ScrollTrigger.batch(shown, {
+          start: 'top 94%',
+          once: true,
+          onEnter: (batch) =>
+            gsap.fromTo(
+              batch,
+              { autoAlpha: 0, y: -50, scale: 0.85, rotation: () => gsap.utils.random(-12, 12) },
+              { autoAlpha: 1, y: 0, scale: 1, rotation: 0, duration: 0.9, stagger: 0.05, ease: 'back.out(1.7)' },
+            ),
+        });
+      }
+      const c = { v: Number(countEl.textContent) || 0 };
+      gsap.to(c, { v: n, duration: 0.6, onUpdate: () => (countEl.textContent = String(Math.round(c.v))) });
+      if (!first && !reduced()) gsap.fromTo(countEl.parentElement, { scale: 0.85, rotation: -8 }, { scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(2.6)' });
+      first = false;
+    };
+
+    tabs.forEach((t) =>
+      on(t, 'click', () => {
+        const m = Number(t.dataset.month);
+        const dir = m >= month ? 1 : -1;
+        month = m;
+        render(dir);
+      }),
+    );
+    const step = (d: number) => {
+      month = ((month - 1 + d + 12) % 12) + 1;
+      render(d);
+    };
+    on(root.querySelector('[data-prev]')!, 'click', () => step(-1));
+    on(root.querySelector('[data-next]')!, 'click', () => step(1));
+    on(monthsWrap, 'keydown', (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') step(1);
+      if (e.key === 'ArrowLeft') step(-1);
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') tabs[month - 1].focus();
+    });
+    root.querySelectorAll<HTMLButtonElement>('[data-kind]').forEach((b) =>
+      on(b, 'click', () => {
+        kind = b.dataset.kind!;
+        root.querySelectorAll<HTMLButtonElement>('[data-kind]').forEach((x) => {
+          x.classList.toggle('is-on', x === b);
+          x.setAttribute('aria-pressed', String(x === b));
+        });
+        render(0);
+      }),
+    );
+    on(window, 'resize', () => moveIndicator(false));
+
+    render();
+    document.fonts.ready.then(() => {
+      moveIndicator(false);
+      // le filtrage initial change la hauteur de la page après la création des ScrollTrigger
+      ScrollTrigger.refresh();
+    });
+
+    if (!reduced()) {
+      // le soleil du mois se lève quand on arrive sur le tableau, puis tourne doucement avec le scroll
+      const sunWrap = root.querySelector<HTMLElement>('[data-sun-wrap]')!;
+      gsap.from(sunWrap, { scale: 0, duration: 1.2, ease: 'back.out(1.8)', scrollTrigger: { trigger: '.s-board', start: 'top 80%', once: true } });
+      gsap.fromTo(sunWrap, { rotation: -60 }, { rotation: 40, ease: 'none', scrollTrigger: { trigger: '.s-board', start: 'top bottom', end: 'bottom top', scrub: 1 } });
+      // le panier sort de la colline en montant au scroll
+      gsap.from('[data-cta-basket]', {
+        yPercent: 70,
+        rotation: -6,
+        ease: 'none',
+        scrollTrigger: { trigger: '.s-cta__scene', start: 'top bottom', end: 'top 50%', scrub: 0.8 },
+      });
+    }
+    revealOnScroll(root);
+    offs.push(magnetic(root.querySelector('[data-cta]')!, 0.2));
+
+    return () => {
+      pending.forEach((st) => st.kill());
+      offs.forEach((o) => o());
+    };
+  });
+</script>

@@ -1,0 +1,108 @@
+---
+/**
+ * Hero droit : un pot de miel géant, une silhouette assise sur le couvercle,
+ * les jambes immenses qui se balancent, une cuillère à miel plus grande qu'elle, et deux abeilles.
+ */
+import { hexPath, ink, shade } from '../../lib/riso';
+
+const { class: cls, ...rest } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 7);
+const { brown: K, paper: W, blue: B, sky: S, orange: O, red: R, pink: P, yellow: Y, green: G, taupe: T } = ink;
+
+const lidStripes = Array.from({ length: 10 }, (_, i) => 94 + i * 24);
+---
+
+<svg class:list={['illo', 'riso', cls]} viewBox="0 0 400 600" aria-hidden="true" {...rest}>
+  <defs>
+    <clipPath id={`honey-dipper-${uid}`}><ellipse cx="0" cy="0" rx="30" ry="40"></ellipse></clipPath>
+    <symbol id={`honey-bee-${uid}`} viewBox="-30 -24 60 48" overflow="visible">
+      <ellipse cx="-4" cy="-12" rx="10" ry="7" transform="rotate(-25 -4 -12)" fill={W}></ellipse>
+      <ellipse cx="8" cy="-12" rx="9" ry="6" transform="rotate(20 8 -12)" fill={S}></ellipse>
+      <path d="M-22 0 L-30 -2 L-22 4 Z" fill={K}></path>
+      <ellipse cx="0" cy="2" rx="22" ry="14" fill={Y}></ellipse>
+      <path d="M-8 -11.5 C -4 -4 -4 8 -8 15 L -2 15.6 C 2 8 2 -4 -2 -13 Z" fill={K}></path>
+      <path d="M6 -11 C 10 -4 10 8 6 14.5 L 12 13 C 15 7 15 -3 12 -9 Z" fill={K}></path>
+      <circle cx="17" cy="-2" r="2.4" fill={K}></circle>
+    </symbol>
+  </defs>
+
+  <!-- abeilles -->
+  <g transform="translate(316 168)">
+    <g class="ri-drift" style="--a:12px; --dur:6s">
+      <use class="ri-bob" style="--a:-9px; --dur:1.6s" href={`#honey-bee-${uid}`} x="-30" y="-24" width="60" height="48"></use>
+    </g>
+  </g>
+  <g transform="translate(84 236) scale(-0.75 0.75)">
+    <g class="ri-drift" style="--a:10px; --dur:7.5s; --d:-2s">
+      <use class="ri-bob" style="--a:-7px; --dur:1.9s; --d:-.6s" href={`#honey-bee-${uid}`} x="-30" y="-24" width="60" height="48"></use>
+    </g>
+  </g>
+
+  <!-- le pot -->
+  <path d="M58 600 V378 C58 344 84 318 118 318 H282 C316 318 342 344 342 378 V600 Z" fill={O}></path>
+  <g fill={Y}>
+    <rect x="58" y="396" width="284" height="13"></rect>
+    <rect x="58" y="566" width="284" height="13"></rect>
+  </g>
+  <path d="M58 600 V378 C58 344 84 318 118 318 H282 C316 318 342 344 342 378 V600 Z" {...shade('r', 'r')}></path>
+  <circle cx="200" cy="488" r="66" fill={W}></circle>
+  <circle cx="200" cy="488" r="66" {...shade('o', 'c')}></circle>
+  <path d={hexPath(184, 478, 15)} fill={Y}></path>
+  <path d={hexPath(213, 478, 15)} fill={O}></path>
+  <path d={hexPath(198.5, 503, 15)} fill={Y}></path>
+  <path d="M80 322 H320 V334 C320 342 310 342 310 334 C310 354 294 356 294 336 C294 344 286 344 286 334 H152 C152 358 134 358 134 336 C134 344 124 344 124 334 L80 334 Z" fill={Y}></path>
+
+  <!-- couvercle rayé -->
+  <rect x="70" y="276" width="260" height="50" rx="12" fill={B}></rect>
+  <g stroke={S} stroke-width="7">{lidStripes.map((x) => <path d={`M${x} 284 V318`} />)}</g>
+  <rect x="70" y="276" width="260" height="50" rx="12" {...shade('k', 'b')}></rect>
+
+  <!-- bras arrière posé sur le couvercle -->
+  <path d="M160 188 L 146 234" stroke={P} stroke-width="23" stroke-linecap="round"></path>
+  <path d="M146 234 L 140 266" stroke={T} stroke-width="16" stroke-linecap="round"></path>
+  <circle cx="140" cy="270" r="10" fill={T}></circle>
+
+  <!-- jambe arrière : cuisse + mollet qui se balance -->
+  <path d="M170 244 L 250 240 C 260 240 266 248 264 258 L 172 266 Z" fill={G}></path>
+  <path d="M170 244 L 250 240 C 260 240 266 248 264 258 L 172 266 Z" {...shade('k', 'l')}></path>
+  <g class="ri-sway" style="--a:4deg; --dur:2.8s; --d:-1.4s; --o:25% 2%">
+    <path d="M238 252 L 264 252 L 264 438 L 240 438 Z" fill={G}></path>
+    <path d="M238 252 L 264 252 L 264 438 L 240 438 Z" {...shade('k', 'c')}></path>
+    <path d="M236 432 H 266 C 280 432 288 438 288 446 C 288 452 282 454 274 454 H 236 Z" fill={K}></path>
+  </g>
+
+  <!-- buste -->
+  <path d="M148 178 C 154 166 204 164 212 176 L 208 274 L 146 274 Z" fill={P}></path>
+  <path d="M148 178 C 154 166 204 164 212 176 L 208 274 L 146 274 Z" {...shade('r', 'l')}></path>
+  <rect x="172" y="136" width="15" height="36" rx="5" fill={T}></rect>
+  <circle cx="182" cy="122" r="18" fill={T}></circle>
+  <path d="M199 120 L 206 127 L 199 131 Z" fill={T}></path>
+  <path d="M164 120 C 162 98 182 90 198 96 C 210 102 208 118 205 126 C 200 112 188 108 176 110 C 170 112 166 118 164 120 Z" fill={K}></path>
+  <path d="M166 108 C 154 128 156 150 168 160 C 170 142 170 128 174 116 Z" fill={K}></path>
+
+  <!-- jambe avant -->
+  <path d="M166 252 L 262 248 C 272 248 278 256 276 266 C 274 274 268 278 260 278 L 168 286 Z" fill={G}></path>
+  <g class="ri-sway" style="--a:4.5deg; --dur:2.8s; --o:22% 2%">
+    <path d="M248 262 L 278 262 L 282 452 L 256 452 Z" fill={G}></path>
+    <path d="M248 262 L 278 262 L 282 452 L 256 452 Z" {...shade('k', 'r')}></path>
+    <path d="M252 446 H 284 C 298 446 306 452 306 460 C 306 466 300 468 292 468 H 252 Z" fill={K}></path>
+  </g>
+
+  <!-- la cuillère à miel, plus grande que tout -->
+  <g class="ri-sway" style="--a:2deg; --dur:5.5s; --o:50% 100%">
+    <path d="M250 262 L 222 104" stroke={T} stroke-width="10" stroke-linecap="round"></path>
+    <g transform="translate(218 70) rotate(-8)">
+      <ellipse cx="0" cy="0" rx="30" ry="40" fill={Y}></ellipse>
+      <g clip-path={`url(#honey-dipper-${uid})`} stroke={O} stroke-width="7">
+        <path d="M-34 -24 H34"></path><path d="M-34 -8 H34"></path><path d="M-34 8 H34"></path><path d="M-34 24 H34"></path>
+      </g>
+      <ellipse cx="0" cy="0" rx="30" ry="40" {...shade('o', 'r')}></ellipse>
+    </g>
+    <path class="ri-pulse" style="--a:1.25; --dur:1.8s; --o:50% 0%" d="M206 108 C 206 118 200 124 200 130 C 200 136 204 140 209 140 C 214 140 218 136 218 130 C 218 124 212 118 212 108 Z" fill={Y}></path>
+  </g>
+
+  <!-- bras avant qui tient la cuillère -->
+  <path d="M204 182 L 226 204" stroke={P} stroke-width="23" stroke-linecap="round"></path>
+  <path d="M226 204 L 238 214" stroke={T} stroke-width="16" stroke-linecap="round"></path>
+  <circle cx="240" cy="216" r="11" fill={T}></circle>
+</svg>

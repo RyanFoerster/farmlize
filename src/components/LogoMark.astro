@@ -1,0 +1,35 @@
+---
+/**
+ * Le logo Farmlize en SVG (public/logo.svg), une lettre par tracé pour pouvoir les animer.
+ * Prend la couleur du texte (currentColor). Taille : height en CSS (la largeur suit, ratio 5,6).
+ */
+import { LOGO_H, LOGO_W, logoLetters } from '../lib/logo';
+
+interface Props {
+  class?: string;
+  title?: string;
+  [key: string]: unknown;
+}
+const { class: cls, title = 'Farmlize', ...rest } = Astro.props;
+---
+
+<svg
+  class:list={['logo-mark', cls]}
+  viewBox={`0 0 ${LOGO_W} ${LOGO_H}`}
+  fill="currentColor"
+  role="img"
+  aria-label={title}
+  {...rest}
+>
+  {logoLetters.map((d, i) => <path d={d} style={`--i:${i}`} />)}
+</svg>
+
+<style>
+  .logo-mark {
+    display: block;
+    height: 1em;
+    width: auto;
+    aspect-ratio: 1369 / 243;
+    overflow: hidden;
+  }
+</style>

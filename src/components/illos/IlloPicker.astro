@@ -1,0 +1,117 @@
+---
+/**
+ * Hero gauche : un grand arbre fruitier et une cueilleuse sur la pointe des pieds,
+ * le bras démesuré tendu vers un fruit. Le feuillage et le bras bougent à peine.
+ */
+import { ink, shade, starPath } from '../../lib/riso';
+
+const { class: cls, ...rest } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 7);
+const { brown: K, paper: W, blue: B, sky: S, orange: O, red: R, yellow: Y, green: G, leaf: L, taupe: T } = ink;
+
+const fruits: [number, number, string][] = [
+  [52, 280, O],
+  [104, 236, R],
+  [146, 290, Y],
+  [204, 258, O],
+  [186, 196, R],
+  [86, 176, Y],
+  [226, 214, Y],
+];
+---
+
+<svg class:list={['illo', 'riso', cls]} viewBox="0 0 360 600" aria-hidden="true" {...rest}>
+  <defs>
+    <clipPath id={`picker-shirt-${uid}`}><path d="M208 242 C 212 232 262 230 268 242 L 274 366 L 204 366 Z"></path></clipPath>
+  </defs>
+
+  <!-- ciel : nuage et étoile -->
+  <g class="ri-drift" style="--a:10px; --dur:11s">
+    <rect x="226" y="64" width="96" height="26" rx="13" fill={S}></rect>
+    <rect x="248" y="46" width="52" height="26" rx="13" fill={S}></rect>
+  </g>
+  <g transform="translate(316 132)">
+    <path class="ri-spin" style="--dur:28s" d={starPath(0, 0, 22, 9, 8)} fill={Y}></path>
+  </g>
+
+  <!-- sol -->
+  <path d="M0 600 V572 C 90 552 260 550 360 562 V600 Z" fill={G}></path>
+  <g stroke={L} stroke-width="5" stroke-linecap="round">
+    <path d="M24 586 h38"></path><path d="M112 592 h52"></path><path d="M300 584 h36"></path>
+  </g>
+
+  <!-- tronc -->
+  <path d="M98 566 C 104 480 106 400 110 330 L 130 330 C 134 400 138 480 146 566 Z" fill={K}></path>
+  <g stroke={K} stroke-width="13" stroke-linecap="round" fill="none">
+    <path d="M116 420 C 96 396 78 372 66 336"></path>
+    <path d="M124 396 C 150 380 170 356 182 326"></path>
+  </g>
+
+  <!-- feuillage -->
+  <g class="ri-sway" style="--a:1.2deg; --dur:7s">
+    <circle cx="80" cy="264" r="72" fill={G}></circle>
+    <circle cx="80" cy="264" r="72" {...shade('k', 'b')}></circle>
+    <circle cx="172" cy="226" r="78" fill={L}></circle>
+    <circle cx="172" cy="226" r="78" {...shade('g', 'd')}></circle>
+    <path d="M110 104 A 64 64 0 0 0 110 232 Z" fill={G}></path>
+    <path d="M110 104 A 64 64 0 0 1 110 232 Z" fill={B}></path>
+    <path d="M110 104 A 64 64 0 0 1 110 232 Z" {...shade('k', 'r')}></path>
+    {
+      fruits.map(([x, y, c]) => (
+        <g>
+          <circle cx={x} cy={y} r="12" fill={c} />
+          <path d={`M${x} ${y - 11} c 3 -8 11 -9 16 -7 c -4 6 -10 8 -16 7 z`} fill={L} />
+        </g>
+      ))
+    }
+  </g>
+
+  <!-- la cueilleuse -->
+  <path d="M238 350 L 270 350 L 282 548 L 254 548 Z" fill={R}></path>
+  <path d="M204 350 L 246 350 L 236 552 L 198 552 Z" fill={O}></path>
+  <path d="M204 350 L 246 350 L 236 552 L 198 552 Z" {...shade('r', 'r')}></path>
+  <path d="M252 542 H 282 L 292 566 C 294 574 286 578 276 576 L 256 570 Z" fill={K}></path>
+  <path d="M198 546 H 238 L 240 570 C 240 578 232 580 222 580 H 192 C 184 580 182 572 190 566 Z" fill={K}></path>
+
+  <!-- bras qui porte le panier -->
+  <g stroke-linecap="round" fill="none">
+    <path d="M262 252 L 284 302" stroke={B} stroke-width="24"></path>
+    <path d="M284 302 L 292 344" stroke={T} stroke-width="17"></path>
+  </g>
+  <g class="ri-sway" style="--a:3deg; --dur:4.5s; --o:50% 0%">
+    <path d="M268 380 C 268 342 316 342 316 380" stroke={Y} stroke-width="7" fill="none"></path>
+    <circle cx="278" cy="372" r="9" fill={R}></circle>
+    <circle cx="297" cy="368" r="10" fill={O}></circle>
+    <circle cx="313" cy="374" r="8" fill={L}></circle>
+    <path d="M256 378 H328 L318 420 C 317 424 314 426 310 426 H274 C 270 426 267 424 266 420 Z" fill={Y}></path>
+    <path d="M256 378 H328 L318 420 C 317 424 314 426 310 426 H274 C 270 426 267 424 266 420 Z" {...shade('o', 'b')}></path>
+    <g stroke={R} stroke-width="4"><path d="M261 394 H323"></path><path d="M265 408 H319"></path></g>
+  </g>
+  <circle cx="292" cy="348" r="10" fill={T}></circle>
+
+  <!-- buste rayé -->
+  <path d="M208 242 C 212 232 262 230 268 242 L 274 366 L 204 366 Z" fill={B}></path>
+  <g clip-path={`url(#picker-shirt-${uid})`} fill={S}>
+    <rect x="200" y="268" width="80" height="9"></rect>
+    <rect x="200" y="296" width="80" height="9"></rect>
+    <rect x="200" y="324" width="80" height="9"></rect>
+    <rect x="200" y="352" width="80" height="9"></rect>
+  </g>
+  <path d="M208 242 C 212 232 262 230 268 242 L 274 366 L 204 366 Z" {...shade('k', 'r')}></path>
+
+  <!-- tête -->
+  <rect x="232" y="206" width="14" height="32" rx="5" fill={T}></rect>
+  <circle cx="240" cy="196" r="18" fill={T}></circle>
+  <path d="M223 194 L 216 201 L 223 205 Z" fill={T}></path>
+  <path d="M224 192 C 222 172 238 164 252 168 C 264 172 268 186 262 198 C 258 190 250 186 240 186 C 232 186 226 190 224 192 Z" fill={K}></path>
+  <path d="M258 182 C 280 184 292 210 282 238 C 276 220 268 206 256 196 Z" fill={K}></path>
+
+  <!-- bras tendu vers le fruit -->
+  <g class="ri-sway" style="--a:2.2deg; --dur:5s; --o:85% 91%">
+    <path d="M218 252 L 190 198" stroke={B} stroke-width="25" stroke-linecap="round"></path>
+    <path d="M190 198 L 168 160" stroke={T} stroke-width="17" stroke-linecap="round"></path>
+    <circle cx="160" cy="141" r="13" fill={O}></circle>
+    <path d="M160 129 c 3 -8 11 -9 16 -7 c -4 6 -10 8 -16 7 z" fill={L}></path>
+    <circle cx="167" cy="155" r="11" fill={T}></circle>
+  </g>
+</svg>

@@ -1,0 +1,416 @@
+---
+/**
+ * En-tête compact : une petite pilule centrée (logo, favoris, « Menu »).
+ * Le bouton « Menu » l'élargit en panneau de cartes illustrées (desktop) ou ouvre le menu plein écran (mobile).
+ */
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import MenuCards from './MenuCards.astro';
+
+interface Props {
+  /**
+   * 'floating' : apparaît au scroll (page d'accueil) ;
+   * 'explore' : posé au-dessus de la carte des fermes, avec la recherche (slot « search ») et un bouton favoris qui filtre la liste.
+   */
+  variant?: 'static' | 'floating' | 'explore';
+}
+const { variant = 'static' } = Astro.props;
+const links = [
+  { href: '/', label: 'Accueil' },
+  { href: '/fermes', label: 'La carte' },
+  { href: '/saisons', label: 'De saison' },
+  { href: '/producteurs', label: 'Producteurs' },
+];
+---
+
+<header class:list={['site-header', `site-header--${variant}`]} data-site-header>
+  <div class="site-header__inner" data-header-inner>
+    <div class="site-header__bar">
+      <Logo size={28} />
+      <slot name="search" />
+      <div class="site-header__actions">
+        {
+          variant === 'explore' ? (
+            <button type="button" class="fav-pill" data-fav-toggle aria-pressed="false" aria-label="Afficher mes favoris">
+              <Icon name="heart" size={18} />
+              <span data-fav-count>0</span>
+            </button>
+          ) : (
+            <a href="/fermes?favoris=1" class="fav-pill" aria-label="Mes fermes favorites">
+              <Icon name="heart" size={18} />
+              <span data-fav-count>0</span>
+            </a>
+          )
+        }
+        <button type="button" class="menu-btn" aria-expanded="false" aria-controls="mega-menu" aria-label="Ouvrir le menu" data-menu-btn>
+          <span class="menu-btn__label" data-menu-label>Menu</span>
+          <span class="menu-btn__icon" aria-hidden="true"><i></i><i></i></span>
+        </button>
+      </div>
+    </div>
+    <div class="mega" id="mega-menu" data-mega hidden>
+      <div class="mega__inner">
+        <MenuCards variant="desktop" />
+      </div>
+    </div>
+  </div>
+  <div class="mobile-menu" data-mobile-menu hidden>
+    <MenuCards variant="mobile" />
+    <nav class="mobile-menu__links" aria-label="Navigation mobile">
+      {links.map((l) => <a href={l.href} class="mobile-link">{l.label}</a>)}
+    </nav>
+    <p class="mobile-menu__foot">Fermes locales de Belgique · Wallonie, Bruxelles & Flandre</p>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 14px var(--gutter);
+    pointer-events: none;
+  }
+  .site-header--floating {
+    position: fixed;
+    inset: 0 0 auto 0;
+    transform: translateY(-140%);
+    transition: transform 0.6s var(--ease);
+  }
+  .site-header--floating.is-visible {
+    transform: none;
+  }
+  .site-header__inner {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+    padding: 8px;
+    border-radius: 30px;
+    overflow: hidden;
+    pointer-events: auto;
+    background: rgba(252, 250, 242, 0.84);
+    /* préfixe d'abord : sinon le minifieur ne garde que la version -webkit- (ignorée par Chrome) */
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-s);
+    transition:
+      background-color 0.4s,
+      box-shadow 0.4s;
+  }
+  .site-header__inner.is-open {
+    background-color: rgba(252, 250, 242, 0.97);
+    background-image: url('/textures/paper-grain.png');
+    background-size: 240px 240px;
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      var(--shadow-m);
+  }
+  .site-header__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding-left: 14px;
+  }
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .fav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1.5px var(--line);
+    transition: box-shadow 0.3s;
+  }
+  .fav-pill:hover {
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+  .fav-pill.has-favs :global(.icon) {
+    fill: var(--coral);
+    stroke: var(--coral);
+  }
+  .fav-pill[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--cream);
+    box-shadow: 3px 4px 0 0 var(--coral);
+  }
+
+  /* --- variante carte des fermes : posée au-dessus de la carte, plus large, avec la recherche */
+  .site-header--explore {
+    position: absolute;
+    inset: 0 0 auto 0;
+    padding: 12px clamp(16px, 2.2vw, 34px);
+  }
+  .site-header--explore .site-header__inner {
+    width: min(1120px, 100%);
+  }
+  .site-header--explore .site-header__bar {
+    gap: clamp(12px, 1.6vw, 22px);
+  }
+  .site-header--explore .mega__inner {
+    margin-inline: auto;
+  }
+
+  /* --- bouton Menu : deux traits qui deviennent une croix */
+  .menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    height: 44px;
+    padding: 0 8px 0 18px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--cream);
+    font-weight: 600;
+    font-size: 15px;
+    transition: background 0.3s;
+  }
+  .menu-btn:hover {
+    background: var(--coral);
+  }
+  .menu-btn__label {
+    min-width: 46px;
+    text-align: left;
+  }
+  .menu-btn__icon {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(252, 250, 242, 0.14);
+  }
+  .menu-btn__icon i {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.45s var(--ease);
+  }
+  .menu-btn__icon i:first-child {
+    top: 12px;
+  }
+  .menu-btn__icon i:last-child {
+    top: 17px;
+  }
+  .menu-btn[aria-expanded='true'] .menu-btn__icon i:first-child {
+    transform: translateY(2.5px) rotate(45deg);
+  }
+  .menu-btn[aria-expanded='true'] .menu-btn__icon i:last-child {
+    transform: translateY(-2.5px) rotate(-45deg);
+  }
+
+  /* --- panneau */
+  .mega__inner {
+    width: min(960px, calc(100vw - 2 * var(--gutter) - 16px));
+    padding: 10px 0 0;
+  }
+
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 100px var(--gutter) 28px;
+    overflow-y: auto;
+    pointer-events: auto;
+    background: var(--cream) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+  }
+  .mobile-menu[hidden] {
+    display: none;
+  }
+  .mobile-menu__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+  }
+  .mobile-link {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 96, 'wdth' 82;
+    font-size: clamp(26px, 7vw, 36px);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+  .mobile-menu__foot {
+    margin-top: auto;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  @media (max-width: 960px) {
+    .mega {
+      display: none;
+    }
+    .site-header__bar {
+      gap: 18px;
+      padding-left: 10px;
+    }
+  }
+  @media (max-width: 380px) {
+    .menu-btn__label {
+      display: none;
+    }
+    .menu-btn {
+      padding: 0 7px;
+    }
+  }
+  /* sur téléphone, la carte garde la recherche, les favoris et le menu (le logo est dans le menu) */
+  @media (max-width: 600px) {
+    .site-header--explore {
+      padding: 10px 12px;
+    }
+    .site-header--explore .site-header__bar {
+      gap: 8px;
+      padding-left: 0;
+    }
+    .site-header--explore .site-header__bar > :global(.logo) {
+      display: none;
+    }
+    .site-header--explore .menu-btn__label {
+      display: none;
+    }
+    .site-header--explore .menu-btn {
+      padding: 0 7px;
+    }
+    .site-header--explore .fav-pill {
+      padding: 0 12px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { getFavs } from '../lib/store';
+
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobile = () => window.matchMedia('(max-width: 960px)').matches;
+
+  function setCount(n: number, bump = false) {
+    document.querySelectorAll<HTMLElement>('[data-fav-count]').forEach((el) => {
+      el.textContent = String(n);
+      el.closest('.fav-pill')?.classList.toggle('has-favs', n > 0);
+      if (bump) gsap.fromTo(el.closest('.fav-pill'), { scale: 1.18 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+    });
+  }
+
+  window.addEventListener('fz:favs', (e) => setCount((e as CustomEvent).detail.count, true));
+
+  let page: AbortController | null = null;
+  document.addEventListener('astro:before-swap', () => page?.abort());
+
+  document.addEventListener('astro:page-load', () => {
+    setCount(getFavs().length);
+    page?.abort();
+    page = new AbortController();
+    const signal = page.signal;
+
+    const header = document.querySelector<HTMLElement>('[data-site-header]');
+    if (!header) return;
+    const btn = header.querySelector<HTMLButtonElement>('[data-menu-btn]')!;
+    const label = header.querySelector<HTMLElement>('[data-menu-label]')!;
+    const setButton = (open: boolean) => {
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+      label.textContent = open ? 'Fermer' : 'Menu';
+    };
+
+    // --- menu mobile (plein écran)
+    const menu = header.querySelector<HTMLElement>('[data-mobile-menu]')!;
+    let mobileOpen = false;
+    const setMobile = (state: boolean) => {
+      if (state === mobileOpen) return;
+      mobileOpen = state;
+      setButton(state);
+      if (state) {
+        menu.hidden = false;
+        gsap.fromTo(menu, { clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 0.7, ease: 'fz.inOut' });
+        gsap.fromTo(
+          menu.querySelectorAll('[data-mcard], .mobile-link'),
+          { y: 30, autoAlpha: 0, rotation: (i: number) => (i % 2 ? 2 : -2) },
+          { y: 0, autoAlpha: 1, rotation: 0, stagger: 0.05, delay: 0.2, ease: 'back.out(1.5)', clearProps: 'transform' },
+        );
+      } else {
+        gsap.to(menu, { clipPath: 'inset(0 0 100% 0)', duration: 0.5, ease: 'fz.inOut', onComplete: () => (menu.hidden = true) });
+      }
+    };
+
+    // --- panneau (desktop) : la pilule s'élargit jusqu'au panneau de cartes
+    const inner = header.querySelector<HTMLElement>('[data-header-inner]')!;
+    const mega = header.querySelector<HTMLElement>('[data-mega]')!;
+    const cards = () => [...mega.querySelectorAll<HTMLElement>('[data-mcard]')];
+    let megaOpen = false;
+    const setMega = (state: boolean) => {
+      if (state === megaOpen) return;
+      megaOpen = state;
+      setButton(state);
+      inner.classList.toggle('is-open', state);
+      gsap.killTweensOf([inner, mega, ...cards()]);
+      if (state) {
+        const w0 = inner.offsetWidth;
+        mega.hidden = false;
+        gsap.set(inner, { clearProps: 'width' });
+        const w1 = inner.offsetWidth;
+        if (reducedMotion()) return;
+        gsap.fromTo(inner, { width: w0 }, { width: w1, duration: 0.6, ease: 'fz.inOut', clearProps: 'width' });
+        gsap.fromTo(mega, { height: 0 }, { height: 'auto', duration: 0.6, ease: 'fz.inOut' });
+        gsap.fromTo(
+          cards(),
+          { y: 28, autoAlpha: 0, rotation: (i: number) => [-3, 2.5, -2, 3, -1.5][i] ?? 0 },
+          { y: 0, autoAlpha: 1, rotation: 0, duration: 0.65, stagger: 0.05, delay: 0.22, ease: 'back.out(1.7)', clearProps: 'transform' },
+        );
+      } else {
+        const w1 = inner.offsetWidth;
+        const done = () => {
+          if (megaOpen) return;
+          mega.hidden = true;
+          gsap.set(inner, { clearProps: 'width' });
+        };
+        if (reducedMotion()) return done();
+        // largeur d'arrivée : celle de la pilule seule
+        mega.hidden = true;
+        const w0 = inner.offsetWidth;
+        mega.hidden = false;
+        gsap.fromTo(inner, { width: w1 }, { width: w0, duration: 0.5, ease: 'fz.inOut', delay: 0.05 });
+        gsap.to(mega, { height: 0, duration: 0.45, ease: 'fz.inOut', onComplete: done });
+      }
+    };
+
+    btn.addEventListener('click', () => (isMobile() ? setMobile(!mobileOpen) : setMega(!megaOpen)), { signal });
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key !== 'Escape') return;
+        setMega(false);
+        setMobile(false);
+      },
+      { signal },
+    );
+    document.addEventListener('pointerdown', (e) => megaOpen && !inner.contains(e.target as Node) && setMega(false), { signal });
+
+    // --- en-tête flottant (accueil) : visible après le hero
+    if (header.classList.contains('site-header--floating')) {
+      const onScroll = () => {
+        const visible = window.scrollY > window.innerHeight * 0.75;
+        header.classList.toggle('is-visible', visible);
+        if (!visible) setMega(false);
+      };
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true, signal });
+    }
+  });
+</script>

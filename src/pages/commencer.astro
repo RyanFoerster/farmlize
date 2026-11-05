@@ -1,0 +1,1218 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import Icon from '../components/Icon.astro';
+import Produce from '../components/Produce.astro';
+import IlloCountryside from '../components/illos/IlloCountryside.astro';
+import IlloBasketFill from '../components/illos/IlloBasketFill.astro';
+import IlloPotager from '../components/illos/IlloPotager.astro';
+import FunTitle from '../components/FunTitle.astro';
+import Floaters from '../components/Floaters.astro';
+import { categories } from '../data/categories';
+
+const shapes = [
+  ['M14 80 C 8 36, 86 6, 168 8 C 246 10, 296 40, 290 76 C 284 116, 214 144, 136 144 C 66 144, 20 120, 14 80 Z', 'M10 74 C 14 30, 96 4, 174 10 C 250 16, 294 50, 286 86 C 278 122, 204 146, 128 142 C 58 138, 6 112, 10 74 Z'],
+  ['M12 70 C 18 26, 104 8, 178 12 C 252 16, 294 54, 288 88 C 282 124, 196 146, 120 140 C 50 134, 6 108, 12 70 Z', 'M16 82 C 10 40, 90 10, 166 8 C 244 6, 292 36, 290 74 C 288 114, 220 142, 142 146 C 70 150, 22 122, 16 82 Z'],
+  ['M18 86 C 6 46, 70 10, 150 8 C 232 6, 292 32, 292 72 C 292 114, 228 140, 150 144 C 76 148, 28 124, 18 86 Z', 'M12 76 C 16 34, 82 10, 158 10 C 238 10, 296 42, 288 82 C 280 120, 210 142, 138 142 C 64 142, 8 116, 12 76 Z'],
+  ['M10 78 C 12 36, 92 10, 170 10 C 246 10, 290 44, 290 80 C 290 118, 226 144, 148 144 C 72 144, 8 118, 10 78 Z', 'M18 72 C 26 30, 100 6, 176 12 C 250 18, 290 52, 284 90 C 278 126, 200 146, 126 140 C 54 134, 10 110, 18 72 Z'],
+];
+---
+
+<Base title="C’est parti" smooth={false} bodyClass="onb-body">
+  <main class="onb" data-onb>
+    <header class="onb__top">
+      <Logo size={36} />
+      <div class="onb__progress" aria-hidden="true">
+        <span class="onb__dot is-on" data-progress-dot>1</span>
+        <i class="onb__path"><b data-progress-path></b></i>
+        <span class="onb__dot" data-progress-dot>2</span>
+      </div>
+    </header>
+
+    <!-- ÉTAPE 1 — OÙ ? -->
+    <section class="step step--where" data-step="1" aria-labelledby="where-title">
+      <Floaters
+        items={[
+          { name: 'Fraises', x: 15, y: 24, rot: -12, depth: 1, desk: true },
+          { name: 'Poireaux', x: 86, y: 20, rot: 14, depth: 1, desk: true },
+          { name: 'Pommes', x: 82, y: 62, size: 0.8, rot: 8, depth: 1, desk: true },
+          { name: 'Radis', x: 24, y: 48, size: 0.7, rot: -6, depth: 1, desk: true },
+        ]}
+      />
+      <div class="step__inner">
+        <FunTitle as="h1" class="display step__title" id="where-title" manual text={'Où êtes-[vous|butter] ?'} />
+        <p class="step__lead" data-anim>
+          Entrez votre adresse ou votre ville pour découvrir les potagers,<br class="br-d" /> fermes et étals artisanaux les plus
+          proches de votre foyer.
+        </p>
+
+        <div class="where" data-anim>
+          <label class="field where__field" data-field>
+            <Icon name="pin" size={24} class="where__pin" />
+            <span class="sr-only">Commune ou code postal</span>
+            <input
+              id="where-input"
+              type="text"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="where-list"
+              aria-autocomplete="list"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Commune ou code postal — ex. Namur, 1050…"
+              data-input
+            />
+            <button type="button" class="where__clear" data-clear aria-label="Effacer" hidden>
+              <Icon name="close-circle" size={26} stroke={1.5} />
+            </button>
+          </label>
+          <ul class="suggest" id="where-list" role="listbox" data-suggest hidden></ul>
+        </div>
+        <p class="where__msg" data-msg role="status" aria-live="polite"></p>
+
+        <div class="where__actions" data-anim>
+          <button type="button" class="btn" data-next disabled>
+            <Icon name="arrow" size={20} class="icon-arrow" /> Suivant
+          </button>
+          <button type="button" class="link-underline where__locate" data-locate>
+            <span>Me localiser</span>
+          </button>
+        </div>
+      </div>
+      <div class="step__scene" data-anim-illo data-scene>
+        <IlloCountryside />
+      </div>
+    </section>
+
+    <!-- ÉTAPE 2 — QUOI ? -->
+    <section class="step step--what" data-step="2" aria-labelledby="what-title" hidden>
+      <div class="step__inner">
+        <button type="button" class="where-chip" data-where-chip>
+          <Icon name="pin" size={16} /> <span data-where-name>Namur</span> <span class="where-chip__edit">modifier</span>
+        </button>
+        <FunTitle as="h1" class="display step__title" id="what-title" manual text={'Qu’est-ce qui vous [intéresse|pink] ?'} />
+        <p class="step__lead" data-anim>Sélectionnez vos catégories préférées pour personnaliser vos résultats de recherche.</p>
+
+        <div class="blobs" role="group" aria-label="Catégories de produits">
+          {
+            categories.map((c, i) => (
+              <button type="button" class="blob" aria-pressed="false" data-cat={c.id} style={`--c:${c.color}`}>
+                <svg class="blob__shape riso" viewBox="0 0 300 150" preserveAspectRatio="none" aria-hidden="true">
+                  <g transform="translate(3 2) scale(0.93)">
+                    <path class="blob__plate" d={shapes[i % 4][0]} data-alt={shapes[i % 4][1]} transform="translate(7 9)" />
+                    <path class="blob__fill" d={shapes[i % 4][0]} data-alt={shapes[i % 4][1]} vector-effect="non-scaling-stroke" />
+                  </g>
+                </svg>
+                <span class="blob__icon">
+                  <Produce cat={c.id} size="100%" />
+                </span>
+                <span class="blob__label">{c.label}</span>
+                <span class="blob__check" aria-hidden="true">
+                  <Icon name="check" size={14} stroke={2.6} />
+                </span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="what__actions">
+        <!-- le potager : le panier et les boutons sont posés dessus -->
+        <div class="what__garden" aria-hidden="true" data-garden-strip>
+          <IlloPotager />
+        </div>
+        <button type="button" class="btn btn--pill btn--ghost" data-back>Retour</button>
+        <div class="basket" data-basket aria-hidden="true">
+          <div class="basket__img" data-basket-img><IlloBasketFill /></div>
+          <span class="basket__count" data-count>0</span>
+        </div>
+        <button type="button" class="btn btn--pill" data-go>
+          <Icon name="map" size={20} />
+          <span class="go-label" data-go-label>
+            <span class="go-label__all">Voir toutes les fermes</span>
+            <span class="go-label__pick" aria-hidden="true">Découvrir les fermes</span>
+          </span>
+          <Icon name="arrow" size={18} class="icon-arrow" />
+        </button>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .onb {
+    position: relative;
+    min-height: 100svh;
+    overflow: hidden;
+  }
+  .onb__top {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(24px, 4vw, 52px) clamp(24px, 6vw, 110px) 0;
+  }
+  /* progression : deux tampons reliés par un chemin pointillé qui se remplit */
+  .onb__progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .onb__dot {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow: inset 0 0 0 1.5px var(--line-strong);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--muted);
+    transition:
+      background-color 0.4s,
+      box-shadow 0.4s,
+      color 0.4s;
+  }
+  .onb__dot.is-on {
+    background-color: var(--butter);
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      2px 3px 0 0 var(--ink);
+    color: var(--ink);
+  }
+  .onb__path {
+    position: relative;
+    width: 44px;
+    height: 3px;
+    background: repeating-linear-gradient(90deg, var(--line-strong) 0 5px, transparent 5px 10px);
+  }
+  .onb__path b {
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    background: var(--ink);
+    transform-origin: left;
+    transform: scaleX(0);
+  }
+
+  .step {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(130px, 20vh, 230px) var(--gutter) 60px;
+  }
+  .step[hidden] {
+    display: none;
+  }
+  .step__inner {
+    position: relative;
+    z-index: 2;
+    width: min(760px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .step--what {
+    padding-top: clamp(96px, 12vh, 150px);
+    padding-bottom: clamp(20px, 3vh, 40px);
+  }
+  .step--what .step__inner {
+    width: min(1000px, 100%);
+  }
+  .step--what .step__lead {
+    margin-bottom: clamp(24px, 4vh, 40px);
+  }
+  .step__inner > :global(.step__title) {
+    font-size: clamp(42px, 5vw, 72px);
+  }
+  .step__lead {
+    margin: 18px 0 40px;
+    color: var(--ink-2);
+    font-size: clamp(15px, 1.25vw, 17px);
+  }
+
+  /* --- où --- */
+  .where {
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    max-width: 680px;
+    text-align: left;
+  }
+  /* le champ en papier ; au focus il se « décolle » avec sa plaque jaune */
+  .where__field {
+    height: 68px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line-strong),
+      4px 5px 0 0 var(--line);
+    cursor: text;
+    transition:
+      box-shadow 0.35s,
+      translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .where__field:focus-within {
+    border: 0;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      6px 7px 0 0 var(--butter);
+    translate: -2px -2px;
+  }
+  .where__field :global(.where__pin) {
+    color: var(--bark);
+  }
+  .where__clear {
+    display: grid;
+    place-items: center;
+    color: var(--ink-2);
+    border-radius: 50%;
+    transition:
+      color 0.3s,
+      transform 0.4s var(--ease);
+  }
+  .where__clear:hover {
+    color: var(--ink);
+    transform: rotate(90deg);
+  }
+  .where__clear[hidden] {
+    display: none;
+  }
+  .suggest {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 12px);
+    z-index: 10;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      5px 6px 0 0 var(--coral);
+  }
+  .suggest[hidden] {
+    display: none;
+  }
+  .suggest :global(li) {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    font-size: 17px;
+    color: var(--ink);
+    cursor: pointer;
+    transition:
+      background 0.25s,
+      translate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .suggest :global(li[aria-selected='true']) {
+    background: var(--butter);
+    translate: 4px 0;
+  }
+  .suggest :global(li .icon) {
+    color: var(--bark);
+  }
+  .suggest :global(.prov) {
+    color: var(--muted);
+  }
+  .suggest :global(mark) {
+    background: none;
+    color: inherit;
+    font-weight: 700;
+  }
+  .suggest :global(.empty) {
+    color: var(--muted);
+    cursor: default;
+  }
+  .where__msg {
+    min-height: 24px;
+    margin: 14px 0 0;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .where__msg.is-error {
+    color: #c4462f;
+  }
+  .where__actions {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-top: 18px;
+  }
+  .where__locate.is-loading span::after {
+    content: '…';
+    display: inline-block;
+    animation: dots 1s steps(3) infinite;
+    width: 1em;
+    text-align: left;
+    overflow: hidden;
+    vertical-align: bottom;
+  }
+  @keyframes dots {
+    from {
+      width: 0;
+    }
+    to {
+      width: 1em;
+    }
+  }
+  /* la campagne en pleine largeur, posée en bas de l'écran ; le contenu garde sa place au-dessus */
+  .step--where {
+    --scene-h: clamp(220px, 36vh, 420px);
+    padding-bottom: calc(var(--scene-h) + 24px);
+  }
+  .step__scene {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    height: var(--scene-h);
+    pointer-events: none;
+  }
+
+  /* --- quoi --- */
+  .where-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    margin-bottom: 22px;
+    border-radius: 999px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line-strong),
+      3px 4px 0 0 var(--coral);
+    font-size: 14px;
+    font-weight: 600;
+    rotate: -2deg;
+    transition:
+      box-shadow 0.3s,
+      rotate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      translate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .where-chip:hover {
+    rotate: 0deg;
+    translate: -1px -2px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      5px 6px 0 0 var(--coral);
+  }
+  .where-chip__edit {
+    color: var(--muted);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .blobs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(12px, 1.6vw, 26px) clamp(12px, 1.8vw, 28px);
+    width: 100%;
+  }
+  .blob {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    aspect-ratio: 300 / 160;
+    padding: 0 12% 0 10%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .blob__shape {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  /* bulle imprimée : une forme de papier et sa plaque de couleur décalée */
+  .blob__plate {
+    fill: var(--line);
+    transition: fill 0.45s var(--ease);
+  }
+  .blob__fill {
+    fill: var(--white);
+    stroke: var(--line-strong);
+    stroke-width: 1.5;
+    transition:
+      fill 0.45s var(--ease),
+      stroke 0.45s;
+  }
+  .blob:hover .blob__plate {
+    fill: var(--c);
+  }
+  .blob:hover .blob__fill {
+    stroke: var(--ink);
+  }
+  .blob[aria-pressed='true'] .blob__fill {
+    fill: var(--c);
+    stroke: var(--ink);
+  }
+  .blob[aria-pressed='true'] .blob__plate {
+    fill: var(--ink);
+  }
+  .blob__icon {
+    position: relative;
+    width: clamp(48px, 5.4vw, 80px);
+    aspect-ratio: 1;
+    flex-shrink: 0;
+  }
+  .blob__label {
+    position: relative;
+    font-size: clamp(14px, 1.35vw, 19px);
+    font-weight: 500;
+    text-align: left;
+    line-height: 1.15;
+  }
+  .blob__check {
+    position: absolute;
+    top: 10%;
+    right: 12%;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--cream);
+    transform: scale(0);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .blob[aria-pressed='true'] .blob__check {
+    transform: scale(1);
+  }
+  .blob:focus-visible {
+    outline: none;
+  }
+  .blob:focus-visible .blob__fill {
+    stroke: var(--ink);
+    stroke-width: 2.5;
+  }
+
+  .basket {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: clamp(150px, min(22vw, 28vh), 300px);
+    margin-bottom: calc(clamp(16px, 3.5vh, 44px) * -0.4);
+  }
+  .basket__img {
+    width: 100%;
+    height: auto;
+    transform-origin: 50% 100%;
+  }
+  .basket__count {
+    position: absolute;
+    top: 22%;
+    right: 6%;
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--coral);
+    color: var(--ink);
+    box-shadow:
+      inset 0 0 0 1.5px var(--ink),
+      2px 3px 0 0 var(--ink);
+    font-weight: 700;
+    font-size: 15px;
+    transform: scale(0);
+  }
+  /* Barre d'actions toujours visible en bas de l'écran */
+  .what__actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 28px clamp(20px, 5.5vw, 110px) clamp(16px, 3.5vh, 44px);
+    pointer-events: none;
+  }
+  .what__actions > * {
+    pointer-events: auto;
+  }
+  .what__actions > .what__garden {
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: clamp(150px, 27vh, 250px);
+    pointer-events: none;
+  }
+  .what__actions .btn {
+    min-height: 58px;
+    padding: 0 34px;
+    font-size: 17px;
+  }
+  /* les deux libellés du bouton sont superposés : la largeur est celle du plus long, rien ne bouge
+     quand on passe de « toutes les fermes » à « découvrir » — le texte glisse simplement */
+  .go-label {
+    display: grid;
+    overflow: hidden;
+  }
+  .go-label > span {
+    grid-area: 1 / 1;
+    text-align: center;
+    transition:
+      translate 0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
+      opacity 0.3s;
+  }
+  .go-label__pick {
+    translate: 0 110%;
+    opacity: 0;
+  }
+  [data-go].is-full .go-label__all {
+    translate: 0 -110%;
+    opacity: 0;
+  }
+  [data-go].is-full .go-label__pick {
+    translate: 0 0;
+    opacity: 1;
+  }
+  .what__actions .btn--ghost {
+    background: var(--cream);
+    box-shadow: inset 0 0 0 2px var(--ink);
+  }
+  /* le bouton principal se détache de la terre : anneau crème + plaque de couleur décalée.
+     Dès que le panier contient quelque chose, il passe au corail et sa flèche pousse vers la droite */
+  .what__actions [data-go] {
+    box-shadow:
+      0 0 0 3px var(--cream),
+      6px 7px 0 3px var(--coral);
+    transition:
+      transform 0.4s var(--ease),
+      background-color 0.4s,
+      color 0.4s,
+      box-shadow 0.4s,
+      translate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .what__actions [data-go]:hover {
+    translate: -2px -3px;
+    box-shadow:
+      0 0 0 3px var(--cream),
+      9px 11px 0 3px var(--coral);
+  }
+  .what__actions [data-go].is-full {
+    --bg: var(--coral);
+    --fg: var(--ink);
+    box-shadow:
+      0 0 0 3px var(--cream),
+      6px 7px 0 3px var(--ink);
+  }
+  .what__actions [data-go].is-full:hover {
+    box-shadow:
+      0 0 0 3px var(--cream),
+      9px 11px 0 3px var(--ink);
+  }
+  .what__actions [data-go].is-full::before {
+    background: var(--butter);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .what__actions [data-go].is-full :global(.icon-arrow) {
+      animation: go-nudge 0.8s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes go-nudge {
+    to {
+      translate: 6px 0;
+    }
+  }
+  .step--what {
+    padding-bottom: calc(clamp(150px, min(22vw, 28vh), 300px) * 0.73 + 60px);
+  }
+  @media (max-height: 820px) {
+    .step--what {
+      padding-top: 88px;
+    }
+    .step--what .step__lead {
+      margin: 10px 0 22px;
+    }
+    .where-chip {
+      margin-bottom: 14px;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .blobs {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .br-d {
+      display: none;
+    }
+    .step--where {
+      --scene-h: clamp(190px, 28vh, 260px);
+    }
+  }
+  @media (max-width: 560px) {
+    .onb__top {
+      padding: 20px 20px 0;
+    }
+    .onb__top :global(.logo) {
+      font-size: 26px !important;
+    }
+    .step {
+      padding-top: 110px;
+    }
+    .where__actions {
+      flex-direction: column;
+      width: 100%;
+    }
+    .where__actions .btn {
+      width: 100%;
+    }
+    .what__actions {
+      padding: 32px 16px 16px;
+    }
+    .what__actions .btn {
+      padding: 0 22px;
+      min-height: 54px;
+      font-size: 16px;
+    }
+    .what__actions [data-go] {
+      flex: 1;
+    }
+    .blob {
+      padding: 0 8% 0 8%;
+      gap: 8px;
+    }
+    .basket {
+      display: none;
+    }
+    /* le libellé le plus long doit tenir en entier : on retire l'icône carte et on resserre */
+    .what__actions [data-go] {
+      gap: 8px;
+      padding: 0 16px;
+    }
+    .what__actions [data-go] > :global(.icon:first-child) {
+      display: none;
+    }
+    /* sur téléphone, un potager plus bas, et la place qu'il faut sous les bulles pour ne rien cacher */
+    .what__actions > .what__garden {
+      height: 128px;
+    }
+    .step--what {
+      padding-bottom: 170px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, onPage, reduced } from '../lib/motion';
+  import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin';
+  import { fxTimeline } from '../lib/fx-title';
+  import { navigate } from 'astro:transitions/client';
+  import { communeBySlug, type Commune } from '../data/communes';
+  import { categoryById, type CategoryId } from '../data/categories';
+  import { searchCommunes, nearestCommune, distanceKm, normalize } from '../lib/geo';
+  import { getPrefs, setPrefs } from '../lib/store';
+
+  gsap.registerPlugin(MorphSVGPlugin);
+
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  const pinSvg =
+    '<svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/></svg>';
+
+  function highlight(text: string, q: string) {
+    const n = normalize(text);
+    const i = n.indexOf(normalize(q));
+    if (!q || i < 0) return esc(text);
+    return `${esc(text.slice(0, i))}<mark>${esc(text.slice(i, i + q.length))}</mark>${esc(text.slice(i + q.length))}`;
+  }
+
+  onPage('[data-onb]', (root, ctx) => {
+    const step1 = root.querySelector<HTMLElement>('[data-step="1"]')!;
+    const step2 = root.querySelector<HTMLElement>('[data-step="2"]')!;
+    const input = root.querySelector<HTMLInputElement>('[data-input]')!;
+    const list = root.querySelector<HTMLUListElement>('[data-suggest]')!;
+    const clear = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+    const next = root.querySelector<HTMLButtonElement>('[data-next]')!;
+    const locate = root.querySelector<HTMLButtonElement>('[data-locate]')!;
+    const msg = root.querySelector<HTMLElement>('[data-msg]')!;
+    const progress = root.querySelectorAll<HTMLElement>('[data-progress-dot]');
+    const progressPath = root.querySelector<HTMLElement>('[data-progress-path]')!;
+    const blobs = [...root.querySelectorAll<HTMLButtonElement>('.blob')];
+    const basket = root.querySelector<HTMLElement>('[data-basket]')!;
+    const basketImg = root.querySelector<HTMLElement>('[data-basket-img]')!;
+    const count = root.querySelector<HTMLElement>('[data-count]')!;
+    const goLabel = root.querySelector<HTMLElement>('[data-go-label]')!;
+    const offs: (() => void)[] = [];
+    const on = <K extends keyof HTMLElementEventMap>(el: EventTarget, ev: K | string, fn: (e: any) => void) => {
+      el.addEventListener(ev, fn);
+      offs.push(() => el.removeEventListener(ev, fn));
+    };
+
+    let chosen: Commune | null = null;
+    let results: Commune[] = [];
+    let active = -1;
+    const selected = new Set<CategoryId>();
+
+    // ---------- Étape 1 : autocomplétion ----------
+    const setMsg = (text: string, error = false) => {
+      msg.textContent = text;
+      msg.classList.toggle('is-error', error);
+      if (text) gsap.fromTo(msg, { autoAlpha: 0, y: -6 }, { autoAlpha: 1, y: 0, duration: 0.4 });
+    };
+
+    const setChosen = (c: Commune | null) => {
+      chosen = c;
+      next.disabled = !c;
+      if (c) {
+        input.value = c.name;
+        setMsg(`${c.name}, ${c.province} (${c.zip}) — parfait, on y va.`);
+        gsap.fromTo(next, { scale: 0.94 }, { scale: 1, duration: 0.8, ease: 'elastic.out(1, 0.4)' });
+      }
+      clear.hidden = !input.value;
+    };
+
+    const close = () => {
+      list.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+      active = -1;
+    };
+
+    const render = () => {
+      const q = input.value.trim();
+      results = searchCommunes(q);
+      clear.hidden = !input.value;
+      if (!q) return close();
+      if (!results.length) {
+        list.innerHTML = `<li class="empty" role="option" aria-disabled="true">Aucune commune trouvée — essayez un code postal.</li>`;
+      } else {
+        list.innerHTML = results
+          .map(
+            (c, i) =>
+              `<li role="option" id="opt-${c.slug}" data-slug="${c.slug}" aria-selected="${i === active}">${pinSvg}<span><span class="name">${highlight(c.name, q)}</span>${c.alt ? ` <span class="prov">· ${highlight(c.alt, q)}</span>` : ''}<span class="prov">, ${esc(c.province)} (${c.zip})</span></span></li>`,
+          )
+          .join('');
+      }
+      if (list.hidden) {
+        list.hidden = false;
+        gsap.fromTo(list, { autoAlpha: 0, y: -8 }, { autoAlpha: 1, y: 0, duration: 0.35 });
+        gsap.fromTo(list.children, { autoAlpha: 0, y: -6 }, { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.03 });
+      }
+      input.setAttribute('aria-expanded', 'true');
+    };
+
+    const setActive = (i: number) => {
+      active = (i + results.length) % results.length;
+      list.querySelectorAll('li').forEach((li, j) => li.setAttribute('aria-selected', String(j === active)));
+      const c = results[active];
+      if (c) input.setAttribute('aria-activedescendant', `opt-${c.slug}`);
+    };
+
+    on(input, 'input', () => {
+      chosen = null;
+      next.disabled = true;
+      setMsg('');
+      active = 0;
+      render();
+    });
+    on(input, 'focus', () => input.value && !chosen && render());
+    on(input, 'keydown', (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' && results.length) {
+        e.preventDefault();
+        setActive(active + 1);
+      } else if (e.key === 'ArrowUp' && results.length) {
+        e.preventDefault();
+        setActive(active - 1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (!list.hidden && results[Math.max(active, 0)]) {
+          setChosen(results[Math.max(active, 0)]);
+          close();
+        } else if (chosen) goTo2();
+      } else if (e.key === 'Escape') close();
+    });
+    on(list, 'pointerdown', (e: PointerEvent) => {
+      const li = (e.target as HTMLElement).closest<HTMLElement>('li[data-slug]');
+      if (!li) return;
+      e.preventDefault();
+      setChosen(communeBySlug[li.dataset.slug!]);
+      close();
+    });
+    on(list, 'pointermove', (e: PointerEvent) => {
+      const li = (e.target as HTMLElement).closest<HTMLElement>('li[data-slug]');
+      if (li) setActive([...list.children].indexOf(li));
+    });
+    on(document, 'pointerdown', (e: PointerEvent) => {
+      if (!(e.target as HTMLElement).closest('.where')) close();
+    });
+    on(clear, 'click', () => {
+      input.value = '';
+      setChosen(null);
+      setMsg('');
+      close();
+      input.focus();
+    });
+
+    on(locate, 'click', () => {
+      if (!('geolocation' in navigator)) return setMsg('La géolocalisation n’est pas disponible sur cet appareil.', true);
+      locate.classList.add('is-loading');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          locate.classList.remove('is-loading');
+          const { latitude: lat, longitude: lng } = pos.coords;
+          const c = nearestCommune(lat, lng);
+          if (distanceKm({ lat, lng }, c) > 60) {
+            setMsg('Farmlize couvre pour l’instant la Belgique. Entrez une commune belge pour continuer.', true);
+            return;
+          }
+          // petite animation de "frappe"
+          input.value = '';
+          const word = { n: 0 };
+          gsap.to(word, {
+            n: c.name.length,
+            duration: Math.min(0.9, c.name.length * 0.07),
+            ease: 'none',
+            onUpdate: () => (input.value = c.name.slice(0, Math.round(word.n))),
+            onComplete: () => setChosen(c),
+          });
+        },
+        () => {
+          locate.classList.remove('is-loading');
+          setMsg('Impossible de vous localiser — tapez plutôt votre commune.', true);
+          gsap.fromTo(root.querySelector('[data-field]'), { x: -8 }, { x: 0, duration: 0.6, ease: 'elastic.out(1, 0.3)' });
+        },
+        { timeout: 10000, maximumAge: 600000 },
+      );
+    });
+
+    on(next, 'click', () => chosen && goTo2());
+
+    // ---------- Étape 2 : catégories ----------
+    const updateCount = () => {
+      const n = selected.size;
+      count.textContent = String(n);
+      gsap.to(count, { scale: n ? 1 : 0, duration: 0.5, ease: n ? 'back.out(3)' : 'power2.in' });
+      const go = goLabel.closest<HTMLElement>('[data-go]')!;
+      go.classList.toggle('is-full', n > 0);
+      goLabel.children[0].setAttribute('aria-hidden', String(n > 0));
+      goLabel.children[1].setAttribute('aria-hidden', String(!n));
+    };
+
+    // ---------- Le panier : il se remplit de ce qu'on choisit, et se vide quand on retire ----------
+    const bkSvg = basketImg.querySelector<SVGSVGElement>('svg')!;
+    const bkBack = bkSvg.querySelector<SVGGElement>('[data-bk-back]')!;
+    const bkFront = bkSvg.querySelector<SVGGElement>('[data-bk-front]')!;
+    const bkItems = new Map([...bkSvg.querySelectorAll<SVGGElement>('[data-bk]')].map((g) => [g.dataset.bk as CategoryId, g]));
+    // emplacements dans l'ordre de remplissage (x, y, inclinaison, rangée) : du milieu vers les bords, puis derrière
+    const SLOTS: [number, number, number, 'f' | 'b'][] = [
+      [230, 116, -4, 'f'],
+      [146, 124, -14, 'f'],
+      [314, 122, 12, 'f'],
+      [190, 84, -8, 'b'],
+      [272, 82, 9, 'b'],
+      [386, 132, 18, 'f'],
+      [76, 134, -20, 'f'],
+      [232, 52, 3, 'b'],
+    ];
+    // produits encore en l'air (on peut les désélectionner avant qu'ils n'atterrissent)
+    const flights = new Map<CategoryId, { tl: gsap.core.Timeline; clone: SVGElement }>();
+    gsap.set([...bkItems.values()], { transformOrigin: '50% 50%', scale: 0 });
+
+    // range chaque produit à sa place (les suivants se resserrent quand on en retire un)
+    const layout = (animate: boolean, incoming?: CategoryId) => {
+      [...selected].forEach((id, i) => {
+        const [x, y, rotation, row] = SLOTS[i % SLOTS.length];
+        const g = bkItems.get(id)!;
+        (row === 'b' ? bkBack : bkFront).appendChild(g);
+        if (id === incoming) return void gsap.set(g, { x, y, rotation });
+        if (animate) gsap.to(g, { x, y, rotation, duration: 0.6, ease: 'back.out(1.7)', overwrite: 'auto' });
+        else gsap.set(g, { x, y, rotation, scale: 1, visibility: 'visible' });
+      });
+    };
+    const squash = () => gsap.fromTo(basketImg, { scaleX: 1.08, scaleY: 0.9 }, { scaleX: 1, scaleY: 1, duration: 0.8, ease: 'elastic.out(1, 0.35)' });
+
+    // coordonnées d'un emplacement du panier, à l'écran
+    const slotOnScreen = (id: CategoryId) => {
+      const i = [...selected].indexOf(id);
+      const [x, y] = SLOTS[i % SLOTS.length];
+      const pt = new DOMPoint(x, y).matrixTransform(bkSvg.getScreenCTM()!);
+      const scale = bkSvg.getBoundingClientRect().width / 460;
+      return { x: pt.x, y: pt.y, size: 96 * scale };
+    };
+    const iconClone = (id: CategoryId, r: DOMRect | { left: number; top: number; width: number; height: number }) => {
+      const clone = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      clone.setAttribute('viewBox', '0 0 100 100');
+      clone.classList.add('riso');
+      clone.innerHTML = `<use href="#ico-${id}"></use>`;
+      Object.assign(clone.style, { position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, zIndex: '100', pointerEvents: 'none' });
+      document.body.appendChild(clone);
+      return clone;
+    };
+
+    // le produit saute de sa bulle et atterrit à sa place dans le panier
+    const fly = (blob: HTMLElement, id: CategoryId) => {
+      const g = bkItems.get(id)!;
+      const a = blob.querySelector<SVGElement>('.blob__icon svg')!.getBoundingClientRect();
+      const s = slotOnScreen(id);
+      const clone = iconClone(id, a);
+      const dx = s.x - (a.left + a.width / 2);
+      const dy = s.y - (a.top + a.height / 2);
+      const lift = Math.min(-60, dy * 0.15 - 90);
+      const tl = gsap.timeline();
+      tl.to(clone, { x: dx, duration: 0.8, ease: 'power1.inOut' }, 0)
+        .to(clone, { y: lift, duration: 0.32, ease: 'power2.out' }, 0)
+        .to(clone, { y: dy, duration: 0.48, ease: 'power2.in' }, 0.32)
+        .to(clone, { rotation: gsap.utils.random(-220, 220), scale: s.size / a.width, duration: 0.8, ease: 'power1.in' }, 0)
+        .add(() => {
+          clone.remove();
+          flights.delete(id);
+          const [, y] = SLOTS[[...selected].indexOf(id) % SLOTS.length];
+          gsap.set(g, { visibility: 'visible' });
+          gsap.fromTo(g, { scale: 0.8, y: y - 34 }, { scale: 1, y, duration: 0.6, ease: 'bounce.out', overwrite: 'auto' });
+          squash();
+        }, 0.8);
+      flights.set(id, { tl, clone });
+    };
+
+    // …et en ressort, retourne à sa bulle ; les autres se resserrent
+    const flyBack = (blob: HTMLElement, id: CategoryId) => {
+      const g = bkItems.get(id)!;
+      // encore en vol : on l'arrête là
+      const inAir = flights.get(id);
+      flights.delete(id);
+      inAir?.tl.kill();
+      inAir?.clone.remove();
+      const landed = !inAir;
+      const from = g.getBoundingClientRect();
+      gsap.set(g, { visibility: 'hidden', scale: 0 });
+      if (!landed || !from.width) return;
+      const target = blob.querySelector<SVGElement>('.blob__icon svg')!.getBoundingClientRect();
+      const clone = iconClone(id, from);
+      const dx = target.left + target.width / 2 - (from.left + from.width / 2);
+      const dy = target.top + target.height / 2 - (from.top + from.height / 2);
+      gsap
+        .timeline({ onComplete: () => clone.remove() })
+        .to(clone, { x: dx, duration: 0.7, ease: 'power1.inOut' }, 0)
+        .to(clone, { y: Math.min(-70, dy * 0.2 - 80), duration: 0.28, ease: 'power2.out' }, 0)
+        .to(clone, { y: dy, duration: 0.42, ease: 'power2.in' }, 0.28)
+        .to(clone, { rotation: gsap.utils.random(-200, 200), scale: target.width / from.width, duration: 0.7 }, 0)
+        .to(clone, { autoAlpha: 0, duration: 0.12 }, 0.6);
+      gsap.fromTo(basketImg, { rotation: -5 }, { rotation: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)', transformOrigin: '50% 100%' });
+    };
+
+    blobs.forEach((blob) => {
+      // la forme et sa plaque se déforment ensemble
+      const paths = [...blob.querySelectorAll<SVGPathElement>('path')];
+      const base = paths[0].getAttribute('d')!;
+      const alt = paths[0].dataset.alt!;
+      const icon = blob.querySelector('.blob__icon');
+      on(blob, 'pointerenter', () => {
+        gsap.to(paths, { morphSVG: alt, duration: 0.8, ease: 'elastic.out(1, 0.5)', overwrite: true });
+        gsap.to(icon, { rotation: -10, scale: 1.1, y: -4, duration: 0.5, ease: 'back.out(3)' });
+      });
+      on(blob, 'pointerleave', () => {
+        gsap.to(paths, { morphSVG: base, duration: 0.9, ease: 'elastic.out(1, 0.5)', overwrite: true });
+        gsap.to(icon, { rotation: 0, scale: 1, y: 0, duration: 0.5 });
+      });
+      on(blob, 'click', () => {
+        const id = blob.dataset.cat as CategoryId;
+        const isOn = !selected.has(id);
+        blob.setAttribute('aria-pressed', String(isOn));
+        gsap.fromTo(blob, { scale: 0.94 }, { scale: 1, duration: 0.7, ease: 'elastic.out(1, 0.4)' });
+        const animate = !reduced() && !!basketImg.offsetParent;
+        if (isOn) {
+          selected.add(id);
+          layout(animate, animate ? id : undefined);
+          if (animate) fly(blob, id);
+        } else {
+          if (animate) flyBack(blob, id);
+          else gsap.set(bkItems.get(id)!, { visibility: 'hidden', scale: 0 });
+          selected.delete(id);
+          layout(animate);
+        }
+        if (!reduced()) gsap.fromTo(root.querySelector('[data-go]'), { scale: 0.95 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+        updateCount();
+      });
+    });
+
+    // le chemin se trace jusqu'au tampon suivant, qui se pose d'un coup
+    const toggleProgress = (n: number) => {
+      gsap.to(progressPath, { scaleX: n > 1 ? 1 : 0, duration: reduced() ? 0 : 0.6, ease: 'fz.inOut' });
+      progress.forEach((p, i) => {
+        const was = p.classList.contains('is-on');
+        p.classList.toggle('is-on', i < n);
+        if (i < n && !was && !reduced()) gsap.fromTo(p, { scale: 0.5, rotation: -40 }, { scale: 1, rotation: 0, duration: 0.8, delay: 0.4, ease: 'back.out(3)' });
+      });
+    };
+
+    // Une seule transition à la fois (évite qu'un double clic relance l'intro
+    // et fige des éléments à opacité 0), et des valeurs de fin toujours explicites.
+    let busy = false;
+    let introTl: gsap.core.Timeline | null = null;
+    const step2Actions = () => step2.querySelectorAll<HTMLElement>('.what__actions .btn');
+
+    const intro = (step: HTMLElement) => {
+      introTl?.kill();
+      introTl = null;
+      const title = step.querySelector<HTMLElement>('[data-fx]')!;
+      const parts = step.querySelectorAll<HTMLElement>('[data-anim], .where-chip');
+      const illo = step.querySelector<HTMLElement>('[data-anim-illo]');
+      const extras = step === step2 ? [...blobs, basket, ...step2Actions()] : [];
+      if (reduced()) {
+        gsap.set([title, ...parts, illo, ...extras].filter(Boolean), { autoAlpha: 1, clearProps: 'transform' });
+        return;
+      }
+      const tl = gsap.timeline({
+        onComplete: () => {
+          if (extras.length) gsap.set(extras, { clearProps: 'transform,opacity,visibility' });
+        },
+      });
+      // le titre monte mot à mot, puis son surligneur se trace (même système que le reste du site)
+      tl.add(fxTimeline(title, true), 0).fromTo(parts, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.08 }, 0.2);
+      if (illo) {
+        // la campagne monte calque par calque, du ciel au premier plan
+        gsap.set(illo, { autoAlpha: 1, yPercent: 0 });
+        tl.fromTo(
+          illo.querySelectorAll('[data-cty-layer]'),
+          { yPercent: 45, autoAlpha: 0 },
+          { yPercent: 0, autoAlpha: 1, duration: 1.3, ease: 'expo.out', stagger: 0.09 },
+          0.1,
+        );
+      }
+      if (step === step2) {
+        tl.fromTo(
+          blobs,
+          { autoAlpha: 0, scale: 0.7, y: 30, rotation: () => gsap.utils.random(-10, 10) },
+          { autoAlpha: 1, scale: 1, y: 0, rotation: 0, duration: 0.9, ease: 'back.out(1.8)', stagger: 0.05 },
+          0.25,
+        )
+          // le potager pousse depuis le bas, puis le panier vient s'y poser
+          .fromTo('[data-garden-strip]', { yPercent: 75 }, { yPercent: 0, duration: 1.3, ease: 'expo.out' }, 0.2)
+          .fromTo(basket, { yPercent: 60, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 1.2, ease: 'expo.out' }, 0.45)
+          .fromTo(step2Actions(), { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.08 }, 0.5);
+      }
+      introTl = tl;
+      return tl;
+    };
+
+    const goTo2 = () => {
+      if (!chosen || busy || !step2.hidden) return;
+      busy = true;
+      introTl?.kill();
+      close();
+      setPrefs({ commune: chosen.slug });
+      root.querySelector('[data-where-name]')!.textContent = chosen.name;
+      toggleProgress(2);
+      const swap = () => {
+        step1.hidden = true;
+        step2.hidden = false;
+        gsap.set(step1.querySelectorAll('.step__inner > *, [data-anim-illo]'), { clearProps: 'all' });
+        window.scrollTo(0, 0);
+        intro(step2);
+        busy = false;
+      };
+      if (reduced()) return swap();
+      gsap
+        .timeline({ onComplete: swap })
+        .to(step1.querySelectorAll('.step__inner > *'), { autoAlpha: 0, y: -30, duration: 0.45, stagger: 0.04, ease: 'power2.in' })
+        .to(step1.querySelector('[data-anim-illo]'), { yPercent: 40, autoAlpha: 0, duration: 0.5, ease: 'power2.in' }, 0);
+    };
+
+    const goTo1 = () => {
+      if (busy || step1.hidden === false) return;
+      busy = true;
+      introTl?.kill();
+      toggleProgress(1);
+      const targets = step2.querySelectorAll('.step__inner > *, [data-basket], .what__actions .btn, [data-garden-strip]');
+      const swap = () => {
+        step2.hidden = true;
+        gsap.set(targets, { clearProps: 'all' });
+        step1.hidden = false;
+        intro(step1);
+        input.focus({ preventScroll: true });
+        busy = false;
+      };
+      if (reduced()) return swap();
+      gsap.to(targets, { autoAlpha: 0, y: 30, duration: 0.4, stagger: 0.03, ease: 'power2.in', onComplete: swap });
+    };
+
+    on(root.querySelector('[data-back]')!, 'click', goTo1);
+    on(root.querySelector('[data-where-chip]')!, 'click', goTo1);
+
+    on(root.querySelector('[data-go]')!, 'click', () => {
+      if (busy) return;
+      if (!chosen) return goTo1();
+      busy = true;
+      introTl?.kill();
+      gsap.set([...blobs, basket, ...step2Actions()], { autoAlpha: 1 });
+      const cats = [...selected];
+      setPrefs({ commune: chosen.slug, cats });
+      const url = `/fermes?lieu=${chosen.slug}${cats.length ? `&cats=${cats.join(',')}` : ''}`;
+      if (reduced()) return navigate(url);
+      gsap
+        .timeline({ onComplete: () => navigate(url) })
+        .to(basketImg, { y: -30, duration: 0.25, ease: 'power2.out' })
+        .to(basketImg, { y: 0, duration: 0.5, ease: 'bounce.out' })
+        .to(blobs, { autoAlpha: 0, scale: 0.85, duration: 0.35, stagger: 0.02, ease: 'power2.in' }, 0);
+    });
+
+    // ---------- La campagne suit (un peu) la souris : chaque calque glisse selon sa profondeur ----------
+    if (!reduced() && matchMedia('(hover: hover)').matches) {
+      const layers = [...root.querySelectorAll<SVGElement>('[data-cty-layer]')].map((l) => ({
+        depth: Number(l.dataset.ctyLayer || 0),
+        x: gsap.quickTo(l, 'x', { duration: 1.2, ease: 'power3.out' }),
+      }));
+      on(window, 'pointermove', (e: PointerEvent) => {
+        const k = e.clientX / window.innerWidth - 0.5;
+        layers.forEach((l) => l.x(-k * 36 * l.depth));
+      });
+    }
+
+    // ---------- État initial ----------
+    const prefs = getPrefs();
+    if (prefs.commune && communeBySlug[prefs.commune]) {
+      chosen = communeBySlug[prefs.commune];
+      input.value = chosen.name;
+      next.disabled = false;
+      clear.hidden = false;
+    }
+    (prefs.cats ?? []).forEach((id) => {
+      if (!categoryById[id]) return;
+      selected.add(id);
+      root.querySelector(`.blob[data-cat="${id}"]`)?.setAttribute('aria-pressed', 'true');
+    });
+    // les choix déjà faits sont déjà dans le panier
+    layout(false);
+    gsap.set(count, { scale: 0 });
+    updateCount();
+
+    const params = new URLSearchParams(location.search);
+    if (params.get('etape') === '2' && chosen) {
+      step1.hidden = true;
+      step2.hidden = false;
+      root.querySelector('[data-where-name]')!.textContent = chosen.name;
+      toggleProgress(2);
+      intro(step2);
+    } else {
+      intro(step1);
+      if (!matchMedia('(hover: none)').matches) input.focus({ preventScroll: true });
+    }
+
+    return () => offs.forEach((o) => o());
+  });
+</script>

@@ -1,0 +1,78 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import SvgDefs from '../components/SvgDefs.astro';
+import Loader from '../components/Loader.astro';
+import PageTransition from '../components/PageTransition.astro';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Défilement fluide (Lenis) — désactivé sur la carte */
+  smooth?: boolean;
+  bodyClass?: string;
+}
+const {
+  title,
+  description = 'Farmlize vous connecte directement avec les producteurs, maraîchers, fromagers et artisans de votre région pour des produits sains et de saison.',
+  smooth = true,
+  bodyClass,
+} = Astro.props;
+const fullTitle = title ? `${title} — Farmlize` : 'Farmlize — Trouvez les fermes près de chez vous';
+---
+
+<!doctype html>
+<html lang="fr-BE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#FCFAF2" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{fullTitle}</title>
+    <ClientRouter />
+  </head>
+  <body class={bodyClass} data-smooth={smooth ? '' : undefined}>
+    <SvgDefs />
+    <Loader />
+    <PageTransition />
+    <slot />
+  </body>
+</html>
+
+<script>
+  import Lenis from 'lenis';
+  import { gsap, ScrollTrigger, reduced, loaderDone } from '../lib/motion';
+  import { initClickGarden } from '../lib/click-garden';
+
+  initClickGarden();
+
+  let lenis: Lenis | null = null;
+  const raf = (time: number) => lenis?.raf(time * 1000);
+
+  document.addEventListener('astro:page-load', async () => {
+    await loaderDone();
+    if (lenis || !document.body.hasAttribute('data-smooth') || reduced()) return;
+    lenis = new Lenis({ lerp: 0.11, wheelMultiplier: 0.95 });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(raf);
+    gsap.ticker.lagSmoothing(0);
+    // ancres internes
+    document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) =>
+      a.addEventListener('click', (e) => {
+        const target = document.querySelector(a.getAttribute('href')!);
+        if (!target) return;
+        e.preventDefault();
+        lenis?.scrollTo(target as HTMLElement, { offset: -90, duration: 1.4 });
+      }),
+    );
+    (window as any).__lenis = lenis;
+  });
+
+  document.addEventListener('astro:before-swap', () => {
+    gsap.ticker.remove(raf);
+    lenis?.destroy();
+    lenis = null;
+    (window as any).__lenis = null;
+  });
+</script>

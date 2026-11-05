@@ -1,0 +1,110 @@
+---
+/**
+ * Décor : des fruits et légumes riso qui flottent autour d'un titre ou d'une section.
+ * Chacun ondule doucement, apparaît d'un petit bond quand il arrive à l'écran,
+ * puis glisse à sa propre vitesse au scroll (parallaxe, `depth`).
+ * Positions en % de la section parente (qui doit être en position: relative).
+ * `name` : une illustration du calendrier (Fraises, Carottes…) ; `cat` : une icône produit (fromages, miel…).
+ */
+import { seasonArt } from '../lib/season-art';
+
+interface Item {
+  name?: string;
+  cat?: string;
+  x: number;
+  y: number;
+  size?: number;
+  rot?: number;
+  depth?: number;
+  /** masqué sur mobile (là où la place manque) */
+  desk?: boolean;
+}
+interface Props {
+  items: Item[];
+}
+const { items } = Astro.props;
+---
+
+{
+  items.map((it, i) => (
+    <span
+      class:list={['floater', { 'floater--desk': it.desk }]}
+      aria-hidden="true"
+      data-floater
+      data-depth={it.depth ?? 1}
+      style={`left:${it.x}%; top:${it.y}%; --w:${it.size ?? 1}`}
+    >
+      <span class="floater__pop" data-floater-pop>
+        {it.cat ? (
+          <svg class="riso ri-bob" viewBox="0 0 100 100" style={`--a:${-6 - (i % 3) * 1.5}px; --dur:${3 + (i % 4) * 0.4}s; --d:${-i * 0.7}s; rotate:${it.rot ?? 0}deg`}>
+            <use href={`#ico-${it.cat}`} />
+          </svg>
+        ) : (
+          <svg
+            class="riso ri-bob"
+            viewBox="0 0 60 60"
+            style={`--a:${-6 - (i % 3) * 1.5}px; --dur:${3 + (i % 4) * 0.4}s; --d:${-i * 0.7}s; rotate:${it.rot ?? 0}deg`}
+            set:html={seasonArt(it.name ?? 'Pommes')}
+          />
+        )}
+      </span>
+    </span>
+  ))
+}
+
+<style is:global>
+  .floater {
+    position: absolute;
+    z-index: 0;
+    width: calc(clamp(44px, 5.4vw, 84px) * var(--w, 1));
+    translate: -50% -50%;
+    pointer-events: none;
+  }
+  .floater__pop {
+    display: block;
+  }
+  .floater svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  @media (max-width: 760px) {
+    .floater {
+      width: calc(38px * var(--w, 1));
+    }
+    .floater--desk {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, ScrollTrigger, reduced, loaderDone } from '../lib/motion';
+
+  const live: (() => void)[] = [];
+  document.addEventListener('astro:page-load', async () => {
+    await loaderDone();
+    if (reduced()) return;
+    document.querySelectorAll<HTMLElement>('[data-floater]').forEach((el, i) => {
+      const depth = Number(el.dataset.depth || 1);
+      const zone = el.parentElement!;
+      const pop = el.querySelector<HTMLElement>('[data-floater-pop]')!;
+      // il saute en place en arrivant à l'écran…
+      const enter = gsap.fromTo(
+        pop,
+        { scale: 0, rotation: i % 2 ? 50 : -50 },
+        { scale: 1, rotation: 0, duration: 0.9, ease: 'back.out(2.4)', scrollTrigger: { trigger: el, start: 'top 94%', once: true } },
+      );
+      // …puis dérive à sa vitesse (les plus « proches » bougent plus)
+      const drift = gsap.fromTo(
+        el,
+        { y: 46 * depth },
+        { y: -46 * depth, ease: 'none', scrollTrigger: { trigger: zone, start: 'top bottom', end: 'bottom top', scrub: true } },
+      );
+      live.push(() => [enter, drift].forEach((t) => (t.scrollTrigger?.kill(), t.kill())));
+    });
+    ScrollTrigger.refresh();
+  });
+  document.addEventListener('astro:before-swap', () => live.splice(0).forEach((k) => k()));
+</script>

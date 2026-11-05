@@ -1,0 +1,15 @@
+---
+import type { CategoryId } from '../data/categories';
+
+interface Props {
+  cat: CategoryId;
+  size?: number | string;
+  class?: string;
+}
+const { cat, size = 64, class: cls } = Astro.props;
+const dim = typeof size === 'number' ? `${size}px` : size;
+---
+
+<svg class:list={['produce', 'riso', cls]} viewBox="0 0 100 100" style={`width:${dim};height:${dim}`} aria-hidden="true">
+  <use href={`#ico-${cat}`}></use>
+</svg>

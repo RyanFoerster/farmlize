@@ -1,0 +1,349 @@
+---
+/**
+ * « De saison en ce moment » : le nom du mois en très grand sur un soleil rayé,
+ * entouré des fruits et légumes du mois qui tombent du ciel, flottent, s'écartent
+ * au passage du curseur et sautent quand on clique dessus.
+ */
+import Icon from './Icon.astro';
+import { monthNames, seasonItems } from '../data/seasons';
+import { gardenSprouts } from '../lib/season-garden';
+import { seasonArt } from '../lib/season-art';
+import { ink } from '../lib/riso';
+
+const month = new Date().getMonth() + 1;
+const count = seasonItems.filter((s) => s.months.includes(month)).length;
+const sprouts = gardenSprouts(month);
+---
+
+<section class="garden" data-garden data-month={month}>
+  <div class="garden__stage" data-garden-stage>
+    <div class="garden__sun" aria-hidden="true" data-garden-sun>
+      <svg class="riso" viewBox="0 0 200 200">
+        <defs><clipPath id="garden-sun"><circle cx="100" cy="100" r="96"></circle></clipPath></defs>
+        <circle cx="100" cy="100" r="96" fill={ink.yellow}></circle>
+        <circle cx="100" cy="100" r="96" fill="url(#ri-o-b)" filter="url(#ri-dot)"></circle>
+        <g clip-path="url(#garden-sun)" fill="var(--cream)">
+          <rect x="0" y="128" width="200" height="6"></rect>
+          <rect x="0" y="146" width="200" height="9"></rect>
+          <rect x="0" y="166" width="200" height="13"></rect>
+          <rect x="0" y="188" width="200" height="16"></rect>
+        </g>
+      </svg>
+    </div>
+
+    <div class="garden__center">
+      <h2 class="display garden__month" data-split data-garden-month>{monthNames[month - 1]}</h2>
+      <p class="garden__lead" data-reveal>
+        <span data-garden-count>{count}</span> fruits et légumes poussent en ce moment dans les champs belges. Plus de goût, moins de kilomètres.
+      </p>
+      <a href="/saisons" class="btn" data-reveal>
+        Voir le calendrier <Icon name="arrow" size={18} class="icon-arrow" />
+      </a>
+    </div>
+
+    <ul class="garden__items" data-garden-items>
+      {
+        sprouts.map((s) => (
+          <li class="sprout" style={`left:${s.x}%;top:${s.y}%;--s:${s.size}px;--r:${s.rot}deg;--c:${s.color}`}>
+            <button type="button" class="sprout__btn" aria-label={s.name}>
+              <span class="sprout__float" style={`--dur:${s.dur}s;--d:${s.delay}s`}>
+                <svg class="riso" viewBox="0 0 60 60" aria-hidden="true" set:html={seasonArt(s.name)} />
+              </span>
+              <span class="sprout__label" aria-hidden="true">{s.name}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style is:global>
+  /* invisibles jusqu'à leur chute (GSAP les révèle) */
+  @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    .garden .sprout,
+    .garden__sun {
+      visibility: hidden;
+    }
+  }
+  .garden {
+    position: relative;
+    padding: clamp(56px, 8vw, 120px) var(--gutter);
+    overflow: hidden;
+  }
+  .garden__stage {
+    position: relative;
+    max-width: 1240px;
+    height: clamp(660px, 68vw, 860px);
+    margin-inline: auto;
+    display: grid;
+    place-items: center;
+  }
+  .garden__sun {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(44vw, 420px);
+    translate: -50% -66%;
+    pointer-events: none;
+  }
+  .garden__sun svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .garden__sun svg {
+      animation: garden-breathe 7s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes garden-breathe {
+    from {
+      scale: 1;
+      rotate: -2deg;
+    }
+    to {
+      scale: 1.04;
+      rotate: 2deg;
+    }
+  }
+  .garden__center {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 480px;
+    text-align: center;
+  }
+  .garden__month {
+    font-size: clamp(96px, 16vw, 230px);
+    line-height: 0.82;
+    color: var(--ink);
+  }
+  /* le texte sur une étiquette en papier (lisible par-dessus le soleil) */
+  .garden__lead {
+    max-width: 420px;
+    /* même respiration au-dessus et en dessous de l'étiquette */
+    margin: clamp(30px, 3.2vw, 44px) 0 clamp(34px, 3.6vw, 48px);
+    padding: 16px 24px 17px;
+    border-radius: 18px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line),
+      4px 5px 0 0 var(--butter);
+    font-size: var(--fs-lead);
+    line-height: 1.45;
+    color: var(--ink-2);
+    rotate: -1.2deg;
+  }
+
+  /* --- les pousses */
+  .garden__items {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none;
+  }
+  .sprout {
+    position: absolute;
+    width: var(--s);
+    height: var(--s);
+    translate: -50% -50%;
+    rotate: var(--r);
+  }
+  .sprout__btn {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sprout__float {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .sprout__float svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    transition: scale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .sprout__btn:hover .sprout__float svg,
+  .sprout__btn:focus-visible .sprout__float svg {
+    scale: 1.14;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .sprout__float {
+      animation: garden-float var(--dur, 3.6s) var(--d, 0s) ease-in-out infinite alternate;
+    }
+  }
+  @keyframes garden-float {
+    from {
+      translate: 0 0;
+      rotate: -4deg;
+    }
+    to {
+      translate: 0 -12px;
+      rotate: 4deg;
+    }
+  }
+  .sprout__label {
+    position: absolute;
+    left: 50%;
+    top: calc(100% - 4px);
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--cream);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    rotate: calc(var(--r) * -1);
+    translate: -50% 6px;
+    scale: 0.7;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.25s,
+      scale 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      translate 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .sprout__btn:hover .sprout__label,
+  .sprout__btn:focus-visible .sprout__label,
+  .sprout.is-pop .sprout__label {
+    opacity: 1;
+    scale: 1;
+    translate: -50% 0;
+  }
+  .sprout__btn:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+
+  @media (max-width: 760px) {
+    .garden__stage {
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      padding: 40px 0 20px;
+    }
+    .garden__sun {
+      top: 22%;
+      width: 86vw;
+    }
+    .garden__items {
+      position: relative;
+      inset: auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px 10px;
+    }
+    .sprout {
+      position: relative;
+      left: auto !important;
+      top: auto !important;
+      width: calc(var(--s) * 0.68);
+      height: calc(var(--s) * 0.68);
+      translate: none;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, ScrollTrigger, onPage, reduced } from '../lib/motion';
+  import { monthNames, seasonItems } from '../data/seasons';
+  import { gardenSprouts, sproutHTML } from '../lib/season-garden';
+
+  // Le HTML est statique : si le mois du visiteur n'est pas celui du build, on refait le potager
+  // (avant le découpage des titres, d'où l'écoute directe de page-load).
+  document.addEventListener('astro:page-load', () => {
+    const garden = document.querySelector<HTMLElement>('[data-garden]');
+    const month = new Date().getMonth() + 1;
+    if (!garden || Number(garden.dataset.month) === month) return;
+    garden.dataset.month = String(month);
+    garden.querySelector('[data-garden-month]')!.textContent = monthNames[month - 1];
+    garden.querySelector('[data-garden-count]')!.textContent = String(seasonItems.filter((s) => s.months.includes(month)).length);
+    garden.querySelector('[data-garden-items]')!.innerHTML = gardenSprouts(month).map(sproutHTML).join('');
+  });
+
+  onPage('[data-garden]', (root) => {
+    const sprouts = [...root.querySelectorAll<HTMLElement>('.sprout')];
+    const offs: (() => void)[] = [];
+
+    // le soleil se lève, puis les fruits et légumes tombent du ciel et rebondissent
+    if (!reduced()) {
+      const tl = gsap.timeline({ scrollTrigger: { trigger: root, start: 'top 65%', once: true } });
+      tl.fromTo('[data-garden-sun]', { scale: 0.4, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 1.2, ease: 'back.out(1.6)' }).fromTo(
+        sprouts,
+        { y: () => -gsap.utils.random(320, 640), rotation: () => gsap.utils.random(-160, 160), autoAlpha: 0 },
+        { y: 0, rotation: 0, autoAlpha: 1, duration: 1.2, ease: 'bounce.out', stagger: { each: 0.05, from: 'random' } },
+        0.15,
+      );
+    }
+
+    // un clic (ou un tap) : la pousse saute en tournoyant et montre son nom
+    sprouts.forEach((sp) => {
+      const btn = sp.querySelector<HTMLButtonElement>('.sprout__btn')!;
+      const art = sp.querySelector<SVGElement>('svg')!;
+      const jump = () => {
+        sp.classList.add('is-pop');
+        if (!reduced()) {
+          gsap.killTweensOf(art);
+          gsap
+            .timeline({ onComplete: () => sp.classList.remove('is-pop') })
+            .to(art, { y: -70, rotation: '+=200', duration: 0.38, ease: 'power2.out' })
+            .to(art, { y: 0, rotation: '+=160', duration: 0.75, ease: 'bounce.out' })
+            .set(art, { rotation: 0 });
+        } else window.setTimeout(() => sp.classList.remove('is-pop'), 1200);
+      };
+      btn.addEventListener('click', jump);
+      offs.push(() => btn.removeEventListener('click', jump));
+    });
+
+    // le curseur écarte les pousses comme des feuilles
+    if (!reduced() && window.matchMedia('(hover: hover)').matches) {
+      const stage = root.querySelector<HTMLElement>('[data-garden-stage]')!;
+      const movers = sprouts.map((sp) => {
+        const btn = sp.querySelector<HTMLElement>('.sprout__btn')!;
+        return { sp, x: gsap.quickTo(btn, 'x', { duration: 1.1, ease: 'power3.out' }), y: gsap.quickTo(btn, 'y', { duration: 1.1, ease: 'power3.out' }) };
+      });
+      const R = 130;
+      const onMove = (e: PointerEvent) => {
+        for (const m of movers) {
+          const r = m.sp.getBoundingClientRect();
+          const dx = r.left + r.width / 2 - e.clientX;
+          const dy = r.top + r.height / 2 - e.clientY;
+          const d = Math.hypot(dx, dy);
+          // celle qu'on survole ne bouge pas (on peut la viser), les voisines s'écartent un peu
+          const push = d > r.width * 0.55 && d < R ? (1 - d / R) * 22 : 0;
+          m.x(d ? (dx / d) * push : 0);
+          m.y(d ? (dy / d) * push : 0);
+        }
+      };
+      const onLeave = () => movers.forEach((m) => (m.x(0), m.y(0)));
+      stage.addEventListener('pointermove', onMove);
+      stage.addEventListener('pointerleave', onLeave);
+      offs.push(() => {
+        stage.removeEventListener('pointermove', onMove);
+        stage.removeEventListener('pointerleave', onLeave);
+      });
+    }
+
+    ScrollTrigger.refresh();
+    return () => offs.forEach((o) => o());
+  });
+</script>

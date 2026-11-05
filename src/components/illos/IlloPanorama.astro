@@ -1,0 +1,201 @@
+---
+/**
+ * Panorama pleine largeur, animé : collines rayées, moulin, ferme et silo, arbres,
+ * route où passe un tracteur, vaches, nuages et oiseaux.
+ * Construit en calques SVG superposés : les calques tramés (filtres coûteux) restent immobiles,
+ * les calques animés n'ont pas de trame ; chaque calque peut glisser à sa vitesse au scroll (parallaxe).
+ */
+import { ink, shade, starPath } from '../../lib/riso';
+
+const { class: cls, ...rest } = Astro.props;
+const { brown: K, paper: W, blue: B, sky: S, orange: O, red: R, coral: C, pink: P, yellow: Y, green: G, leaf: L, taupe: T } = ink;
+const VB = '0 0 1600 520';
+const fit = 'xMidYMax slice';
+
+const tree = (x: number, y: number, r: number, i: number) => `
+  <g transform="translate(${x} ${y})">
+    <rect x="-4" y="${r * 0.4}" width="8" height="${r * 1.6}" fill="${K}"/>
+    <g class="ri-sway" style="--a:2.2deg;--dur:${4.5 + (i % 3) * 0.7}s;--d:-${i * 0.8}s">
+      <path d="M0 ${-r} A ${r} ${r} 0 0 0 0 ${r} Z" fill="${G}"/>
+      <path d="M0 ${-r} A ${r} ${r} 0 0 1 0 ${r} Z" fill="${L}"/>
+      <circle cx="${-r * 0.4}" cy="${-r * 0.2}" r="4" fill="${O}"/>
+      <circle cx="${r * 0.35}" cy="${r * 0.3}" r="4" fill="${R}"/>
+    </g>
+  </g>`;
+
+const cow = (x: number, y: number, flip: boolean, i: number) => `
+  <g transform="translate(${x} ${y}) scale(${flip ? -1 : 1} 1)">
+    <rect x="-34" y="-6" width="7" height="22" rx="3" fill="${K}"/><rect x="-18" y="-6" width="7" height="22" rx="3" fill="${K}"/>
+    <rect x="10" y="-6" width="7" height="22" rx="3" fill="${K}"/><rect x="24" y="-6" width="7" height="22" rx="3" fill="${K}"/>
+    <rect x="-40" y="-36" width="78" height="38" rx="16" fill="${W}"/>
+    <path d="M-30 -36 C -26 -28 -14 -26 -10 -34 Z M6 -36 C 10 -22 24 -22 28 -34 C 22 -36 12 -36 6 -36 Z M-34 -10 C -28 -16 -18 -14 -16 -4 L -36 -4 Z" fill="${K}"/>
+    <path d="M-40 -28 C -48 -26 -50 -16 -46 -8" stroke="${K}" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <g class="ri-sway" style="--a:7deg;--dur:${2.6 + i * 0.5}s;--d:-${i}s;--o:10% 20%">
+      <rect x="32" y="-46" width="30" height="26" rx="10" fill="${W}"/>
+      <rect x="46" y="-34" width="18" height="14" rx="6" fill="${P}"/>
+      <path d="M36 -46 L 33 -54 M 50 -46 L 53 -54" stroke="${Y}" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="44" cy="-38" r="2.4" fill="${K}"/>
+    </g>
+  </g>`;
+---
+
+<div class:list={['pano', cls]} aria-hidden="true" {...rest}>
+  <!-- A · collines du fond (immobiles ; pas de trame : elle serait cachée par les plans de devant) -->
+  <svg class="pano__layer riso" viewBox={VB} preserveAspectRatio={fit} data-pano-layer="0.6">
+    <path d="M0 300 C 180 230 360 236 540 276 C 740 320 880 228 1080 236 C 1280 244 1440 300 1600 270 V520 H0 Z" fill={B}></path>
+    <g stroke={S} stroke-width="6" fill="none">
+      <path d="M0 330 C 180 260 360 266 540 306 C 740 350 880 258 1080 266 C 1280 274 1440 330 1600 300"></path>
+      <path d="M0 362 C 180 292 360 298 540 338 C 740 382 880 290 1080 298 C 1280 306 1440 362 1600 332"></path>
+    </g>
+  </svg>
+
+  <!-- B · ciel et moulin (animés) -->
+  <svg class="pano__layer riso" viewBox={VB} preserveAspectRatio={fit} data-pano-layer="0.45">
+    <defs><clipPath id="pano-sun"><circle cx="1290" cy="130" r="64"></circle></clipPath></defs>
+    <g class="ri-pulse" style="--a:1.05; --dur:4s">
+      <circle cx="1290" cy="130" r="64" fill={Y}></circle>
+      <g clip-path="url(#pano-sun)" fill="var(--cream)">
+        <rect x="1220" y="150" width="140" height="6"></rect><rect x="1220" y="164" width="140" height="9"></rect><rect x="1220" y="181" width="140" height="13"></rect>
+      </g>
+    </g>
+    <g class="ri-drift" style="--a:40px; --dur:16s">
+      <rect x="250" y="96" width="120" height="30" rx="15" fill={S}></rect><rect x="282" y="74" width="62" height="30" rx="15" fill={S}></rect>
+    </g>
+    <g class="ri-drift" style="--a:30px; --dur:20s; --d:-7s">
+      <rect x="780" y="58" width="96" height="26" rx="13" fill={S}></rect><rect x="804" y="40" width="48" height="26" rx="13" fill={S}></rect>
+    </g>
+    <g class="ri-drift" style="--a:36px; --dur:18s; --d:-3s">
+      <rect x="1440" y="190" width="110" height="26" rx="13" fill={S}></rect>
+    </g>
+    <g class="ri-drift" style="--a:60px; --dur:12s">
+      <path class="pano__bird" d="M560 150 q 9 -10 18 0 q 9 -10 18 0" stroke={K} stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+      <path class="pano__bird" style="--d:-.2s" d="M606 126 q 7 -8 14 0 q 7 -8 14 0" stroke={K} stroke-width="3" fill="none" stroke-linecap="round"></path>
+      <path class="pano__bird" style="--d:-.35s" d="M528 118 q 6 -7 12 0 q 6 -7 12 0" stroke={K} stroke-width="3" fill="none" stroke-linecap="round"></path>
+    </g>
+    <!-- moulin -->
+    <path d="M1064 252 L1071 176 L1089 176 L1096 252 Z" fill={W}></path>
+    <path d="M1075 252 V240 A5 5 0 0 1 1085 240 V252 Z" fill={R}></path>
+    <path d="M1066 180 L1080 162 L1094 180 Z" fill={R}></path>
+    <g class="ri-spin" style="--dur:9s">
+      <g fill={W} stroke={K} stroke-width="2">
+        <rect x="1075" y="108" width="10" height="62"></rect>
+        <rect x="1075" y="182" width="10" height="62"></rect>
+        <rect x="1012" y="171" width="62" height="10"></rect>
+        <rect x="1086" y="171" width="62" height="10"></rect>
+      </g>
+      <circle cx="1080" cy="176" r="7" fill={K}></circle>
+    </g>
+  </svg>
+
+  <!-- C · collines du milieu et ferme (immobiles) -->
+  <svg class="pano__layer riso" viewBox={VB} preserveAspectRatio={fit} data-pano-layer="0.3">
+    <path d="M0 372 C 170 320 350 322 530 360 C 700 396 860 330 1040 332 C 1230 334 1400 392 1600 352 V520 H0 Z" fill={L}></path>
+    <!-- ferme, silo et bottes de foin -->
+    <rect x="512" y="300" width="96" height="62" fill={R}></rect>
+    <path d="M504 304 L560 262 L616 304 Z" fill={K}></path>
+    <rect x="546" y="322" width="28" height="40" fill={W}></rect>
+    <path d="M546 322 L574 362 M574 322 L546 362" stroke={R} stroke-width="3"></path>
+    <rect x="522" y="312" width="14" height="12" fill={Y}></rect>
+    <rect x="626" y="262" width="32" height="100" fill={W}></rect>
+    <g fill={S}><rect x="626" y="280" width="32" height="7"></rect><rect x="626" y="300" width="32" height="7"></rect><rect x="626" y="320" width="32" height="7"></rect><rect x="626" y="340" width="32" height="7"></rect></g>
+    <path d="M626 264 A16 16 0 0 1 658 264 Z" fill={R}></path>
+    <rect x="684" y="340" width="40" height="26" rx="8" fill={Y}></rect>
+    <rect x="730" y="346" width="34" height="22" rx="7" fill={Y}></rect>
+    <g stroke={O} stroke-width="2.5" fill="none"><path d="M690 348 h28 M690 356 h28 M736 353 h22 M736 360 h22"></path></g>
+  </svg>
+
+  <!-- D · arbres (animés) -->
+  <svg class="pano__layer riso" viewBox={VB} preserveAspectRatio={fit} data-pano-layer="0.2" set:html={[tree(150, 312, 30, 0), tree(218, 326, 22, 1), tree(860, 318, 26, 2), tree(1400, 340, 30, 3), tree(1468, 330, 22, 4)].join('')}></svg>
+
+  <!-- E · champ et route (immobiles, tramés) -->
+  <svg class="pano__layer riso" viewBox={VB} preserveAspectRatio={fit} data-pano-layer="0.08">
+    <path d="M0 420 C 320 392 620 400 920 418 C 1180 434 1420 410 1600 420 V520 H0 Z" fill={G}></path>
+    <g stroke={L} stroke-width="5" fill="none" opacity=".9">
+      <path d="M0 492 C 320 470 620 476 920 490 C 1180 502 1420 486 1600 494"></path>
+      <path d="M0 512 C 320 492 620 498 920 512 C 1180 524 1420 508 1600 516"></path>
+    </g>
+    <path d="M0 420 C 320 392 620 400 920 418 C 1180 434 1420 410 1600 420 V520 H0 Z" {...shade('k', 'b')}></path>
+    <path d="M-20 462 C 400 446 800 452 1200 458 S 1500 466 1620 460" stroke={Y} stroke-width="32" fill="none"></path>
+    <path d="M-20 462 C 400 446 800 452 1200 458 S 1500 466 1620 460" stroke={W} stroke-width="3" fill="none" stroke-dasharray="18 18"></path>
+    {[[90, 430], [420, 424], [700, 432], [980, 438], [1330, 432], [1540, 436]].map(([x, y], i) => <path d={starPath(x, y, 7, 3, 6)} fill={i % 2 ? C : Y} />)}
+  </svg>
+
+  <!-- F · tracteur et vaches (animés) -->
+  <svg class="pano__layer riso" viewBox={VB} preserveAspectRatio={fit} data-pano-layer="0">
+    <g set:html={cow(330, 438, false, 0) + cow(1180, 444, true, 1)}></g>
+    <g class="pano__tractor">
+      <g transform="translate(0 458)">
+        <g class="pano__smoke"><circle cx="18" cy="-64" r="6" fill={S}></circle><circle cx="10" cy="-80" r="8" fill={S}></circle><circle cx="2" cy="-98" r="10" fill={S}></circle></g>
+        <rect x="14" y="-58" width="7" height="22" fill={K}></rect>
+        <rect x="0" y="-38" width="74" height="26" rx="6" fill={O}></rect>
+        <rect x="44" y="-72" width="34" height="46" rx="4" fill={R}></rect>
+        <rect x="52" y="-66" width="18" height="18" rx="2" fill={W}></rect>
+        <g class="ri-spin" style="--dur:1.2s"><circle cx="58" cy="-8" r="24" fill={K}></circle><circle cx="58" cy="-8" r="9" fill={Y}></circle><path d="M58 -30 V14 M36 -8 H80" stroke={T} stroke-width="3"></path></g>
+        <g class="ri-spin" style="--dur:0.7s"><circle cx="10" cy="0" r="13" fill={K}></circle><circle cx="10" cy="0" r="5" fill={Y}></circle><path d="M10 -12 V12 M-2 0 H22" stroke={T} stroke-width="2"></path></g>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<style>
+  .pano {
+    position: relative;
+    width: 100%;
+    height: clamp(300px, 36vw, 560px);
+    overflow: hidden;
+  }
+  .pano__layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    will-change: transform;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pano__tractor {
+      animation: pano-drive 26s linear infinite;
+    }
+    .pano__smoke circle {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pano-smoke 1.4s ease-out infinite;
+    }
+    .pano__smoke circle:nth-child(2) {
+      animation-delay: -0.45s;
+    }
+    .pano__smoke circle:nth-child(3) {
+      animation-delay: -0.9s;
+    }
+    .pano__bird {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pano-flap 0.5s ease-in-out infinite alternate;
+      animation-delay: var(--d, 0s);
+    }
+  }
+  @keyframes pano-drive {
+    from {
+      translate: -220px 0;
+    }
+    to {
+      translate: 1760px 0;
+    }
+  }
+  @keyframes pano-smoke {
+    from {
+      opacity: 0.9;
+      scale: 0.6;
+      translate: 0 8px;
+    }
+    to {
+      opacity: 0;
+      scale: 1.3;
+      translate: -6px -14px;
+    }
+  }
+  @keyframes pano-flap {
+    to {
+      scale: 1 0.4;
+    }
+  }
+</style>

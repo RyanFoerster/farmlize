@@ -1,0 +1,601 @@
+@import '@fontsource-variable/fraunces/opsz.css';
+@import '@fontsource-variable/bricolage-grotesque/standard.css';
+@import '@fontsource-variable/dm-sans/opsz.css';
+@import 'lenis/dist/lenis.css';
+/* Chargé globalement : importé depuis un script, le ClientRouter le retire en changeant de page
+   (les canvas/marqueurs perdent alors leur position absolue et la carte grandit à l'infini). */
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+:root {
+  --cream: #fcfaf2;
+  --cream-2: #f3eee1;
+  --sand: #eee8da;
+  --line: #e5ddcb;
+  --line-strong: #d2c7b1;
+  --ink: #352200;
+  --ink-2: #5c665f;
+  --muted: #858d87;
+  --coral: #e9694f;
+  --butter: #f3d677;
+  --tangerine: #f0973f;
+  --rose: #f0a8bf;
+  --leaf: #a2c48a;
+  --moss: #2f7a50;
+  --sky: #bcd0f0;
+  --blue: #3563c9;
+  --bark: #5a4334;
+  --white: #fffdf8;
+  /* Palette riso, adoucie pour l'interface : papier chaud, encre brun-noir, corail terre cuite,
+     jaune moutarde, vert profond et bleu riso (les illustrations gardent leurs encres franches). */
+
+  --font-logo: 'Fraunces Variable', Georgia, serif;
+  --font-display: 'Bricolage Grotesque Variable', 'DM Sans Variable', system-ui, sans-serif;
+  --font-body: 'DM Sans Variable', system-ui, sans-serif;
+
+  --r-s: 6px;
+  --r-m: 14px;
+  --r-l: 24px;
+  --r-xl: 32px;
+  --shadow-s: 0 1px 0 rgba(53, 34, 0, 0.04), 0 8px 24px -12px rgba(53, 34, 0, 0.18);
+  --shadow-m: 0 2px 0 rgba(53, 34, 0, 0.03), 0 24px 48px -24px rgba(53, 34, 0, 0.28);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: clamp(20px, 4vw, 56px);
+  --header-h: 84px;
+
+  /* Échelle unique des contrôles (boutons, pastilles, tags) */
+  --ctl-lg: 56px;
+  --ctl-md: 44px;
+  --ctl-sm: 38px;
+  --tag-h: 28px;
+  --fs-ctl: 15px;
+  --fs-tag: 13px;
+  --fs-body: 16px;
+  --fs-lead: clamp(16px, 1.25vw, 18px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Pas d'ancrage de scroll : le texte de la banderole bouge en continu, et le navigateur
+     « corrigeait » la position à chaque image (tremblement). Lenis gère le scroll. */
+  overflow-anchor: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.42;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+.icon {
+  flex-shrink: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--butter);
+  color: var(--ink);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Masques SplitText : un peu d'air au-dessus (capitales, accents) et sur les côtés
+   (lettres qui débordent de la ligne : le « Q », le « e » final des titres serrés).
+   Pas en dessous : les mots qui montent depuis le bas restent cachés au départ. */
+.fz-line-mask {
+  padding: 0.18em 0.12em 0;
+  margin: -0.18em -0.12em 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Typographie ---------- */
+/* Titres en brun encre, textes courants en gris-vert (body). Spécificité nulle : un composant peut toujours les recolorer. */
+:where(h1, h2, h3, h4, h5, .display, .title, .serif, .logo-type) {
+  color: var(--ink);
+}
+
+.logo-type {
+  font-family: var(--font-logo);
+  font-weight: 800;
+  font-variation-settings: 'opsz' 9;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'opsz' 96, 'wdth' 82;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  margin: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variation-settings: 'opsz' 48, 'wdth' 88;
+  letter-spacing: -0.025em;
+  line-height: 0.98;
+  margin: 0;
+}
+
+.serif {
+  font-family: var(--font-logo);
+  font-weight: 600;
+  font-variation-settings: 'opsz' 24;
+  letter-spacing: -0.01em;
+}
+
+.lead {
+  color: var(--ink-2);
+  font-size: var(--fs-lead);
+  line-height: 1.42;
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- Boutons ---------- */
+.btn {
+  --bg: var(--ink);
+  --fg: var(--cream);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: var(--ctl-lg);
+  padding: 0 30px;
+  border-radius: var(--r-s);
+  background: var(--bg);
+  color: var(--fg);
+  font-weight: 600;
+  font-size: var(--fs-ctl);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform 0.4s var(--ease),
+    opacity 0.3s;
+  white-space: nowrap;
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--coral);
+  transform: translateY(101%);
+  border-radius: 40% 40% 0 0;
+  transition:
+    transform 0.55s var(--ease),
+    border-radius 0.55s var(--ease);
+}
+.btn:hover::before {
+  transform: translateY(0);
+  border-radius: 0;
+}
+.btn:hover {
+  color: var(--ink);
+}
+.btn .icon {
+  transition: transform 0.45s var(--ease);
+}
+.btn:hover .icon-arrow {
+  transform: translateX(4px);
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn[disabled],
+.btn[aria-disabled='true'] {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.btn--pill {
+  border-radius: 999px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 16px;
+}
+.btn--ghost {
+  --bg: transparent;
+  --fg: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.btn--ghost::before {
+  background: var(--ink);
+}
+.btn--ghost:hover {
+  color: var(--cream);
+}
+.btn--light {
+  --bg: var(--cream);
+  --fg: var(--ink);
+}
+.btn--light::before {
+  background: var(--butter);
+}
+.btn--sm {
+  min-height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.link-underline {
+  position: relative;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: var(--fs-ctl);
+  color: var(--ink-2);
+  padding: 4px 0;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5px;
+  background: currentColor;
+  transform-origin: right;
+  transition: transform 0.5s var(--ease);
+}
+.link-underline:hover::after {
+  animation: underline 0.7s var(--ease);
+}
+@keyframes underline {
+  0% {
+    transform: scaleX(1);
+    transform-origin: right;
+  }
+  45% {
+    transform: scaleX(0);
+    transform-origin: right;
+  }
+  46% {
+    transform-origin: left;
+  }
+  100% {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+/* ---------- Chips ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--ctl-md);
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--white);
+  font-size: var(--fs-ctl);
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  transition:
+    background 0.3s,
+    border-color 0.3s,
+    color 0.3s,
+    transform 0.3s var(--ease);
+}
+.chip:hover {
+  border-color: var(--line-strong);
+}
+.chip[aria-pressed='true'],
+.chip.is-on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--cream);
+}
+.chip:active {
+  transform: scale(0.96);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: var(--tag-h);
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--sand);
+  font-size: var(--fs-tag);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+/* ---------- Champs ---------- */
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 64px;
+  padding: 0 22px;
+  border-radius: var(--r-s);
+  border: 1.5px solid var(--line);
+  background: var(--white);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.field:focus-within {
+  border-color: var(--bark);
+  box-shadow: 0 0 0 4px rgba(90, 67, 52, 0.08);
+}
+.field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 18px;
+}
+.field input::placeholder {
+  color: var(--muted);
+}
+
+/* ---------- Layout ---------- */
+.container {
+  width: min(1320px, 100% - var(--gutter) * 2);
+  margin-inline: auto;
+}
+
+/* ---------- Apparition (évite le flash avant GSAP) ---------- */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal],
+  [data-stagger] > :not([data-stagger-skip]),
+  [data-split],
+  [data-fx],
+  [data-anim],
+  [data-anim-title],
+  [data-anim-illo],
+  [data-intro] {
+    visibility: hidden;
+  }
+}
+
+/* ---------- Transitions de page (ClientRouter) ---------- */
+@keyframes fz-page-out {
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+@keyframes fz-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+::view-transition-old(root) {
+  animation: 0.32s cubic-bezier(0.4, 0, 1, 1) both fz-page-out;
+}
+::view-transition-new(root) {
+  animation: 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both fz-page-in;
+}
+::view-transition-group(*) {
+  animation-duration: 0.6s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Illustrations « risographie » ---------- */
+/* Texture d'impression : encre légèrement irrégulière et mouchetures (masque tuilé, peu coûteux à animer) */
+.riso {
+  -webkit-mask: url('/textures/riso-grain.png') 0 0 / 240px 240px repeat;
+  mask: url('/textures/riso-grain.png') 0 0 / 240px 240px repeat;
+}
+.illo {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Le potager du clic (src/lib/click-garden.ts) : sous le header, au-dessus du contenu */
+.grow-layer {
+  position: absolute;
+  z-index: 40;
+  top: 0;
+  left: 0;
+  width: 100%;
+  overflow: clip;
+  pointer-events: none;
+}
+.grow,
+.grow__fly,
+.grow__speck {
+  position: absolute;
+  pointer-events: none;
+}
+.grow svg,
+.grow__fly svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.grow__fly {
+  width: 38px;
+  margin: -15px 0 0 -19px;
+}
+.grow__speck {
+  width: var(--sz);
+  height: var(--sz);
+  margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
+  border-radius: 50%;
+}
+
+/* Animations minimalistes : une seule propriété, lente, en boucle.
+   Réglages par élément : --a (amplitude), --o (origine), --dur, --d (délai). */
+.ri-sway,
+.ri-bob,
+.ri-spin,
+.ri-pulse,
+.ri-blink,
+.ri-drift {
+  transform-box: fill-box;
+  transform-origin: var(--o, 50% 50%);
+}
+.ri-sway {
+  transform-origin: var(--o, 50% 100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ri-sway {
+    animation: ri-sway var(--dur, 5s) var(--d, 0s) ease-in-out infinite alternate both;
+  }
+  .ri-bob {
+    animation: ri-bob var(--dur, 4s) var(--d, 0s) ease-in-out infinite alternate both;
+  }
+  .ri-drift {
+    animation: ri-drift var(--dur, 9s) var(--d, 0s) ease-in-out infinite alternate both;
+  }
+  .ri-spin {
+    animation: ri-spin var(--dur, 40s) var(--d, 0s) linear infinite;
+  }
+  .ri-pulse {
+    animation: ri-pulse var(--dur, 3s) var(--d, 0s) ease-in-out infinite alternate both;
+  }
+  .ri-blink {
+    animation: ri-blink var(--dur, 5s) var(--d, 0s) linear infinite;
+  }
+}
+@keyframes ri-sway {
+  from {
+    rotate: calc(var(--a, 3deg) * -1);
+  }
+  to {
+    rotate: var(--a, 3deg);
+  }
+}
+@keyframes ri-bob {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 var(--a, -6px);
+  }
+}
+@keyframes ri-drift {
+  from {
+    translate: calc(var(--a, 10px) * -1) 0;
+  }
+  to {
+    translate: var(--a, 10px) 0;
+  }
+}
+@keyframes ri-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes ri-pulse {
+  from {
+    scale: 1;
+  }
+  to {
+    scale: var(--a, 1.1);
+  }
+}
+@keyframes ri-blink {
+  0%,
+  92%,
+  100% {
+    scale: 1 1;
+  }
+  95% {
+    scale: 1 0.1;
+  }
+}
+
+/* ---------- Cartes « imprimées » ---------- */
+/* Papier moucheté + plaque de couleur décalée (comme un tirage riso mal calé).
+   La couleur de la plaque se règle par carte avec --off. */
+.print {
+  --print-rest: inset 0 0 0 1.5px var(--line), 4px 5px 0 0 var(--off, var(--sky));
+  --print-hover: inset 0 0 0 1.5px var(--ink), 8px 10px 0 0 var(--off, var(--sky));
+  background-color: var(--white);
+  background-image: url('/textures/paper-grain.png');
+  background-size: 240px 240px;
+  box-shadow: var(--print-rest);
+}
+.print--sm {
+  --print-rest: inset 0 0 0 1.5px var(--line), 3px 4px 0 0 var(--off, var(--sky));
+  --print-hover: inset 0 0 0 1.5px var(--ink), 5px 6px 0 0 var(--off, var(--sky));
+}

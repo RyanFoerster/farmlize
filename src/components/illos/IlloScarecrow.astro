@@ -1,0 +1,78 @@
+---
+/**
+ * 404 : un épouvantail aux bras immenses au milieu des blés, un oiseau posé sur la main.
+ * Les manches et les épis bougent à peine, l'oiseau hoche la tête.
+ */
+import { ink, shade } from '../../lib/riso';
+
+const { class: cls, ...rest } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 7);
+const { brown: K, paper: W, blue: B, sky: S, orange: O, red: R, coral: C, pink: P, yellow: Y, green: G, leaf: L, taupe: T } = ink;
+const wheat = [26, 60, 96, 300, 336, 372];
+---
+
+<svg class:list={['illo', 'riso', cls]} viewBox="0 0 400 480" aria-hidden="true" {...rest}>
+  <defs>
+    <clipPath id={`scare-shirt-${uid}`}><path d="M166 170 H 234 L 244 300 H 156 Z"></path></clipPath>
+  </defs>
+
+  <!-- soleil rayé -->
+  <circle cx="300" cy="96" r="44" fill={O}></circle>
+  <g fill={W}><rect x="250" y="108" width="100" height="5"></rect><rect x="250" y="120" width="100" height="7"></rect><rect x="250" y="133" width="100" height="10"></rect></g>
+
+  <!-- piquet -->
+  <rect x="192" y="160" width="16" height="320" fill={K}></rect>
+
+  <!-- bras en croix : une longue manche rayée -->
+  <g class="ri-sway" style="--a:1.6deg; --dur:5s; --o:50% 50%">
+    <rect x="40" y="168" width="320" height="30" rx="15" fill={B}></rect>
+    <g fill={S}><rect x="88" y="168" width="12" height="30"></rect><rect x="122" y="168" width="12" height="30"></rect><rect x="266" y="168" width="12" height="30"></rect><rect x="300" y="168" width="12" height="30"></rect></g>
+    <rect x="40" y="168" width="320" height="30" rx="15" {...shade('k', 'b')}></rect>
+    <path d="M40 172 L 18 160 L 26 176 L 12 184 L 30 188 L 22 202 L 42 194 Z" fill={Y}></path>
+    <path d="M360 172 L 382 160 L 374 176 L 388 184 L 370 188 L 378 202 L 358 194 Z" fill={Y}></path>
+    <!-- oiseau sur la main -->
+    <g transform="translate(332 142)">
+      <path d="M-18 24 C -20 10 -8 0 6 2 C 18 4 22 16 18 26 Z" fill={K}></path>
+      <g class="ri-sway" style="--a:9deg; --dur:1.6s; --o:30% 90%">
+        <circle cx="12" cy="0" r="9" fill={K}></circle>
+        <path d="M20 -2 L 30 1 L 20 4 Z" fill={O}></path>
+        <circle cx="14" cy="-2" r="2" fill={W}></circle>
+      </g>
+      <path d="M-18 22 L -30 30 L -16 28 Z" fill={K}></path>
+    </g>
+  </g>
+
+  <!-- veste -->
+  <path d="M166 170 H 234 L 244 300 H 156 Z" fill={O}></path>
+  <g clip-path={`url(#scare-shirt-${uid})`} fill={R}>
+    <rect x="150" y="196" width="100" height="10"></rect><rect x="150" y="224" width="100" height="10"></rect><rect x="150" y="252" width="100" height="10"></rect>
+  </g>
+  <path d="M166 170 H 234 L 244 300 H 156 Z" {...shade('r', 'b')}></path>
+  <path d="M156 300 L 168 314 L 178 300 L 190 316 L 200 300 L 212 316 L 222 300 L 232 314 L 244 300 Z" fill={Y}></path>
+  <rect x="190" y="198" width="20" height="20" fill={P}></rect>
+
+  <!-- tête en toile et chapeau -->
+  <circle cx="200" cy="130" r="30" fill={T}></circle>
+  <circle cx="200" cy="130" r="30" {...shade('k', 'c')}></circle>
+  <g fill={K}>
+    <path d="M186 124 l 8 8 m 0 -8 l -8 8" stroke={K} stroke-width="3.5" stroke-linecap="round"></path>
+    <path d="M206 124 l 8 8 m 0 -8 l -8 8" stroke={K} stroke-width="3.5" stroke-linecap="round"></path>
+    <path d="M188 144 C 194 150 206 150 212 144" stroke={K} stroke-width="3" fill="none" stroke-linecap="round"></path>
+  </g>
+  <ellipse cx="200" cy="104" rx="52" ry="10" fill={G}></ellipse>
+  <path d="M174 104 C 174 70 226 70 226 104 Z" fill={G}></path>
+  <rect x="175" y="94" width="50" height="8" fill={C}></rect>
+
+  <!-- blés -->
+  <path d="M0 480 V 400 C 120 380 280 380 400 396 V 480 Z" fill={Y}></path>
+  <path d="M0 480 V 400 C 120 380 280 380 400 396 V 480 Z" {...shade('o', 'b')}></path>
+  {
+    wheat.map((x, i) => (
+      <g class="ri-sway" style={`--a:4deg; --dur:${3 + (i % 3) * 0.6}s; --d:-${i * 0.5}s`}>
+        <path d={`M${x} 410 V 330`} stroke={O} stroke-width="5" stroke-linecap="round" />
+        <ellipse cx={x} cy="318" rx="8" ry="18" fill={O} />
+        <ellipse cx={x} cy="318" rx="8" ry="18" {...shade('r', 'r')} />
+      </g>
+    ))
+  }
+</svg>
