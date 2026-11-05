@@ -484,7 +484,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
 
 <script>
   import { Flip } from 'gsap/Flip';
-  import { gsap, ScrollTrigger, onPage, reduced, revealOnScroll, magnetic } from '../lib/motion';
+  import { gsap, ScrollTrigger, onPage, reduced, revealOnScroll } from '../lib/motion';
   import { monthNames } from '../data/seasons';
   import { ink } from '../lib/riso';
 
@@ -678,7 +678,6 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
       });
     }
     revealOnScroll(root);
-    offs.push(magnetic(root.querySelector('[data-cta]')!, 0.2));
 
     return () => {
       pending.forEach((st) => st.kill());

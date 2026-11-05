@@ -68,10 +68,6 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
         </a>
       </div>
 
-      <a href="#comment" class="hero__scroll" data-hero-scroll data-intro>
-        <span>Découvrir</span>
-        <i></i>
-      </a>
     </section>
 
     <!-- COMMENT ÇA MARCHE -->
@@ -355,45 +351,6 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
     font-size: clamp(15px, 1.15vw, 17px);
     line-height: 1.42;
   }
-  .hero__scroll {
-    position: absolute;
-    bottom: 26px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--muted);
-    z-index: 2;
-  }
-  .hero__scroll i {
-    position: relative;
-    width: 1.5px;
-    height: 44px;
-    background: var(--line);
-    overflow: hidden;
-  }
-  .hero__scroll i::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--ink);
-    animation: scrollcue 2.2s var(--ease) infinite;
-  }
-  @keyframes scrollcue {
-    0% {
-      transform: translateY(-100%);
-    }
-    60%,
-    100% {
-      transform: translateY(100%);
-    }
-  }
-
   /* ---------- Comment ---------- */
   .how {
     position: relative;
@@ -1029,33 +986,32 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
       flex-direction: column;
       align-items: flex-start;
     }
-    .hero__scroll {
-      display: none;
-    }
   }
 </style>
 
 <script>
-  import { gsap, ScrollTrigger, SplitText, onPage, reduced, revealOnScroll, splitReveal, magnetic } from '../lib/motion';
+  import { gsap, ScrollTrigger, SplitText, onPage, reduced, revealOnScroll, splitReveal } from '../lib/motion';
   import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin';
   import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
   import { fxTimeline } from '../lib/fx-title';
+  import { showGardenHint } from '../lib/click-garden';
   gsap.registerPlugin(MorphSVGPlugin, MotionPathPlugin);
 
   onPage('[data-home]', async (root, ctx) => {
     await document.fonts.ready;
     const cleanups: (() => void)[] = [];
+    // première visite : une fleur pousse toute seule dans le hero pour montrer qu'on peut en faire pousser partout
+    cleanups.push(showGardenHint(root.querySelector<HTMLElement>('[data-hero]')!));
 
     ctx.add(() => {
       const logo = root.querySelector<HTMLElement>('[data-hero-logo]')!;
       const title = root.querySelector<HTMLElement>('[data-hero-title]')!;
       const sub = root.querySelector<HTMLElement>('[data-hero-sub]')!;
       const cta = root.querySelector<HTMLElement>('[data-hero-cta]')!;
-      const scrollCue = root.querySelector<HTMLElement>('[data-hero-scroll]')!;
       const illos = root.querySelectorAll<HTMLElement>('[data-illo] .illo');
 
       if (reduced()) {
-        gsap.set([logo, title, sub, cta, scrollCue, ...illos], { autoAlpha: 1 });
+        gsap.set([logo, title, sub, cta, ...illos], { autoAlpha: 1 });
       } else {
         // --- Intro du hero
         gsap.set([logo, title], { autoAlpha: 1 });
@@ -1065,7 +1021,6 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
           .add(fxTimeline(title, true), 0.6)
           .fromTo(sub, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 1 }, 1.05)
           .fromTo(cta, { autoAlpha: 0, y: 16, scale: 0.96 }, { autoAlpha: 1, y: 0, scale: 1, duration: 1 }, 1.15)
-          .fromTo(scrollCue, { autoAlpha: 0 }, { autoAlpha: 1, duration: 1 }, 1.6)
           .fromTo(
             illos,
             { autoAlpha: 0, yPercent: 40, rotation: (i: number) => (i ? 6 : -6) },
@@ -1110,7 +1065,6 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
         gsap.to(left, { yPercent: 14, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
         gsap.to(right, { yPercent: 22, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
 
-        cleanups.push(magnetic(cta, 0.18));
 
         // --- Titres de section
         root.querySelectorAll<HTMLElement>('[data-split]').forEach((el) =>

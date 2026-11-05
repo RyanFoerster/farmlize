@@ -1,46 +1,81 @@
 ---
-import { categories } from '../data/categories';
+/**
+ * Loader d'entrée (première page vue) : une feuille de papier crème sur laquelle le grand logo
+ * monte lettre par lettre ; en bas, un tracteur roule sur la colline au rythme du chargement,
+ * et des fruits et légumes viennent se poser sur les lettres à chaque étape franchie.
+ * Quand la page est prête, le tracteur file hors de l'écran et le rideau (festonné, comme
+ * celui des changements de page) se lève sur la page.
+ */
 import LogoMark from './LogoMark.astro';
+import { seasonArt } from '../lib/season-art';
+import { ink } from '../lib/riso';
 
-const messages = [
-  'On cueille les fraises',
-  'On ramasse les œufs',
-  'On affine les fromages',
-  'On récolte le miel',
-  'On sort le pain du four',
-  'On remplit le panier',
+const { brown: K, paper: W, sky: S, orange: O, red: R, yellow: Y, green: G, leaf: L, taupe: T } = ink;
+
+// les mêmes habitants que sur le grand logo du footer (x en % de la largeur du logo)
+const perched = [
+  { name: 'Fraises', x: 5.6, size: 7.2, rot: -10 },
+  { name: 'Pommes', x: 40.4, size: 6.6, rot: 8 },
+  { name: 'Carottes', x: 59.6, size: 7.6, rot: 18 },
+  { name: 'Poires', x: 72.6, size: 6.8, rot: -6 },
 ];
+
+let scallop = 'M0 40 V 22';
+for (let x = 0; x < 1440; x += 60) scallop += ` Q ${x + 30} 2 ${x + 60} 22`;
+scallop += ' V 40 Z';
 ---
 
 <div class="loader" data-loader aria-hidden="true">
-  <div class="loader__layer loader__layer--coral" data-loader-coral>
-    <svg class="loader__curve" viewBox="0 0 100 12" preserveAspectRatio="none"><path data-curve d="M0 0 L100 0 L100 0 Q50 0 0 0 Z"></path></svg>
+  <div class="loader__sheet loader__sheet--back" data-loader-back>
+    <svg class="loader__edge" viewBox="0 0 1440 40" preserveAspectRatio="none"><path d={scallop}></path></svg>
   </div>
-  <div class="loader__layer loader__layer--cream" data-loader-panel>
-    <svg class="loader__curve" viewBox="0 0 100 12" preserveAspectRatio="none"><path data-curve d="M0 0 L100 0 L100 0 Q50 0 0 0 Z"></path></svg>
 
-    <div class="loader__center" data-loader-center>
-      <div class="loader__plate" data-plate>
-        <svg class="loader__ring" viewBox="0 0 160 160">
-          <circle class="loader__track" cx="80" cy="80" r="76"></circle>
-          <circle class="loader__progress" data-ring cx="80" cy="80" r="76" pathLength="1"></circle>
-        </svg>
-        <div class="loader__disc" data-disc></div>
+  <div class="loader__sheet loader__sheet--front" data-loader-front>
+    <svg class="loader__edge" viewBox="0 0 1440 40" preserveAspectRatio="none"><path d={scallop}></path></svg>
+
+    <!-- ciel : nuages qui dérivent -->
+    <svg class="loader__cloud loader__cloud--a riso ri-drift" style="--a:30px; --dur:9s" viewBox="0 0 120 50"><rect x="0" y="20" width="120" height="30" rx="15" fill={S}></rect><rect x="30" y="0" width="62" height="30" rx="15" fill={S}></rect></svg>
+    <svg class="loader__cloud loader__cloud--b riso ri-drift" style="--a:24px; --dur:11s; --d:-4s" viewBox="0 0 100 26"><rect x="0" y="0" width="100" height="26" rx="13" fill={S}></rect></svg>
+
+    <!-- le logo et ses habitants -->
+    <div class="loader__stage">
+      <div class="loader__logo" data-loader-logo>
+        <LogoMark title="" />
         {
-          categories.map((c) => (
-            <svg class="loader__item riso" data-item data-tint={c.tint} viewBox="0 0 100 100">
-              <use href={`#ico-${c.id}`} />
-            </svg>
+          perched.map((p) => (
+            <span class="loader__perch" style={`left:${p.x}%; width:${p.size}%; --r:${p.rot}deg`} data-loader-perch>
+              <svg class="riso" viewBox="0 0 60 60" set:html={seasonArt(p.name)} />
+            </span>
           ))
         }
       </div>
-      <div class="loader__logo" data-loader-logo><LogoMark /></div>
-      <p class="loader__msg" data-loader-msg data-messages={JSON.stringify(messages)}><span>{messages[0]}…</span></p>
     </div>
 
-    <div class="loader__foot">
-      <span class="loader__place">Fermes locales · Belgique</span>
-      <span class="loader__count display"><span data-loader-count>0</span><small>%</small></span>
+    <!-- la colline, le soleil et le tracteur qui avance avec le chargement -->
+    <div class="loader__field" data-loader-field>
+      <svg class="loader__sun riso" viewBox="0 0 100 100" data-loader-sun>
+        <defs><clipPath id="loader-sun"><circle cx="50" cy="50" r="48"></circle></clipPath></defs>
+        <circle cx="50" cy="50" r="48" fill={Y}></circle>
+        <g clip-path="url(#loader-sun)" fill="var(--cream)">
+          <rect x="0" y="62" width="100" height="4"></rect><rect x="0" y="72" width="100" height="6"></rect><rect x="0" y="84" width="100" height="9"></rect>
+        </g>
+      </svg>
+      <svg class="loader__hill riso" viewBox="0 0 1440 140" preserveAspectRatio="none">
+        <path d="M0 140 V 50 C 360 10 1080 10 1440 50 V 140 Z" fill={G}></path>
+        <path d="M0 84 C 360 50 1080 50 1440 84 M0 112 C 360 80 1080 80 1440 112" stroke={L} stroke-width="6" fill="none"></path>
+        <path d="M0 140 V 50 C 360 10 1080 10 1440 50 V 140 Z" fill="url(#ri-k-b)" filter="url(#ri-dot)"></path>
+      </svg>
+      <div class="loader__tractor" data-loader-tractor>
+        <svg class="riso" viewBox="-14 -112 110 140">
+          <g class="loader__smoke"><circle cx="18" cy="-64" r="6" fill={S}></circle><circle cx="10" cy="-80" r="8" fill={S}></circle><circle cx="2" cy="-98" r="10" fill={S}></circle></g>
+          <rect x="14" y="-58" width="7" height="22" fill={K}></rect>
+          <rect x="0" y="-38" width="74" height="26" rx="6" fill={O}></rect>
+          <rect x="44" y="-72" width="34" height="46" rx="4" fill={R}></rect>
+          <rect x="52" y="-66" width="18" height="18" rx="2" fill={W}></rect>
+          <g class="ri-spin" style="--dur:0.9s"><circle cx="58" cy="-8" r="24" fill={K}></circle><circle cx="58" cy="-8" r="9" fill={Y}></circle><path d="M58 -30 V14 M36 -8 H80" stroke={T} stroke-width="3"></path></g>
+          <g class="ri-spin" style="--dur:0.55s"><circle cx="10" cy="0" r="13" fill={K}></circle><circle cx="10" cy="0" r="5" fill={Y}></circle><path d="M10 -12 V12 M-2 0 H22" stroke={T} stroke-width="2"></path></g>
+        </svg>
+      </div>
     </div>
   </div>
 </div>
@@ -66,128 +101,154 @@ const messages = [
       visibility: hidden;
     }
   }
-  .loader__layer {
+  .loader__sheet {
     position: absolute;
     inset: 0;
+    will-change: transform;
   }
-  .loader__layer--coral {
-    background: var(--coral);
+  .loader__sheet--back {
+    background: var(--coral) url('/textures/paper-grain.png') 0 0 / 240px 240px;
   }
-  .loader__layer--cream {
-    background: var(--cream);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  .loader__sheet--front {
+    background: var(--cream) url('/textures/paper-grain.png') 0 0 / 240px 240px;
   }
-  .loader__curve {
+  /* bord festonné sous chaque feuille : il apparaît quand le rideau se lève */
+  .loader__edge {
     position: absolute;
     left: 0;
     top: calc(100% - 1px);
     width: 100%;
-    height: 14vh;
-    overflow: visible;
+    height: 40px;
+    scale: 1 -1;
   }
-  .loader__layer--cream .loader__curve path {
-    fill: var(--cream);
-  }
-  .loader__layer--coral .loader__curve path {
+  .loader__sheet--back .loader__edge {
     fill: var(--coral);
   }
-  .loader__center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 26px;
+  .loader__sheet--front .loader__edge {
+    fill: var(--cream);
   }
-  .loader__plate {
+
+  .loader__cloud {
+    position: absolute;
+    height: auto;
+  }
+  .loader__cloud--a {
+    left: 12%;
+    top: 16%;
+    width: clamp(80px, 9vw, 130px);
+  }
+  .loader__cloud--b {
+    right: 14%;
+    top: 26%;
+    width: clamp(60px, 7vw, 100px);
+  }
+
+  .loader__stage {
+    position: absolute;
+    inset: 0 0 clamp(110px, 18vh, 170px);
+    display: grid;
+    place-items: center;
+  }
+  .loader__logo {
     position: relative;
-    width: clamp(132px, 15vw, 172px);
-    aspect-ratio: 1;
+    width: min(84vw, 760px);
+    color: var(--ink);
   }
-  .loader__ring {
+  .loader .loader__logo .logo-mark {
+    width: 100%;
+    height: auto;
+  }
+  .loader__perch {
+    position: absolute;
+    bottom: 94%;
+    translate: -50% 0;
+    rotate: var(--r);
+    transform-origin: 50% 100%;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .loader__perch svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .loader__perch svg {
+      animation: loader-perch 2.4s ease-in-out infinite alternate;
+    }
+    .loader__perch:nth-of-type(2n) svg {
+      animation-duration: 3s;
+      animation-delay: -1s;
+    }
+    .loader__smoke circle {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: loader-smoke 1s ease-out infinite;
+    }
+    .loader__smoke circle:nth-child(2) {
+      animation-delay: -0.33s;
+    }
+    .loader__smoke circle:nth-child(3) {
+      animation-delay: -0.66s;
+    }
+  }
+  @keyframes loader-perch {
+    from {
+      rotate: -5deg;
+    }
+    to {
+      rotate: 5deg;
+    }
+  }
+  @keyframes loader-smoke {
+    from {
+      opacity: 0.9;
+      scale: 0.6;
+      translate: 0 8px;
+    }
+    to {
+      opacity: 0;
+      scale: 1.3;
+      translate: -8px -14px;
+    }
+  }
+
+  .loader__field {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: clamp(110px, 18vh, 170px);
+  }
+  .loader__hill {
     position: absolute;
     inset: 0;
     width: 100%;
+    max-width: none;
     height: 100%;
-    transform: rotate(-90deg);
+  }
+  .loader__sun {
+    position: absolute;
+    right: 9%;
+    bottom: 58%;
+    width: clamp(70px, 8vw, 110px);
+    height: auto;
+  }
+  .loader__tractor {
+    position: absolute;
+    left: 0;
+    bottom: 26%;
+    width: clamp(80px, 8.5vw, 120px);
+  }
+  .loader__tractor svg {
+    display: block;
+    width: 100%;
+    height: auto;
     overflow: visible;
   }
-  .loader__track,
-  .loader__progress {
-    fill: none;
-    stroke-width: 2.5;
-  }
-  .loader__track {
-    stroke: var(--line);
-  }
-  .loader__progress {
-    stroke: var(--ink);
-    stroke-linecap: round;
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-  }
-  .loader__disc {
-    position: absolute;
-    inset: 11px;
-    border-radius: 50%;
-    background: var(--sand);
-  }
-  .loader__item {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 52%;
-    height: 52%;
-    margin: -26% 0 0 -26%;
-    opacity: 0;
-  }
-  .loader__logo {
-    margin: 0 0 10px;
-    font-size: clamp(24px, 2.6vw, 38px);
-    color: var(--ink);
-  }
-  .loader__msg {
-    margin: -10px 0 0;
-    height: 1.5em;
-    overflow: hidden;
-    font-size: 15px;
-    color: var(--muted);
-  }
-  .loader__msg span {
-    display: block;
-  }
-  .loader__foot {
-    position: absolute;
-    left: var(--gutter);
-    right: var(--gutter);
-    bottom: clamp(18px, 4vh, 40px);
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 20px;
-  }
-  .loader__place {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .loader__count {
-    display: inline-flex;
-    align-items: flex-start;
-    font-size: clamp(64px, 9vw, 140px);
-    line-height: 0.8;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
-  .loader__count small {
-    font-size: 0.32em;
-    margin: 0.12em 0 0 0.08em;
-  }
 
-  /* barre de progression des changements de page */
+  /* barre de progression des changements de page (mouvement réduit seulement) */
   .fz-progress {
     position: fixed;
     left: 0;
@@ -233,7 +294,7 @@ const messages = [
         return true;
       }
     })();
-    const minTime = first ? 2.4 : 0.9;
+    const minTime = first ? 2.2 : 0.9;
 
     // empêche le défilement pendant le chargement
     const block = (e: Event) => {
@@ -243,63 +304,39 @@ const messages = [
     el.addEventListener('wheel', block, { passive: false });
     el.addEventListener('touchmove', block, { passive: false });
 
-    const items = [...el.querySelectorAll<SVGElement>('[data-item]')];
-    const disc = $('[data-disc]');
-    const ring = $<SVGCircleElement>('[data-ring]');
-    const count = $('[data-loader-count]');
-    const msgEl = $('[data-loader-msg]');
-    const messages: string[] = JSON.parse(msgEl.dataset.messages || '[]');
-    const logoLetters = el.querySelectorAll('[data-loader-logo] path');
+    const letters = el.querySelectorAll('[data-loader-logo] path');
+    const perches = [...el.querySelectorAll<HTMLElement>('[data-loader-perch]')];
+    const tractor = $('[data-loader-tractor]');
+    const field = $('[data-loader-field]');
+    const travel = () => field.offsetWidth - tractor.offsetWidth * 0.6;
 
-    // --- entrée
-    gsap.set(el.querySelectorAll('.loader__foot > *'), { autoAlpha: 0, y: 14 });
-    const intro = gsap.timeline();
-    intro
-      .from($('[data-plate]'), { scale: 0.6, autoAlpha: 0, duration: 0.8, ease: 'back.out(1.8)' })
-      .from(logoLetters, { y: 260, duration: 0.8, stagger: 0.04 }, 0.1)
-      .from(msgEl, { autoAlpha: 0, y: 10, duration: 0.6 }, 0.35)
-      .to(el.querySelectorAll('.loader__foot > *'), { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0.3);
+    // --- entrée : les lettres montent, le soleil se lève, la colline et le tracteur arrivent
+    gsap
+      .timeline()
+      .from(letters, { y: 260, duration: 0.9, stagger: 0.045, ease: 'fz.out' })
+      .from('[data-loader-sun]', { yPercent: 70, scale: 0.6, duration: 1, ease: 'back.out(1.6)' }, 0.1)
+      .from(field, { yPercent: 60, duration: 0.9, ease: 'fz.out' }, 0);
+    gsap.set(tractor, { x: -tractor.offsetWidth });
 
-    // --- les produits défilent dans l'assiette
-    const cycle = gsap.timeline({ repeat: -1, delay: 0.25 });
-    items.forEach((it) => {
-      cycle
-        .fromTo(it, { scale: 0, rotation: -60, autoAlpha: 1 }, { scale: 1, rotation: 0, duration: 0.42, ease: 'back.out(2.2)' })
-        .to(disc, { backgroundColor: it.dataset.tint, duration: 0.35, ease: 'power1.out' }, '<')
-        .to(it, { scale: 0, rotation: 50, duration: 0.26, ease: 'power2.in' }, '+=0.12');
-    });
-
-    // --- petites phrases
-    let mi = 0;
-    const msgTimer = window.setInterval(() => {
-      mi = (mi + 1) % messages.length;
-      const span = msgEl.querySelector('span')!;
-      gsap.to(span, {
-        yPercent: -100,
-        autoAlpha: 0,
-        duration: 0.25,
-        ease: 'power2.in',
-        onComplete: () => {
-          span.textContent = `${messages[mi]}…`;
-          gsap.fromTo(span, { yPercent: 100, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.35 });
-        },
-      });
-    }, 700);
-
-    // --- progression : avance seule, puis termine quand la page est prête
+    // --- progression : le tracteur avance, et un habitant se pose sur le logo à chaque quart du chemin
     const p = { v: 0 };
+    const landed = new Set<number>();
     const render = () => {
-      count.textContent = String(Math.round(p.v * 100));
-      ring.style.strokeDashoffset = String(1 - p.v);
+      gsap.set(tractor, { x: -tractor.offsetWidth + p.v * (travel() + tractor.offsetWidth) * 0.92 });
+      perches.forEach((perch, i) => {
+        if (landed.has(i) || p.v < (i + 0.7) / (perches.length + 0.4)) return;
+        landed.add(i);
+        gsap.fromTo(perch, { autoAlpha: 1, y: -70, scale: 0 }, { y: 0, scale: 1, duration: 0.8, ease: 'bounce.out' });
+      });
     };
-    const crawl = gsap.to(p, { v: 0.86, duration: minTime, ease: 'power2.out', onUpdate: render });
+    const crawl = gsap.to(p, { v: 0.86, duration: minTime, ease: 'power1.out', onUpdate: render, delay: 0.2 });
 
     const pageReady = Promise.all([
       document.fonts?.ready ?? Promise.resolve(),
       document.readyState === 'complete' ? Promise.resolve() : new Promise((r) => window.addEventListener('load', r, { once: true })),
     ]);
     const timeout = new Promise((r) => setTimeout(r, 6000));
-    const minWait = new Promise((r) => setTimeout(r, minTime * 1000));
+    const minWait = new Promise((r) => setTimeout(r, minTime * 1000 + 200));
 
     Promise.all([Promise.race([pageReady, timeout]), minWait]).then(() => {
       crawl.kill();
@@ -307,42 +344,30 @@ const messages = [
     });
 
     function leave() {
-      clearInterval(msgTimer);
       try {
         sessionStorage.setItem(BOOT, '1');
       } catch {}
-      const panel = $('[data-loader-panel]');
-      const coral = $('[data-loader-coral]');
-      const curves = el.querySelectorAll('[data-curve]');
-      const out = gsap.timeline({
-        onComplete: () => {
-          cycle.kill();
-          finish();
-        },
-      });
-      out
-        .to(el.querySelectorAll('[data-item]'), { scale: 0, duration: 0.3, ease: 'power2.in' })
-        .to($('[data-plate]'), { scale: 0.7, autoAlpha: 0, duration: 0.45, ease: 'power3.in' }, 0)
-        .to(logoLetters, { y: -260, duration: 0.5, stagger: 0.03, ease: 'power3.in' }, 0.05)
-        .to([msgEl, ...el.querySelectorAll('.loader__foot > *')], { autoAlpha: 0, y: -12, duration: 0.35, ease: 'power2.in' }, 0)
-        // le rideau crème se lève, le corail suit
-        .add('lift', 0.45)
-        .to(curves, { attr: { d: 'M0 0 L100 0 L100 0 Q50 12 0 0 Z' }, duration: 0.5, ease: 'power2.in' }, 'lift')
-        .to(panel, { yPercent: -100, duration: 1, ease: 'power4.inOut' }, 'lift')
-        .to(coral, { yPercent: -100, duration: 1, ease: 'power4.inOut' }, 'lift+=0.12')
-        .to(curves, { attr: { d: 'M0 0 L100 0 L100 0 Q50 0 0 0 Z' }, duration: 0.5, ease: 'power2.out' }, 'lift+=0.55')
+      const H = window.innerHeight + 80;
+      gsap
+        .timeline({ onComplete: finish })
+        // tout le monde saute de joie, le tracteur file hors de l'écran…
+        .to(perches, { keyframes: [{ y: -26, duration: 0.22, ease: 'power2.out' }, { y: 0, duration: 0.5, ease: 'bounce.out' }], stagger: 0.05 })
+        .to(tractor, { x: window.innerWidth + 200, duration: 0.7, ease: 'power2.in' }, 0)
+        // …et le rideau se lève : le papier, puis le corail
+        .add('lift', 0.35)
+        .to('[data-loader-front]', { y: -H, duration: 1, ease: 'power4.inOut' }, 'lift')
+        .to('[data-loader-back]', { y: -H, duration: 1, ease: 'power4.inOut' }, 'lift+=0.12')
         // les animations de la page démarrent pendant que le rideau se lève
         .add(() => resolveDone(), 'lift+=0.45');
     }
   }
 
-  // --- navigations suivantes : pas de loader, une fine barre de progression
+  // --- navigations suivantes : le rideau illustré (PageTransition) s'en charge ; une fine barre en mouvement réduit
   document.addEventListener('astro:after-swap', () => document.querySelector('[data-loader]')?.remove());
 
   let bar: HTMLElement | null = null;
   let barTween: gsap.core.Tween | null = null;
   document.addEventListener('astro:before-preparation', () => {
-    // le rideau illustré (PageTransition) s'en charge ; la barre reste pour le mouvement réduit
     if (!reduced()) return;
     if (!bar) {
       bar = document.createElement('div');

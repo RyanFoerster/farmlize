@@ -273,14 +273,20 @@ function wilt(p: Live) {
     .to(p.soilG, { scaleX: 0, scaleY: 0, duration: 0.35, ease: 'power2.in' }, '-=0.15');
 }
 
-function spawn(px: number, py: number) {
-  const at = ensureLayer();
-  const now = performance.now();
-  combo = now - lastClick < 1300 ? combo + 1 : 0;
-  lastClick = now;
+type SpawnOpts = { demo?: boolean; life?: number };
 
-  const plant = (combo >= 5 && combo % 5 === 0 ? sunflower : choose())();
-  const size = rnd(176, 204) * (1 + Math.min(combo, 6) * 0.06);
+/** Fait pousser une plante au point (coordonnées de la page). Renvoie le haut de la plante, en coordonnées de la page. */
+function spawn(px: number, py: number, opts: SpawnOpts = {}) {
+  const at = ensureLayer();
+  if (!opts.demo) {
+    const now = performance.now();
+    combo = now - lastClick < 1300 ? combo + 1 : 0;
+    lastClick = now;
+  }
+
+  // la démo montre toujours une marguerite (la plus parlante)
+  const plant = (opts.demo ? daisy : combo >= 5 && combo % 5 === 0 ? sunflower : choose())();
+  const size = opts.demo ? 196 : rnd(176, 204) * (1 + Math.min(combo, 6) * 0.06);
   const k = size / 160;
   const el = document.createElement('div');
   el.className = 'grow';
@@ -319,15 +325,16 @@ function spawn(px: number, py: number) {
     soilG,
     bend: gsap.quickTo(bendG, 'rotation', { duration: 0.7, ease: 'power3.out' }),
     sway,
-    timer: gsap.delayedCall(rnd(5.5, 7.5), () => wilt(p)),
+    timer: gsap.delayedCall(opts.life ?? rnd(5.5, 7.5), () => wilt(p)),
   };
   live.push(p);
   if (live.length > MAX) wilt(live[0]);
 
-  if (plant.flower && plant.head && (combo >= 5 || Math.random() < 0.35)) {
+  if (plant.flower && plant.head && (opts.demo || combo >= 5 || Math.random() < 0.35)) {
     const [hx, hy] = plant.head;
-    gsap.delayedCall(1.3, () => p.el.isConnected && butterfly(at, px + (hx - BX) * k, py + (hy - BY) * k));
+    gsap.delayedCall(opts.demo ? 2.2 : 1.3, () => p.el.isConnected && butterfly(at, px + (hx - BX) * k, py + (hy - BY) * k));
   }
+  return { x: px, top: py - (BY - plant.top) * k };
 }
 
 /* ---------- le curseur couche les plantes ---------- */
@@ -386,16 +393,127 @@ function overText(x: number, y: number) {
   return false;
 }
 
+/** Peut-on planter sur cet élément, à ce point de l'écran ? (ni lien, ni bouton, ni texte) */
+function plantable(t: EventTarget | null, x: number, y: number): t is Element {
+  if (!(t instanceof Element) || t.closest(BLOCK)) return false;
+  if (document.querySelector('.site-header__inner.is-open')) return false; // ce clic ferme le menu
+  if (getComputedStyle(t).cursor === 'pointer') return false;
+  return !overText(x, y);
+}
+
 function onClick(e: MouseEvent) {
   if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || reduced()) return;
-  const t = e.target;
-  if (!(t instanceof Element) || t.closest(BLOCK)) return;
-  if (document.querySelector('.site-header__inner.is-open')) return; // ce clic ferme le menu
-  if (getComputedStyle(t).cursor === 'pointer') return;
   const sel = window.getSelection();
   if (sel && !sel.isCollapsed) return;
-  if (overText(e.clientX, e.clientY)) return;
+  if (!plantable(e.target, e.clientX, e.clientY)) return;
   spawn(e.clientX + window.scrollX, e.clientY + window.scrollY);
+  // la personne a trouvé : l'indice de la première visite peut s'effacer
+  window.dispatchEvent(new CustomEvent('fz:planted'));
+}
+
+/* ---------- l'indice de la première visite ---------- */
+
+const HINT_KEY = 'farmlize:garden-hint';
+
+/**
+ * À la première visite, une marguerite pousse toute seule dans un coin vide de `zone`
+ * (un petit « clic fantôme » d'abord), avec une étiquette en papier et une flèche dessinée :
+ * « Psst… cliquez dans le vide, ça pousse ! ». Elle s'efface au premier vrai clic ou après quelques secondes,
+ * et ne revient plus (mémorisé dans le navigateur). Renvoie une fonction de nettoyage.
+ */
+export function showGardenHint(zone: HTMLElement, delay = 2.4) {
+  try {
+    if (reduced() || localStorage.getItem(HINT_KEY)) return () => {};
+  } catch {
+    return () => {};
+  }
+  let hint: HTMLElement | null = null;
+  let gone = false;
+
+  const dismiss = () => {
+    if (gone) return;
+    gone = true;
+    window.removeEventListener('fz:planted', dismiss);
+    const h = hint;
+    if (h) gsap.to(h, { scale: 0, rotation: 8, autoAlpha: 0, duration: 0.35, ease: 'back.in(2)', onComplete: () => h.remove() });
+  };
+
+  // un coin vide de la zone : le point et l'espace au-dessus (où la fleur va pousser) ne touchent rien
+  const findSpot = () => {
+    const r = zone.getBoundingClientRect();
+    const spots = [
+      [0.72, 0.6],
+      [0.28, 0.6],
+      [0.78, 0.42],
+      [0.22, 0.42],
+      [0.66, 0.8],
+      [0.34, 0.8],
+      [0.86, 0.3],
+      [0.14, 0.3],
+    ];
+    for (const [fx, fy] of spots) {
+      const x = r.left + r.width * fx;
+      const y = r.top + r.height * fy;
+      if (y < 160 || y > window.innerHeight - 20 || x < 40 || x > window.innerWidth - 40) continue;
+      const free = [
+        [0, 0],
+        [0, -70],
+        [0, -130],
+        [-40, -60],
+        [40, -60],
+      ].every(([dx, dy]) => document.elementFromPoint(x + dx, y + dy) === zone);
+      if (free && plantable(zone, x, y)) return { x, y };
+    }
+    return null;
+  };
+
+  const timer = gsap.delayedCall(delay, () => {
+    const spot = findSpot();
+    if (!spot || gone) return;
+    try {
+      localStorage.setItem(HINT_KEY, '1');
+    } catch {}
+    const at = ensureLayer();
+    const px = spot.x + window.scrollX;
+    const py = spot.y + window.scrollY;
+
+    // le clic fantôme : deux ondes qui s'élargissent là où la fleur va pousser
+    const ping = document.createElement('span');
+    ping.className = 'grow-ping';
+    ping.style.cssText = `left:${px}px;top:${py}px`;
+    at.append(ping);
+    gsap
+      .timeline({ onComplete: () => ping.remove() })
+      .fromTo(ping, { scale: 0.2, autoAlpha: 1 }, { scale: 1.6, autoAlpha: 0, duration: 0.6, ease: 'power2.out' })
+      .fromTo(ping, { scale: 0.2, autoAlpha: 1 }, { scale: 1.6, autoAlpha: 0, duration: 0.6, ease: 'power2.out' }, 0.22);
+
+    gsap.delayedCall(0.3, () => {
+      if (gone) return;
+      const top = spawn(px, py, { demo: true, life: 9 });
+      // l'étiquette se pose à côté de la fleur, du côté où il y a de la place
+      const left = spot.x > window.innerWidth * 0.6;
+      const touch = matchMedia('(hover: none)').matches;
+      hint = document.createElement('div');
+      hint.className = `grow-hint${left ? ' grow-hint--left' : ''}`;
+      hint.style.cssText = `left:${px + (left ? -22 : 22)}px;top:${top.top + 26}px`;
+      hint.innerHTML = `<p class="grow-hint__tag">Psst… <strong>${touch ? 'touchez' : 'cliquez'} dans le vide</strong>, ça pousse&nbsp;!</p><svg class="grow-hint__arrow" viewBox="0 0 80 64" aria-hidden="true"><path pathLength="1" d="M70 4 C 64 30 40 50 10 52"/><path pathLength="1" d="M20 42 L 9 52 L 22 60"/></svg>`;
+      at.append(hint);
+      const paths = hint.querySelectorAll('path');
+      gsap
+        .timeline({ delay: 0.9 })
+        .fromTo(hint.querySelector('.grow-hint__tag'), { scale: 0, rotation: -16 }, { scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(2.4)' })
+        .fromTo(paths, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, ease: 'power2.out', stagger: 0.2 }, 0.3);
+      gsap.delayedCall(8, dismiss);
+    });
+  });
+
+  window.addEventListener('fz:planted', dismiss);
+  return () => {
+    timer.kill();
+    window.removeEventListener('fz:planted', dismiss);
+    hint?.remove();
+    gone = true;
+  };
 }
 
 function clear() {

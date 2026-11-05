@@ -42,10 +42,22 @@ const fullTitle = title ? `${title} — Farmlize` : 'Farmlize — Trouvez les fe
 
 <script>
   import Lenis from 'lenis';
-  import { gsap, ScrollTrigger, reduced, loaderDone } from '../lib/motion';
+  import { gsap, ScrollTrigger, reduced, loaderDone, magnetic } from '../lib/motion';
   import { initClickGarden } from '../lib/click-garden';
 
   initClickGarden();
+
+  // Tous les boutons suivent un peu la souris, comme celui du hero de l'accueil
+  // (les petits boutons ronds ou en pilule plus doucement, pour rester dans leur cadre).
+  const magnets: (() => void)[] = [];
+  document.addEventListener('astro:page-load', async () => {
+    await loaderDone();
+    document.querySelectorAll<HTMLElement>('.btn').forEach((el) => magnets.push(magnetic(el, 0.18)));
+    document
+      .querySelectorAll<HTMLElement>('.menu-btn, .fav-pill, .round-btn, .s-arrow, .ex-recenter, .ex-filter-btn')
+      .forEach((el) => magnets.push(magnetic(el, 0.12)));
+  });
+  document.addEventListener('astro:before-swap', () => magnets.splice(0).forEach((off) => off()));
 
   let lenis: Lenis | null = null;
   const raf = (time: number) => lenis?.raf(time * 1000);
