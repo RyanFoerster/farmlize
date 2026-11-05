@@ -1,0 +1,14 @@
+{
+  // Farmlize : site statique (Astro) servi par un Worker Cloudflare (Workers Static Assets).
+  // Déploiement : npm run build && npx wrangler deploy
+  "name": "farmlize",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    // /fermes → /fermes/index.html, et la page 404 d'Astro pour le reste
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  // sous-domaine : Cloudflare crée l'enregistrement DNS et le certificat (la zone ryanfoerster.dev doit être sur Cloudflare)
+  "routes": [{ "pattern": "farmlize.ryanfoerster.dev", "custom_domain": true }]
+}
