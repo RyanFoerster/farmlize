@@ -15,7 +15,10 @@ interface Props {
 const { text, as: Tag = 'h2', class: cls, manual = false, ...rest } = Astro.props;
 ---
 
-<Tag class:list={['fx', cls]} data-fx data-fx-manual={manual ? '' : undefined} aria-label={plainFx(text)} set:html={renderFx(text)} {...rest} />
+<!-- lecteurs d'écran : la phrase en clair ; à l'écran : les mots découpés, icônes et traits (masqués aux lecteurs) -->
+<Tag class:list={['fx', cls]} data-fx data-fx-manual={manual ? '' : undefined} {...rest}
+  ><span class="sr-only">{plainFx(text)}</span><span aria-hidden="true" set:html={renderFx(text)} /></Tag
+>
 
 <style is:global>
   /* chaque mot dans son masque (un peu d'air au-dessus pour les accents) */

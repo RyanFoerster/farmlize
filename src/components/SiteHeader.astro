@@ -31,13 +31,15 @@ const links = [
       <div class="site-header__actions">
         {
           variant === 'explore' ? (
-            <button type="button" class="fav-pill" data-fav-toggle aria-pressed="false" aria-label="Afficher mes favoris">
+            <button type="button" class="fav-pill" data-fav-toggle aria-pressed="false">
               <Icon name="heart" size={18} />
+              <span class="sr-only">N’afficher que mes favoris :&nbsp;</span>
               <span data-fav-count>0</span>
             </button>
           ) : (
-            <a href="/fermes?favoris=1" class="fav-pill" aria-label="Mes fermes favorites">
+            <a href="/fermes?favoris=1" class="fav-pill">
               <Icon name="heart" size={18} />
+              <span class="sr-only">Mes fermes favorites :&nbsp;</span>
               <span data-fav-count>0</span>
             </a>
           )
@@ -48,19 +50,19 @@ const links = [
         </button>
       </div>
     </div>
-    <div class="mega" id="mega-menu" data-mega hidden>
+    <nav class="mega" id="mega-menu" aria-label="Menu principal" data-mega hidden>
       <div class="mega__inner">
         <MenuCards variant="desktop" />
       </div>
-    </div>
-  </div>
-  <div class="mobile-menu" data-mobile-menu hidden>
-    <MenuCards variant="mobile" />
-    <nav class="mobile-menu__links" aria-label="Navigation mobile">
-      {links.map((l) => <a href={l.href} class="mobile-link">{l.label}</a>)}
     </nav>
-    <p class="mobile-menu__foot">Fermes locales de Belgique · Wallonie, Bruxelles & Flandre</p>
   </div>
+  <nav class="mobile-menu" id="mobile-menu" aria-label="Menu principal" data-mobile-menu hidden>
+    <MenuCards variant="mobile" />
+    <div class="mobile-menu__links">
+      {links.map((l) => <a href={l.href} class="mobile-link">{l.label}</a>)}
+    </div>
+    <p class="mobile-menu__foot">Fermes locales de Belgique · Wallonie, Bruxelles & Flandre</p>
+  </nav>
 </header>
 
 <style>
@@ -98,6 +100,15 @@ const links = [
     transition:
       background-color 0.4s,
       box-shadow 0.4s;
+  }
+  /* sur téléphone, pas de flou d'arrière-plan : recalculé à chaque image du scroll, il fait ramer.
+     Un papier presque opaque rend pareil. */
+  @media (hover: none), (max-width: 760px) {
+    .site-header__inner {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background-color: rgba(252, 250, 242, 0.96);
+    }
   }
   .site-header__inner.is-open {
     background-color: rgba(252, 250, 242, 0.97);
@@ -232,18 +243,24 @@ const links = [
   .mobile-menu[hidden] {
     display: none;
   }
+  /* les liens en petites pastilles de papier, sur une ou deux lignes nettes */
   .mobile-menu__links {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 18px;
+    gap: 8px;
   }
   .mobile-link {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-variation-settings: 'opsz' 96, 'wdth' 82;
-    font-size: clamp(26px, 7vw, 36px);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
+    box-shadow:
+      inset 0 0 0 1.5px var(--line-strong),
+      2px 3px 0 0 var(--line);
+    font-weight: 600;
+    font-size: 15px;
     color: var(--ink);
   }
   .mobile-menu__foot {
@@ -304,7 +321,7 @@ const links = [
     document.querySelectorAll<HTMLElement>('[data-fav-count]').forEach((el) => {
       el.textContent = String(n);
       el.closest('.fav-pill')?.classList.toggle('has-favs', n > 0);
-      if (bump) gsap.fromTo(el.closest('.fav-pill'), { scale: 1.18 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+      if (bump && !reducedMotion()) gsap.fromTo(el.closest('.fav-pill'), { scale: 1.18 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
     });
   }
 
@@ -322,6 +339,11 @@ const links = [
     const header = document.querySelector<HTMLElement>('[data-site-header]');
     if (!header) return;
     const btn = header.querySelector<HTMLButtonElement>('[data-menu-btn]')!;
+    // le bouton pilote le panneau (desktop) ou le menu plein écran (mobile) : aria-controls suit la largeur
+    const mq = window.matchMedia('(max-width: 960px)');
+    const syncControls = () => btn.setAttribute('aria-controls', mq.matches ? 'mobile-menu' : 'mega-menu');
+    syncControls();
+    mq.addEventListener('change', syncControls, { signal });
     const label = header.querySelector<HTMLElement>('[data-menu-label]')!;
     const setButton = (open: boolean) => {
       btn.setAttribute('aria-expanded', String(open));
@@ -332,10 +354,31 @@ const links = [
     // --- menu mobile (plein écran)
     const menu = header.querySelector<HTMLElement>('[data-mobile-menu]')!;
     let mobileOpen = false;
+    // menu ouvert : la page derrière devient inerte (le clavier reste dans l'en-tête et le menu)
+    // (tout ce qui n'est pas l'en-tête, à chaque niveau jusqu'au body : sur la carte, l'en-tête est imbriqué)
+    const behind = () => {
+      const out: HTMLElement[] = [];
+      for (let n: HTMLElement = header; n.parentElement && n !== document.body; n = n.parentElement)
+        for (const c of n.parentElement.children) if (c !== n) out.push(c as HTMLElement);
+      return out;
+    };
+    let inerted: HTMLElement[] = [];
     const setMobile = (state: boolean) => {
       if (state === mobileOpen) return;
       mobileOpen = state;
       setButton(state);
+      if (state) {
+        inerted = behind().filter((c) => !c.inert);
+        inerted.forEach((c) => (c.inert = true));
+      } else {
+        inerted.forEach((c) => (c.inert = false));
+        inerted = [];
+        if (menu.contains(document.activeElement)) btn.focus();
+      }
+      if (reducedMotion()) {
+        menu.hidden = !state;
+        return;
+      }
       if (state) {
         menu.hidden = false;
         gsap.fromTo(menu, { clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 0.7, ease: 'fz.inOut' });
@@ -394,9 +437,11 @@ const links = [
     document.addEventListener(
       'keydown',
       (e) => {
-        if (e.key !== 'Escape') return;
+        if (e.key !== 'Escape' || !(megaOpen || mobileOpen)) return;
+        const inside = header.contains(document.activeElement);
         setMega(false);
         setMobile(false);
+        if (inside) btn.focus();
       },
       { signal },
     );

@@ -273,9 +273,20 @@ scallop += ' V 40 Z';
 
   const el = document.querySelector<HTMLElement>('[data-loader]');
 
+  // tant que le loader couvre la page, rien dessous ne peut recevoir le focus clavier
+  const covered = el ? ([...document.body.children].filter((c) => c !== el && !(c as HTMLElement).inert) as HTMLElement[]) : [];
+  covered.forEach((c) => (c.inert = true));
+  let released = false;
+  function release() {
+    if (released) return;
+    released = true;
+    covered.forEach((c) => (c.inert = false));
+    resolveDone();
+  }
+
   function finish() {
     el?.remove();
-    resolveDone();
+    release();
   }
 
   if (!el || !window.matchMedia('(scripting: enabled)').matches) finish();
@@ -358,7 +369,7 @@ scallop += ' V 40 Z';
         .to('[data-loader-front]', { y: -H, duration: 1, ease: 'power4.inOut' }, 'lift')
         .to('[data-loader-back]', { y: -H, duration: 1, ease: 'power4.inOut' }, 'lift+=0.12')
         // les animations de la page démarrent pendant que le rideau se lève
-        .add(() => resolveDone(), 'lift+=0.45');
+        .add(release, 'lift+=0.45');
     }
   }
 

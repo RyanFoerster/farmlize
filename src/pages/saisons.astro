@@ -14,9 +14,12 @@ import { ink } from '../lib/riso';
 const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 ---
 
-<Base title="De saison" description="Le calendrier des fruits et légumes de saison en Belgique, mois par mois.">
+<Base
+  title="Calendrier des fruits et légumes de saison"
+  description="Le calendrier des fruits et légumes de saison en Belgique, mois par mois : ce qui pousse en ce moment et les fermes qui le vendent près de chez vous."
+>
   <SiteHeader />
-  <main class="seasons" data-seasons>
+  <main class="seasons" id="contenu" tabindex="-1" data-seasons>
     <!-- HERO -->
     <section class="s-hero">
       <Floaters
@@ -41,11 +44,11 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
     <section class="s-picker" data-reveal>
       <div class="container s-picker__inner">
         <button type="button" class="s-arrow print print--sm" data-prev aria-label="Mois précédent"><Icon name="arrow-left" size={20} /></button>
-        <div class="s-months print print--sm" role="tablist" aria-label="Mois" data-months>
-          <span class="s-months__indicator" data-indicator></span>
+        <div class="s-months print print--sm" role="group" aria-label="Choisir le mois" data-months>
+          <span class="s-months__indicator" aria-hidden="true" data-indicator></span>
           {
             monthNames.map((m, i) => (
-              <button type="button" role="tab" class="s-month" data-month={i + 1} aria-selected="false">
+              <button type="button" class="s-month" data-month={i + 1} aria-pressed="false">
                 <span class="s-month__long">{m}</span>
                 <span class="s-month__short">{m.slice(0, 3)}</span>
               </button>
@@ -76,7 +79,8 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
           <h2 class="display s-board__month"><span data-month-title>Novembre</span></h2>
         </div>
         <div class="s-board__side">
-          <p class="s-board__count"><strong data-count>0</strong> produits de saison</p>
+          <p class="s-board__count" aria-hidden="true"><strong data-count>0</strong> produits de saison</p>
+          <p class="sr-only" role="status" data-count-status></p>
           <div class="s-kind" role="group" aria-label="Type">
             <button type="button" class="chip is-on" data-kind="all" aria-pressed="true">Tout</button>
             <button type="button" class="chip" data-kind="legume" aria-pressed="false">Légumes</button>
@@ -247,7 +251,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
   .s-month:hover {
     color: var(--ink);
   }
-  .s-month[aria-selected='true'] {
+  .s-month[aria-pressed='true'] {
     color: var(--cream);
   }
   .s-month__short {
@@ -389,7 +393,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
     right: 12px;
     padding: 3px 10px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.02em;
     rotate: 3deg;
@@ -557,6 +561,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
     const indicator = root.querySelector<HTMLElement>('[data-indicator]')!;
     const title = root.querySelector<HTMLElement>('[data-month-title]')!;
     const countEl = root.querySelector<HTMLElement>('[data-count]')!;
+    const countStatus = root.querySelector<HTMLElement>('[data-count-status]')!;
     const sun = root.querySelector<SVGElement>('[data-sun]')!;
     const sunFill = root.querySelector<SVGCircleElement>('[data-sun-fill]')!;
     let month = new Date().getMonth() + 1;
@@ -577,7 +582,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
       const vars = { x: tab.offsetLeft, width: tab.offsetWidth };
       if (animate && !reduced()) gsap.to(indicator, { ...vars, duration: 0.6, ease: 'fz.inOut' });
       else gsap.set(indicator, vars);
-      tab.scrollIntoView({ block: 'nearest', inline: 'center', behavior: animate ? 'smooth' : 'auto' });
+      tab.scrollIntoView({ block: 'nearest', inline: 'center', behavior: animate && !reduced() ? 'smooth' : 'auto' });
     };
 
     const setTitle = (dir: number) => {
@@ -604,7 +609,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
 
     const render = (dir = 1) => {
       if (!first) flushPending();
-      tabs.forEach((t, i) => t.setAttribute('aria-selected', String(i === month - 1)));
+      tabs.forEach((t, i) => t.setAttribute('aria-pressed', String(i === month - 1)));
       moveIndicator(!first);
       setTitle(dir);
 
@@ -628,6 +633,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
         return count;
       };
       const countTo = (n: number) => {
+        if (!first) countStatus.textContent = `${monthNames[month - 1]} : ${n} produit${n > 1 ? 's' : ''} de saison${kind === 'legume' ? ' (légumes)' : kind === 'fruit' ? ' (fruits)' : ''}`;
         const c = { v: Number(countEl.textContent) || 0 };
         gsap.to(c, { v: n, duration: 0.6, onUpdate: () => (countEl.textContent = String(Math.round(c.v))) });
         if (!first && !reduced()) gsap.fromTo(countEl.parentElement, { scale: 0.85, rotation: -8 }, { scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(2.6)' });

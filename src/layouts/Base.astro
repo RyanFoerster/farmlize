@@ -4,6 +4,7 @@ import SvgDefs from '../components/SvgDefs.astro';
 import Loader from '../components/Loader.astro';
 import PageTransition from '../components/PageTransition.astro';
 import '../styles/global.css';
+import { SITE_NAME, DEFAULT_DESCRIPTION, canonicalPath } from '../lib/seo';
 
 interface Props {
   title?: string;
@@ -11,14 +12,17 @@ interface Props {
   /** Défilement fluide (Lenis) — désactivé sur la carte */
   smooth?: boolean;
   bodyClass?: string;
+  /** Page à ne pas indexer (planche interne, 404) */
+  noindex?: boolean;
+  /** Données structurées schema.org de la page */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
-const {
-  title,
-  description = 'Farmlize vous connecte directement avec les producteurs, maraîchers, fromagers et artisans de votre région pour des produits sains et de saison.',
-  smooth = true,
-  bodyClass,
-} = Astro.props;
-const fullTitle = title ? `${title} — Farmlize` : 'Farmlize — Trouvez les fermes près de chez vous';
+const { title, description = DEFAULT_DESCRIPTION, smooth = true, bodyClass, noindex = false, jsonLd } = Astro.props;
+const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — Trouvez les fermes près de chez vous`;
+const site = Astro.site ?? new URL(Astro.url.origin);
+const canonical = new URL(canonicalPath(Astro.url.pathname), site).href;
+const ogImage = new URL('/og.png', site).href;
+const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 ---
 
 <!doctype html>
@@ -26,13 +30,36 @@ const fullTitle = title ? `${title} — Farmlize` : 'Farmlize — Trouvez les fe
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={description} />
-    <meta name="theme-color" content="#FCFAF2" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <link rel="canonical" href={canonical} />}
+
+    <!-- aperçu quand la page est partagée (réseaux, messageries) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="fr_BE" />
+    <meta property="og:title" content={title ?? fullTitle} />
+    <meta property="og:description" content={description} />
+    {!noindex && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Farmlize : les fermes locales de Belgique, illustrées en risographie" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <meta name="theme-color" content="#FCFAF2" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    {ld.map((d) => <script is:inline type="application/ld+json" set:html={JSON.stringify(d)} />)}
     <ClientRouter />
   </head>
   <body class={bodyClass} data-smooth={smooth ? '' : undefined}>
+    <!-- premier arrêt au clavier : sauter le menu -->
+    <a class="skip-link" href="#contenu">Aller au contenu</a>
     <SvgDefs />
     <Loader />
     <PageTransition />
@@ -42,10 +69,27 @@ const fullTitle = title ? `${title} — Farmlize` : 'Farmlize — Trouvez les fe
 
 <script>
   import Lenis from 'lenis';
-  import { gsap, ScrollTrigger, reduced, loaderDone, magnetic } from '../lib/motion';
+  import { gsap, ScrollTrigger, reduced, loaderDone, magnetic, layerizeScrub } from '../lib/motion';
   import { initClickGarden } from '../lib/click-garden';
 
   initClickGarden();
+
+  // Perf : les boucles CSS (illustrations qui flottent, se balancent, tournent…) se figent quand leur
+  // section est hors de l'écran — le navigateur n'a plus à les redessiner pour rien.
+  const offscreen = new IntersectionObserver(
+    (entries) => entries.forEach((e) => e.target.classList.toggle('is-offscreen', !e.isIntersecting)),
+    { rootMargin: '120px 0px' },
+  );
+  document.addEventListener('astro:page-load', async () => {
+    document.querySelectorAll('main section, footer').forEach((s) => offscreen.observe(s));
+    // et tout ce qui suit le scroll reçoit son propre calque (une fois les animations des pages créées)
+    await loaderDone();
+    await document.fonts.ready;
+    requestAnimationFrame(() => requestAnimationFrame(layerizeScrub));
+    setTimeout(layerizeScrub, 1500);
+  });
+  document.addEventListener('astro:before-swap', () => offscreen.disconnect());
+  ScrollTrigger.addEventListener('refresh', layerizeScrub);
 
   // Tous les boutons suivent un peu la souris, comme celui du hero de l'accueil
   // (les petits boutons ronds ou en pilule plus doucement, pour rester dans leur cadre).
@@ -69,13 +113,17 @@ const fullTitle = title ? `${title} — Farmlize` : 'Farmlize — Trouvez les fe
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
-    // ancres internes
+    // ancres internes : défilement doux, puis le focus suit (clavier, lecteur d'écran) et l'adresse garde l'ancre
     document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) =>
       a.addEventListener('click', (e) => {
-        const target = document.querySelector(a.getAttribute('href')!);
+        const hash = a.getAttribute('href')!;
+        const target = hash.length > 1 ? document.querySelector<HTMLElement>(hash) : null;
         if (!target) return;
         e.preventDefault();
-        lenis?.scrollTo(target as HTMLElement, { offset: -90, duration: 1.4 });
+        lenis?.scrollTo(target, { offset: -90, duration: 1.4 });
+        if (!target.matches('a, button, input, select, textarea, [tabindex]')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+        history.replaceState(history.state, '', hash);
       }),
     );
     (window as any).__lenis = lenis;

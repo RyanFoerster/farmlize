@@ -18,8 +18,13 @@ const shapes = [
 ];
 ---
 
-<Base title="C’est parti" smooth={false} bodyClass="onb-body">
-  <main class="onb" data-onb>
+<Base
+  title="Trouver une ferme près de chez vous"
+  description="Deux questions — où vous êtes et ce que vous cherchez — et Farmlize vous montre les fermes locales autour de chez vous."
+  smooth={false}
+  bodyClass="onb-body"
+>
+  <main class="onb" id="contenu" tabindex="-1" data-onb>
     <header class="onb__top">
       <Logo size={36} />
       <div class="onb__progress" aria-hidden="true">
@@ -49,9 +54,10 @@ const shapes = [
         <div class="where" data-anim>
           <label class="field where__field" data-field>
             <Icon name="pin" size={24} class="where__pin" />
-            <span class="sr-only">Commune ou code postal</span>
+            <span class="sr-only" id="where-label">Commune ou code postal</span>
             <input
               id="where-input"
+              aria-labelledby="where-label"
               type="text"
               role="combobox"
               aria-expanded="false"
@@ -90,7 +96,7 @@ const shapes = [
         <button type="button" class="where-chip" data-where-chip>
           <Icon name="pin" size={16} /> <span data-where-name>Namur</span> <span class="where-chip__edit">modifier</span>
         </button>
-        <FunTitle as="h1" class="display step__title" id="what-title" manual text={'Qu’est-ce qui vous [intéresse|pink] ?'} />
+        <FunTitle as="h1" class="display step__title" id="what-title" tabindex="-1" manual text={'Qu’est-ce qui vous [intéresse|pink] ?'} />
         <p class="step__lead" data-anim>Sélectionnez vos catégories préférées pour personnaliser vos résultats de recherche.</p>
 
         <div class="blobs" role="group" aria-label="Catégories de produits">
@@ -1124,6 +1130,7 @@ const shapes = [
         gsap.set(step1.querySelectorAll('.step__inner > *, [data-anim-illo]'), { clearProps: 'all' });
         window.scrollTo(0, 0);
         intro(step2);
+        root.querySelector<HTMLElement>('#what-title')!.focus({ preventScroll: true });
         busy = false;
       };
       if (reduced()) return swap();

@@ -1,4 +1,4 @@
-import { gsap } from './motion';
+import { gsap, reduced } from './motion';
 import { getFavs, toggleFav } from './store';
 
 /** Boutons cœur : `<button data-fav="slug">` — un seul écouteur délégué pour tout le site. */
@@ -7,7 +7,7 @@ function sync() {
   document.querySelectorAll<HTMLElement>('[data-fav]').forEach((b) => {
     const on = favs.has(b.dataset.fav!);
     b.setAttribute('aria-pressed', String(on));
-    b.setAttribute('aria-label', on ? 'Retirer des favoris' : 'Ajouter aux favoris');
+    // le nom du bouton ne change pas (« Mettre … en favori ») : c'est aria-pressed qui dit s'il l'est
   });
 }
 
@@ -54,6 +54,6 @@ export function initFavButtons() {
     sync();
     const icon = btn.querySelector('svg');
     gsap.fromTo(icon, { scale: on ? 0.6 : 1.1 }, { scale: 1, duration: 0.7, ease: 'elastic.out(1, 0.35)' });
-    if (on) burst(btn);
+    if (on && !reduced()) burst(btn);
   });
 }

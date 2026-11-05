@@ -80,7 +80,7 @@ const repeated = text.repeat(5);
 </style>
 
 <script>
-  import { gsap, ScrollTrigger, reduced, loaderDone } from '../lib/motion';
+  import { gsap, ScrollTrigger, reduced, loaderDone, pauseOffscreen } from '../lib/motion';
 
   const live: (() => void)[] = [];
 
@@ -102,6 +102,8 @@ const repeated = text.repeat(5);
       const to = reverse ? 0 : -unit;
       tp.setAttribute('startOffset', String(from));
       const loop = gsap.fromTo(tp, { attr: { startOffset: from } }, { attr: { startOffset: to }, duration: (unit / 60) / speed, ease: 'none', repeat: -1 });
+      // hors de l'écran, le ruban s'arrête (le texte sur un tracé coûte cher à redessiner)
+      const unwatch = pauseOffscreen(loop, el);
 
       // le ruban accélère légèrement avec la vitesse de scroll, puis revient doucement à son rythme
       const boost = { v: 1 };
@@ -123,6 +125,7 @@ const repeated = text.repeat(5);
       }
 
       live.push(() => {
+        unwatch();
         loop.kill();
         st.kill();
         settle.kill();

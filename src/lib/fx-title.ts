@@ -107,12 +107,12 @@ export function renderFx(text: string) {
   return html;
 }
 
-/** Texte brut (pour aria-label). */
+/** Texte brut, lu par les lecteurs d'écran (sans icônes ni couleurs : « [mot|#e9694f] » → « mot »). */
 export const plainFx = (text: string) =>
   text
     .replace(/\{[^}]+\}/g, '')
+    .replace(/\|[^\]~*]+(?=[\]~*])/g, '')
     .replace(/[[\]~*]/g, '')
-    .replace(/\|[a-z]+/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 

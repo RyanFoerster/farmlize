@@ -7,8 +7,8 @@ import FunTitle from '../components/FunTitle.astro';
 import Floaters from '../components/Floaters.astro';
 ---
 
-<Base title="Page introuvable" smooth={false}>
-  <main class="nf" data-nf>
+<Base title="Page introuvable" smooth={false} noindex>
+  <main class="nf" id="contenu" tabindex="-1" data-nf>
     <Floaters
       items={[
         { name: 'Carottes', x: 12, y: 22, rot: -14, depth: 1.2 },

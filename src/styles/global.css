@@ -14,7 +14,8 @@
   --line-strong: #d2c7b1;
   --ink: #352200;
   --ink-2: #5c665f;
-  --muted: #858d87;
+  /* gris des textes secondaires : 4,5:1 minimum sur le papier (lisible en petit) */
+  --muted: #626a64;
   --coral: #e9694f;
   --butter: #f3d677;
   --tangerine: #f0973f;
@@ -63,12 +64,18 @@ html {
   /* Pas d'ancrage de scroll : le texte de la banderole bouge en continu, et le navigateur
      « corrigeait » la position à chaque image (tremblement). Lenis gère le scroll. */
   overflow-anchor: none;
+  /* posé aussi ici : sinon le navigateur reporte le « clip » du body sur la fenêtre, qui ne découpe plus rien
+     (la page restait plus large que l'écran et se décalait au doigt) */
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
+  /* rien ne fait défiler la page sur le côté (éléments décalés en attente d'animation, parallaxe…) ;
+     clip et non hidden : les éléments collants continuent de fonctionner */
+  overflow-x: clip;
   background: var(--cream);
   color: var(--ink-2);
   font-family: var(--font-body);
@@ -128,6 +135,33 @@ button {
 .fz-line-mask {
   padding: 0.18em 0.12em 0;
   margin: -0.18em -0.12em 0;
+}
+
+/* Lien d'évitement : invisible jusqu'à ce qu'on arrive dessus au clavier */
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 12px;
+  left: 12px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--cream);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 0.25s var(--ease);
+}
+.skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--coral);
+  outline-offset: 3px;
+}
+/* cibles de focus programmé (lien d'évitement, titre d'une nouvelle étape) : lues, sans cadre */
+#contenu:focus,
+:is(h1, h2, h3)[tabindex='-1']:focus {
+  outline: none;
 }
 
 .sr-only {
@@ -451,7 +485,10 @@ button {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* une seule fois : une boucle infinie à 0,01 ms clignoterait */
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -565,6 +602,13 @@ button {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 1;
+}
+
+/* Section hors de l'écran (classe posée par Base.astro) : ses boucles se figent, sans rien redessiner. */
+.is-offscreen *,
+.is-offscreen *::before,
+.is-offscreen *::after {
+  animation-play-state: paused !important;
 }
 
 /* Animations minimalistes : une seule propriété, lente, en boucle.

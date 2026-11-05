@@ -51,7 +51,7 @@ const floaters = [
         Trouver une ferme <Icon name="arrow" size={18} class="icon-arrow" />
       </a>
     </div>
-    <div class="site-footer__cols">
+    <nav class="site-footer__cols" aria-label="Plan du site">
       <div>
         <p class="eyebrow">Explorer</p>
         <a href="/fermes">Toutes les fermes</a>
@@ -70,7 +70,7 @@ const floaters = [
         <a href="/fermes?lieu=liege">Liège</a>
         <a href="/fermes?lieu=bruxelles">Bruxelles</a>
       </div>
-    </div>
+    </nav>
   </div>
 
   <div class="site-footer__mark" aria-hidden="true">
@@ -307,7 +307,6 @@ const floaters = [
     padding: 22px 0 28px;
     font-size: 13px;
     color: rgba(252, 250, 242, 0.55);
-    border-top: 1px solid rgba(252, 250, 242, 0.12);
   }
   @media (max-width: 860px) {
     .site-footer__top {

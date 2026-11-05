@@ -45,12 +45,12 @@ const sprouts = gardenSprouts(month);
       {
         sprouts.map((s) => (
           <li class="sprout" style={`left:${s.x}%;top:${s.y}%;--s:${s.size}px;--r:${s.rot}deg;--c:${s.color}`}>
-            <button type="button" class="sprout__btn" aria-label={s.name}>
+            <span class="sprout__btn">
               <span class="sprout__float" style={`--dur:${s.dur}s;--d:${s.delay}s`}>
                 <svg class="riso" viewBox="0 0 60 60" aria-hidden="true" set:html={seasonArt(s.name)} />
               </span>
-              <span class="sprout__label" aria-hidden="true">{s.name}</span>
-            </button>
+              <span class="sprout__label">{s.name}</span>
+            </span>
           </li>
         ))
       }
@@ -325,7 +325,7 @@ const sprouts = gardenSprouts(month);
 
     // un clic (ou un tap) : la pousse saute en tournoyant et montre son nom
     sprouts.forEach((sp) => {
-      const btn = sp.querySelector<HTMLButtonElement>('.sprout__btn')!;
+      const btn = sp.querySelector<HTMLElement>('.sprout__btn')!;
       const art = sp.querySelector<SVGElement>('svg')!;
       const jump = () => {
         sp.classList.add('is-pop');

@@ -17,7 +17,12 @@ const radii = [
 ];
 ---
 
-<Base title="Explorer les fermes" smooth={false} bodyClass="explore-body">
+<Base
+  title="Explorer les fermes"
+  description={`La carte des ${farms.length} fermes locales de Belgique, en Wallonie, à Bruxelles et en Flandre : filtrez par produits, distance ou horaires et trouvez celles près de chez vous.`}
+  smooth={false}
+  bodyClass="explore-body"
+>
   <div class="explore" data-explore>
     <!-- En-tête : la même pilule que sur le reste du site, avec la recherche dedans -->
     <div class="ex-top">
@@ -30,15 +35,16 @@ const radii = [
       </SiteHeader>
     </div>
 
-    <!-- Liste -->
-    <aside class="ex-panel" data-panel>
+    <!-- Liste : le contenu principal de la page (la carte en est la vue complémentaire) -->
+    <main class="ex-panel" id="contenu" tabindex="-1" data-panel>
       <div class="ex-panel__controls">
         <div class="ex-where" data-where-wrap>
           <label class="ex-where__field">
             <Icon name="pin" size={20} />
-            <span class="sr-only">Commune</span>
+            <span class="sr-only" id="ex-where-label">Commune</span>
             <input
               type="text"
+              aria-labelledby="ex-where-label"
               data-where
               role="combobox"
               aria-expanded="false"
@@ -62,16 +68,18 @@ const radii = [
       <div class="ex-chips" data-chips>
         <div class="ex-chips__cats" data-cat-chips></div>
         <div class="ex-radius">
-          <button type="button" class="chip" data-radius-btn aria-haspopup="listbox" aria-expanded="false">
+          <button type="button" class="chip" data-radius-btn aria-expanded="false" aria-controls="radius-pop">
             <span data-radius-label>&lt; 25 km</span>
             <Icon name="chevron-down" size={16} />
           </button>
-          <ul class="ex-pop" role="listbox" data-radius-pop hidden>
+          <ul class="ex-pop" id="radius-pop" data-radius-pop hidden>
             {
               radii.map((r) => (
-                <li role="option" data-radius={r.v} aria-selected="false">
-                  {r.l}
-                  <Icon name="check" size={16} />
+                <li>
+                  <button type="button" class="ex-pop__opt" data-radius={r.v} aria-pressed="false">
+                    {r.l}
+                    <Icon name="check" size={16} />
+                  </button>
                 </li>
               ))
             }
@@ -84,13 +92,14 @@ const radii = [
         <h1 class="ex-head__title serif">
           <span data-head-label>Fermes à proximité</span> <span class="ex-head__count">(<span data-count>{farms.length}</span>)</span>
         </h1>
+        <p class="sr-only" role="status" data-results-status></p>
         <button type="button" class="ex-sort" data-sort>
           Trier : <strong data-sort-label>distance</strong>
         </button>
       </div>
 
       <div class="ex-list" data-list>
-        {farms.map((f) => <FarmCard farm={f} />)}
+        {farms.map((f) => <FarmCard farm={f} level={2} />)}
       </div>
 
       <div class="ex-empty" data-empty hidden>
@@ -102,7 +111,7 @@ const radii = [
           <button type="button" class="btn btn--sm btn--ghost" data-reset>Réinitialiser</button>
         </div>
       </div>
-    </aside>
+    </main>
 
     <!-- Carte -->
     <!-- Carte : une grande carte « imprimée », scotchée sur la page, avec ses commandes en papier -->
@@ -165,7 +174,7 @@ const radii = [
       <div class="ex-drawer__backdrop" data-close-filters></div>
       <div class="ex-drawer__sheet" role="dialog" aria-modal="true" aria-labelledby="filters-title">
         <div class="ex-drawer__head">
-          <h2 class="title" id="filters-title">Filtres</h2>
+          <h2 class="title" id="filters-title" tabindex="-1">Filtres</h2>
           <button type="button" class="ex-drawer__close" data-close-filters aria-label="Fermer"><Icon name="close" size={22} /></button>
         </div>
         <div class="ex-drawer__body">
@@ -183,8 +192,8 @@ const radii = [
             </div>
           </fieldset>
           <fieldset>
-            <legend class="eyebrow">Distance maximale · <span data-range-label>25 km</span></legend>
-            <input type="range" min="5" max="120" step="5" value="25" data-range class="ex-range" />
+            <legend class="eyebrow" id="range-legend">Distance maximale · <span data-range-label>25 km</span></legend>
+            <input type="range" min="5" max="120" step="5" value="25" aria-labelledby="range-legend" aria-valuetext="25 km" data-range class="ex-range" />
           </fieldset>
           <fieldset>
             <legend class="eyebrow">Sur place</legend>
@@ -479,7 +488,10 @@ const radii = [
   .ex-pop[hidden] {
     display: none;
   }
-  .ex-pop li {
+  .ex-pop__opt {
+    width: 100%;
+    font: inherit;
+    color: inherit;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -489,13 +501,14 @@ const radii = [
     cursor: pointer;
     font-weight: 500;
   }
-  .ex-pop li:hover {
+  .ex-pop__opt:hover,
+  .ex-pop__opt:focus-visible {
     background: var(--sand);
   }
-  .ex-pop li .icon {
+  .ex-pop__opt .icon {
     opacity: 0;
   }
-  .ex-pop li[aria-selected='true'] .icon {
+  .ex-pop__opt[aria-pressed='true'] .icon {
     opacity: 1;
   }
 
@@ -1016,7 +1029,7 @@ const radii = [
     color: var(--coral);
   }
   .maplibregl-ctrl-attrib {
-    font-size: 10px;
+    font-size: 11px;
     background: rgba(252, 250, 242, 0.85) !important;
   }
   /* l'attribution se range à côté du zoom */
@@ -1357,10 +1370,10 @@ const radii = [
     const renderChips = () => {
       const wrap = $('[data-cat-chips]');
       wrap.innerHTML = [...state.cats]
-        .map((c) => `<button type="button" class="chip chip-cat" data-remove-cat="${c}">${esc(categoryById[c].label)} ${closeSvg}</button>`)
+        .map((c) => `<button type="button" class="chip chip-cat" data-remove-cat="${c}" aria-label="Retirer le filtre ${esc(categoryById[c].label)}">${esc(categoryById[c].label)} ${closeSvg}</button>`)
         .join('');
       $('[data-radius-label]').textContent = radiusLabel(state.radius);
-      $$('[data-radius]').forEach((li) => li.setAttribute('aria-selected', String(Number(li.dataset.radius) === state.radius)));
+      $$('[data-radius]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.radius) === state.radius)));
       $('[data-open-chip]').setAttribute('aria-pressed', String(state.open));
       $('[data-fav-toggle]').setAttribute('aria-pressed', String(state.favs));
       $$('[data-cat-toggle]').forEach((b) => b.setAttribute('aria-pressed', String(state.cats.has(b.dataset.catToggle as CategoryId))));
@@ -1369,11 +1382,13 @@ const radii = [
       $('[data-sort-label]').textContent = state.sort;
       const range = $<HTMLInputElement>('[data-range]');
       range.value = String(state.radius || 120);
+      range.setAttribute('aria-valuetext', state.radius ? `${state.radius} km` : 'toute la Belgique');
       $('[data-range-label]').textContent = state.radius ? `${state.radius} km` : 'toute la Belgique';
       const extra = state.labels.size + (state.sort !== 'distance' ? 1 : 0) + state.cats.size;
       const badge = $('[data-filter-badge]');
       badge.hidden = !extra;
       badge.textContent = String(extra);
+      $('[data-open-filters]').setAttribute('aria-label', extra ? `Plus de filtres (${extra} actif${extra > 1 ? 's' : ''})` : 'Plus de filtres');
       $('[data-head-label]').textContent = state.favs ? 'Mes fermes favorites' : state.q ? 'Résultats' : 'Fermes à proximité';
       const favCount = getFavs().length;
       $('[data-fav-count]').textContent = String(favCount);
@@ -1420,9 +1435,16 @@ const radii = [
           { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.07, delay: 0.15 },
         );
       }
+      const announce = !first;
       first = false;
 
-      // compteur animé
+      // compteur animé (les lecteurs d'écran n'entendent que le nombre final)
+      if (announce) {
+        const k = visible.length;
+        $('[data-results-status]').textContent = state.favs
+          ? `${k} ferme${k > 1 ? 's' : ''} favorite${k > 1 ? 's' : ''}`
+          : `${k} ferme${k > 1 ? 's' : ''} trouvée${k > 1 ? 's' : ''}`;
+      }
       const countEl = $('[data-count]');
       const from = { v: Number(countEl.textContent) || 0 };
       gsap.to(from, { v: visible.length, duration: 0.5, ease: 'power2.out', onUpdate: () => (countEl.textContent = String(Math.round(from.v))) });
@@ -1510,7 +1532,7 @@ const radii = [
       const s = statuses.get(f.slug)!;
       const cover = cardBySlug.get(f.slug)!.querySelector('.cover')!.outerHTML;
       return `<a class="pop" href="/fermes/${f.slug}">
-        <span class="pop__thumb">${cover}</span>
+        <span class="pop__thumb" aria-hidden="true">${cover}</span>
         <span>
           <p class="pop__name">${esc(f.name)}</p>
           <p class="pop__meta">${starSvg} ${f.rating.toFixed(1).replace('.', ',')} (${f.reviews}) · ${formatKm(dist.get(f.slug)!)}</p>
@@ -1570,6 +1592,8 @@ const radii = [
         center: saved?.center ?? [state.commune.lng, state.commune.lat],
         zoom: saved?.zoom ?? 9.5,
         attributionControl: { compact: true },
+        // libellés lus par les lecteurs d'écran (MapLibre les donne en anglais par défaut)
+        locale: { 'Map.Title': 'Carte des fermes', 'Marker.Title': 'Ferme', 'Popup.Close': 'Fermer' },
         dragRotate: true,
         pitchWithRotate: false,
         fadeDuration: 200,
@@ -1625,12 +1649,9 @@ const radii = [
       on(card, 'mouseenter', () => markers.get(slug)?.el.classList.add('is-hover'));
       on(card, 'mouseleave', () => markers.get(slug)?.el.classList.remove('is-hover'));
       on(card, 'click', (e: MouseEvent) => {
-        if ((e.target as HTMLElement).closest('a, button')) return;
+        if ((e.target as HTMLElement).closest('a, button:not([data-pick])')) return;
         select(slug);
         if (matchMedia('(max-width: 900px)').matches) setView(true);
-      });
-      on(card, 'keydown', (e: KeyboardEvent) => {
-        if (e.key === 'Enter' && e.target === card) select(slug);
       });
     });
 
@@ -1645,20 +1666,36 @@ const radii = [
     // rayon
     const radiusBtn = $('[data-radius-btn]');
     const radiusPop = $('[data-radius-pop]');
-    const toggleRadius = (open: boolean) => {
+    const radiusOpts = $$<HTMLButtonElement>('[data-radius]');
+    const toggleRadius = (open: boolean, focus = false) => {
+      if (open === !radiusPop.hidden) return;
       radiusPop.hidden = !open;
       radiusBtn.setAttribute('aria-expanded', String(open));
+      if (focus) (open ? radiusOpts.find((b) => b.getAttribute('aria-pressed') === 'true') ?? radiusOpts[0] : radiusBtn).focus();
       if (open && !reduced()) gsap.fromTo(radiusPop, { autoAlpha: 0, y: -8, scale: 0.97 }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.35, transformOrigin: 'top left' });
     };
     on(radiusBtn, 'click', (e: MouseEvent) => {
       e.stopPropagation();
-      toggleRadius(radiusPop.hidden);
+      toggleRadius(radiusPop.hidden, e.detail === 0);
     });
-    $$('[data-radius]').forEach((li) =>
-      on(li, 'click', () => {
-        state.radius = Number(li.dataset.radius);
+    on(radiusPop, 'keydown', (e: KeyboardEvent) => {
+      const i = radiusOpts.indexOf(document.activeElement as HTMLButtonElement);
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        toggleRadius(false, true);
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        radiusOpts[(i + (e.key === 'ArrowDown' ? 1 : -1) + radiusOpts.length) % radiusOpts.length].focus();
+      }
+    });
+    on(radiusPop, 'focusout', (e: FocusEvent) => {
+      if (!radiusPop.contains(e.relatedTarget as Node) && e.relatedTarget !== radiusBtn) toggleRadius(false);
+    });
+    radiusOpts.forEach((b) =>
+      on(b, 'click', () => {
+        state.radius = Number(b.dataset.radius);
         state.favs = false;
-        toggleRadius(false);
+        toggleRadius(false, true);
         apply();
       }),
     );
@@ -1702,15 +1739,17 @@ const radii = [
     const closeWhere = () => {
       whereList.hidden = true;
       whereInput.setAttribute('aria-expanded', 'false');
+      whereInput.removeAttribute('aria-activedescendant');
     };
     const renderWhere = () => {
       whereResults = searchCommunes(whereInput.value);
       if (!whereResults.length) return closeWhere();
       whereList.innerHTML = whereResults
-        .map((c, i) => `<li role="option" data-slug="${c.slug}" aria-selected="${i === whereActive}">${esc(c.name)} <span>· ${esc(c.province)} (${c.zip})</span></li>`)
+        .map((c, i) => `<li role="option" id="ex-where-opt-${i}" data-slug="${c.slug}" aria-selected="${i === whereActive}">${esc(c.name)} <span>· ${esc(c.province)} (${c.zip})</span></li>`)
         .join('');
       whereList.hidden = false;
       whereInput.setAttribute('aria-expanded', 'true');
+      whereInput.setAttribute('aria-activedescendant', `ex-where-opt-${whereActive}`);
     };
     const setCommune = (c: Commune) => {
       state.commune = c;
@@ -1778,9 +1817,28 @@ const radii = [
     // tiroir filtres
     const drawer = $('[data-drawer]');
     const sheet = drawer.querySelector<HTMLElement>('.ex-drawer__sheet')!;
+    let drawerOpener: HTMLElement | null = null;
+    let drawerInert: HTMLElement[] = [];
+    const outsideDrawer = () => {
+      const out: HTMLElement[] = [];
+      for (let n: HTMLElement = drawer; n.parentElement && n !== document.body; n = n.parentElement)
+        for (const c of n.parentElement.children) if (c !== n) out.push(c as HTMLElement);
+      return out;
+    };
     const openDrawer = (open: boolean) => {
+      if (open === !drawer.hidden) return;
       if (open) {
+        drawerOpener = document.activeElement as HTMLElement | null;
         drawer.hidden = false;
+        drawerInert = outsideDrawer().filter((c) => !c.inert);
+        drawerInert.forEach((c) => (c.inert = true));
+        drawer.querySelector<HTMLElement>('#filters-title')!.focus({ preventScroll: true });
+      } else {
+        drawerInert.forEach((c) => (c.inert = false));
+        drawerInert = [];
+        drawerOpener?.focus();
+      }
+      if (open) {
         if (reduced()) return;
         gsap.fromTo(drawer.querySelector('.ex-drawer__backdrop'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 });
         gsap.fromTo(sheet, { xPercent: -105 }, { xPercent: 0, duration: 0.7, ease: 'fz.out' });

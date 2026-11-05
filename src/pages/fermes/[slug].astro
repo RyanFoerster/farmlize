@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import { breadcrumbLd, farmDescription } from '../../lib/seo';
 import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import FarmCover from '../../components/FarmCover.astro';
@@ -57,9 +58,13 @@ scallop += ' V 40 Z';
 const stampColors = [ink.coral, ink.yellow, ink.sky];
 ---
 
-<Base title={farm.name} description={farm.tagline}>
+<Base
+  title={`${farm.name} à ${farm.commune}`}
+  description={farmDescription(farm)}
+  jsonLd={breadcrumbLd(Astro.site!, [["Accueil", "/"], ["Les fermes", "/fermes"], [farm.name, `/fermes/${farm.slug}`]])}
+>
   <SiteHeader />
-  <main class="farm" data-farm={farm.slug} data-lat={farm.lat} data-lng={farm.lng} data-cat={farm.cats[0]}>
+  <main class="farm" id="contenu" tabindex="-1" data-farm={farm.slug} data-lat={farm.lat} data-lng={farm.lng} data-cat={farm.cats[0]}>
     <!-- HERO -->
     <section class="container farm-hero">
       <div class="farm-hero__text">
@@ -82,9 +87,9 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
         </div>
         <div class="farm-hero__actions" data-anim>
           <a href={directions} target="_blank" rel="noopener" class="btn">
-            <Icon name="route" size={18} /> Itinéraire
+            <Icon name="route" size={18} /> Itinéraire<span class="sr-only"> (nouvel onglet)</span>
           </a>
-          <button type="button" class="round-btn fav-btn" data-fav={farm.slug} aria-pressed="false" aria-label="Ajouter aux favoris">
+          <button type="button" class="round-btn fav-btn" data-fav={farm.slug} aria-pressed="false" aria-label={`Mettre ${farm.name} en favori`}>
             <Icon name="heart" size={22} />
           </button>
           <button type="button" class="round-btn" data-share aria-label="Partager">
@@ -215,7 +220,7 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
           <div class="mini-map__canvas" data-mini-map></div>
         </div>
         <a href={directions} target="_blank" rel="noopener" class="btn btn--ghost btn--sm mini-map__btn">
-          <Icon name="route" size={16} /> Ouvrir l’itinéraire
+          <Icon name="route" size={16} /> Ouvrir l’itinéraire<span class="sr-only"> (nouvel onglet)</span>
         </a>
       </div>
     </section>
@@ -243,8 +248,8 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
     </section>
 
     <div class="mobile-bar">
-      <a href={directions} target="_blank" rel="noopener" class="btn"><Icon name="route" size={18} /> Itinéraire</a>
-      <button type="button" class="round-btn fav-btn" data-fav={farm.slug} aria-pressed="false" aria-label="Ajouter aux favoris">
+      <a href={directions} target="_blank" rel="noopener" class="btn"><Icon name="route" size={18} /> Itinéraire<span class="sr-only"> (nouvel onglet)</span></a>
+      <button type="button" class="round-btn fav-btn" data-fav={farm.slug} aria-pressed="false" aria-label={`Mettre ${farm.name} en favori`}>
         <Icon name="heart" size={22} />
       </button>
       <button type="button" class="round-btn" data-share aria-label="Partager">
@@ -575,7 +580,7 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
     height: 22px;
     border-radius: 6px;
     background: var(--sand);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--muted);
   }
@@ -740,7 +745,7 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
     border-radius: 999px;
     background: var(--butter);
     box-shadow: 0 0 0 1.5px var(--ink);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     vertical-align: middle;
     rotate: -4deg;
@@ -904,8 +909,8 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
       gap: 10px;
       padding: 8px;
       border-radius: 999px;
-      background: rgba(252, 250, 242, 0.9);
-      backdrop-filter: blur(12px);
+      /* pas de flou d'arrière-plan (barre fixe : il serait recalculé à chaque image du scroll) */
+      background: rgba(252, 250, 242, 0.97);
       box-shadow:
         inset 0 0 0 1px var(--line),
         var(--shadow-m);
@@ -920,7 +925,7 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
 <script>
   import * as maplibregl from 'maplibre-gl';
   import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-  import { gsap, SplitText, ScrollTrigger, onPage, reduced, revealOnScroll } from '../../lib/motion';
+  import { gsap, SplitText, ScrollTrigger, onPage, reduced, revealOnScroll, pauseOffscreen } from '../../lib/motion';
   import { farmBySlug } from '../../data/farms';
   import { categoryById, type CategoryId } from '../../data/categories';
   import { communeBySlug } from '../../data/communes';
@@ -1008,7 +1013,7 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
 
       // pastilles produits : elles flottent, puis s'envolent chacune à sa vitesse au scroll
       root.querySelectorAll<HTMLElement>('[data-float]').forEach((el, i) => {
-        gsap.to(el.firstElementChild, { y: i % 2 ? 10 : -12, duration: 3 + i * 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 1.4 });
+        pauseOffscreen(gsap.to(el.firstElementChild, { y: i % 2 ? 10 : -12, duration: 3 + i * 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 1.4 }), el);
         const d = Number(el.dataset.depth || 1);
         gsap.to(el, { y: -120 * d, rotation: i % 2 ? 14 : -14, ease: 'none', scrollTrigger: { trigger: '.farm-hero', start: 'top top', end: 'bottom top', scrub: true } });
       });
@@ -1025,6 +1030,9 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
           type: 'lines',
           mask: 'lines',
           autoSplit: true,
+          // découpe en lignes seulement (les mots restent entiers) : le texte reste lu normalement.
+          // Le mode par défaut masquerait les lignes derrière un aria-label, ignoré sur un <p> ou une citation.
+          aria: 'none',
           onSplit: (self) => {
             gsap.set(el, { autoAlpha: 1 });
             return gsap.from(self.lines, { yPercent: 105, duration: 1.1, stagger: 0.08, scrollTrigger: { trigger: el, start: 'top 85%', once: true } });
@@ -1075,6 +1083,8 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
         zoom: 12.5,
         interactive: false,
         attributionControl: { compact: true },
+        // nom lu par les lecteurs d'écran (MapLibre dit « Map » par défaut)
+        locale: { 'Map.Title': `Plan d’accès : ${farm.name}` },
       });
       const pin = document.createElement('div');
       pin.className = 'mk';

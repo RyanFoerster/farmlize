@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { websiteLd } from '../lib/seo';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import Ribbon from '../components/Ribbon.astro';
@@ -42,9 +43,9 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
 );
 ---
 
-<Base>
+<Base jsonLd={websiteLd(Astro.site!)}>
   <SiteHeader variant="floating" />
-  <main class="home" data-home>
+  <main class="home" id="contenu" tabindex="-1" data-home>
     <!-- HERO -->
     <section class="hero" data-hero>
       <Ribbon class="hero__ribbon" />
@@ -88,25 +89,9 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
         <FunTitle class="title how__title" text="Du champ {Carottes} à votre [table|leaf], en trois étapes." />
       </div>
       <ol class="how__steps" data-stagger>
-        <svg class="how__path" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true" data-stagger-skip>
-          <path data-how-path d="M -30 150 C 140 -20, 300 10, 410 110 S 690 360, 810 250 S 1060 20, 1240 130" vector-effect="non-scaling-stroke"></path>
-        </svg>
-        <div class="how__bee" aria-hidden="true" data-how-bee data-stagger-skip>
-          <svg class="riso" viewBox="-30 -24 60 48">
-            <g class="how__wings">
-              <ellipse cx="-4" cy="-12" rx="10" ry="7" transform="rotate(-25 -4 -12)" fill={ink.paper}></ellipse>
-              <ellipse cx="8" cy="-12" rx="9" ry="6" transform="rotate(20 8 -12)" fill={ink.sky}></ellipse>
-            </g>
-            <path d="M-22 0 L-30 -2 L-22 4 Z" fill={ink.brown}></path>
-            <ellipse cx="0" cy="2" rx="22" ry="14" fill={ink.yellow}></ellipse>
-            <path d="M-8 -11.5 C -4 -4 -4 8 -8 15 L -2 15.6 C 2 8 2 -4 -2 -13 Z" fill={ink.brown}></path>
-            <path d="M6 -11 C 10 -4 10 8 6 14.5 L 12 13 C 15 7 15 -3 12 -9 Z" fill={ink.brown}></path>
-            <circle cx="17" cy="-2" r="2.4" fill={ink.brown}></circle>
-          </svg>
-        </div>
         <li class="step print" style="--c: var(--coral); --off: var(--coral)">
           <div class="step__art">
-            <svg viewBox="0 0 240 180" class="step__svg riso">
+            <svg viewBox="0 0 240 180" class="step__svg riso" aria-hidden="true">
               <clipPath id="step-clip-1"><path d="M22 96 C 12 46, 76 12, 132 14 C 196 16, 232 50, 226 96 C 220 146, 158 170, 110 166 C 56 162, 30 140, 22 96 Z"></path></clipPath>
               <path class="step__blob" data-alt="M18 92 C 22 40, 86 18, 140 20 C 200 24, 228 62, 220 104 C 210 150, 150 168, 104 160 C 50 152, 14 132, 18 92 Z" d="M22 96 C 12 46, 76 12, 132 14 C 196 16, 232 50, 226 96 C 220 146, 158 170, 110 166 C 56 162, 30 140, 22 96 Z" fill="var(--c)"></path>
               <g clip-path="url(#step-clip-1)">
@@ -127,7 +112,7 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
         </li>
         <li class="step print" style="--c: var(--butter); --off: var(--butter)">
           <div class="step__art">
-            <svg viewBox="0 0 240 180" class="step__svg riso">
+            <svg viewBox="0 0 240 180" class="step__svg riso" aria-hidden="true">
               <clipPath id="step-clip-2"><path d="M18 88 C 18 40, 80 14, 136 18 C 200 22, 230 56, 222 102 C 214 148, 150 168, 104 162 C 52 156, 18 132, 18 88 Z"></path></clipPath>
               <path class="step__blob" data-alt="M24 96 C 14 48, 70 16, 128 16 C 190 16, 226 50, 224 94 C 222 144, 160 170, 112 166 C 60 162, 32 140, 24 96 Z" d="M18 88 C 18 40, 80 14, 136 18 C 200 22, 230 56, 222 102 C 214 148, 150 168, 104 162 C 52 156, 18 132, 18 88 Z" fill="var(--c)"></path>
               <g class="ri-bob" style="--a:-5px; --dur:2.6s"><use href="#ico-fromages" x="24" y="56" width="86" height="86" class="step__p1"></use></g>
@@ -141,7 +126,7 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
         </li>
         <li class="step print" style="--c: var(--leaf); --off: var(--leaf)">
           <div class="step__art">
-            <svg viewBox="0 0 240 180" class="step__svg riso">
+            <svg viewBox="0 0 240 180" class="step__svg riso" aria-hidden="true">
               <clipPath id="step-clip-3"><path d="M24 92 C 14 50, 70 16, 124 16 C 190 16, 228 52, 224 96 C 220 142, 164 168, 114 166 C 62 164, 32 132, 24 92 Z"></path></clipPath>
               <clipPath id="step-sun-3"><circle cx="176" cy="52" r="21"></circle></clipPath>
               <path class="step__blob" data-alt="M20 100 C 18 52, 78 20, 132 20 C 192 22, 230 58, 222 100 C 214 146, 156 166, 108 164 C 56 160, 22 140, 20 100 Z" d="M24 92 C 14 50, 70 16, 124 16 C 190 16, 228 52, 224 96 C 220 142, 164 168, 114 166 C 62 164, 32 132, 24 92 Z" fill="var(--c)"></path>
@@ -176,6 +161,25 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
           <span class="step__num serif" aria-hidden="true">03</span>
           <h3 class="step__title">Filez à la ferme</h3>
           <p>Horaires, itinéraire, produits du moment : tout pour rendre visite au producteur, sans détour.</p>
+        </li>
+        <!-- décor (tracé + abeille) : un élément de liste masqué, pour que la liste ne contienne que des <li> -->
+        <li class="how__deco" aria-hidden="true" data-stagger-skip>
+          <svg class="how__path" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true" data-stagger-skip>
+            <path data-how-path d="M -30 150 C 140 -20, 300 10, 410 110 S 690 360, 810 250 S 1060 20, 1240 130" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <div class="how__bee" aria-hidden="true" data-how-bee data-stagger-skip>
+            <svg class="riso" viewBox="-30 -24 60 48">
+              <g class="how__wings">
+                <ellipse cx="-4" cy="-12" rx="10" ry="7" transform="rotate(-25 -4 -12)" fill={ink.paper}></ellipse>
+                <ellipse cx="8" cy="-12" rx="9" ry="6" transform="rotate(20 8 -12)" fill={ink.sky}></ellipse>
+              </g>
+              <path d="M-22 0 L-30 -2 L-22 4 Z" fill={ink.brown}></path>
+              <ellipse cx="0" cy="2" rx="22" ry="14" fill={ink.yellow}></ellipse>
+              <path d="M-8 -11.5 C -4 -4 -4 8 -8 15 L -2 15.6 C 2 8 2 -4 -2 -13 Z" fill={ink.brown}></path>
+              <path d="M6 -11 C 10 -4 10 8 6 14.5 L 12 13 C 15 7 15 -3 12 -9 Z" fill={ink.brown}></path>
+              <circle cx="17" cy="-2" r="2.4" fill={ink.brown}></circle>
+            </svg>
+          </div>
         </li>
       </ol>
     </section>
@@ -451,6 +455,12 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
   .how__steps {
     position: relative;
     align-items: start;
+  }
+  .how__deco {
+    display: contents;
+  }
+  .how__steps > .step {
+    z-index: 1;
   }
   .step {
     z-index: 1;
@@ -959,18 +969,27 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
     }
   }
   @media (max-width: 560px) {
+    /* bande défilante : elle rogne ce qui dépasse en hauteur, d'où la marge pour le tampon cœur et l'ombre décalée */
     .picks__grid {
       display: flex;
+      align-items: flex-start;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
-      margin-inline: calc(var(--gutter) * -1);
-      padding: 6px var(--gutter) 16px;
+      margin: -14px calc(var(--gutter) * -1) -10px;
+      padding: 30px var(--gutter) 30px;
       gap: 14px;
       scrollbar-width: none;
     }
     .picks__grid > :global(*) {
       flex: 0 0 82%;
       scroll-snap-align: start;
+      scroll-margin-left: var(--gutter);
+    }
+    /* droites et immobiles dans la bande (le flottement les faisait sortir du cadre) */
+    .pick:nth-of-type(n) {
+      margin-top: 0;
+      rotate: 0deg;
+      animation: none;
     }
     .cats__cloud {
       grid-template-columns: repeat(2, 1fr);
@@ -1037,7 +1056,7 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
 </style>
 
 <script>
-  import { gsap, ScrollTrigger, SplitText, onPage, reduced, revealOnScroll, splitReveal } from '../lib/motion';
+  import { gsap, ScrollTrigger, SplitText, onPage, reduced, revealOnScroll, splitReveal, pauseOffscreen } from '../lib/motion';
   import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin';
   import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
   import { fxTimeline } from '../lib/fx-title';
@@ -1075,9 +1094,9 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
             0.35,
           );
 
-        // --- Flottement doux des illustrations
+        // --- Flottement doux des illustrations (en pause quand le hero est hors de l'écran)
         root.querySelectorAll<HTMLElement>('.hero__float').forEach((el, i) => {
-          gsap.to(el, {
+          const float = gsap.to(el, {
             rotation: i ? -1.6 : 1.4,
             y: i ? -10 : -14,
             duration: 3.4 + i * 0.6,
@@ -1086,6 +1105,7 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
             repeat: -1,
             delay: 1.8,
           });
+          pauseOffscreen(float, el);
         });
 
         // --- Parallaxe souris

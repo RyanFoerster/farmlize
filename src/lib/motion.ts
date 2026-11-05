@@ -124,6 +124,78 @@ export function splitReveal(el: HTMLElement, vars: gsap.TweenVars = {}) {
   });
 }
 
+/* ---------- Performance (surtout téléphone) ---------- */
+
+const watched = new Map<Element, Set<gsap.core.Animation>>();
+let viewIO: IntersectionObserver | null = null;
+
+/**
+ * Met une boucle infinie en pause tant que `el` est hors de l'écran (elle reprend là où elle s'était arrêtée).
+ * Renvoie de quoi arrêter la surveillance.
+ */
+export function pauseOffscreen(anim: gsap.core.Animation, el: Element) {
+  viewIO ??= new IntersectionObserver(
+    (entries) => entries.forEach((e) => watched.get(e.target)?.forEach((a) => a.paused(!e.isIntersecting))),
+    { rootMargin: '120px 0px' },
+  );
+  let set = watched.get(el);
+  if (!set) watched.set(el, (set = new Set()));
+  set.add(anim);
+  viewIO.observe(el);
+  return () => {
+    set!.delete(anim);
+    if (set!.size) return;
+    watched.delete(el);
+    viewIO?.unobserve(el);
+  };
+}
+
+// après une navigation, on oublie ce qui a quitté la page
+document.addEventListener('astro:after-swap', () =>
+  watched.forEach((_, el) => {
+    if (el.isConnected) return;
+    watched.delete(el);
+    viewIO?.unobserve(el);
+  }),
+);
+
+const MOVES = ['x', 'y', 'xPercent', 'yPercent', 'rotation', 'rotate', 'skewX', 'skewY', 'motionPath'];
+const SCALES = ['scale', 'scaleX', 'scaleY'];
+
+/**
+ * Donne un calque stable (will-change) à tout ce qui suit le scroll en parallaxe.
+ * Sans ça, GSAP repasse en transform 2D aux deux bouts du scrub : le navigateur détruit puis recrée
+ * le calque et redessine tout l'élément (trames comprises) au premier pixel de scroll — le « saccadement ».
+ * Ce qui change d'échelle est laissé de côté (un calque figé deviendrait flou en grandissant).
+ */
+export function layerizeScrub() {
+  const tweens: gsap.core.Tween[] = [];
+  ScrollTrigger.getAll().forEach((st) => {
+    const anim = st.animation;
+    if (!st.vars.scrub || !anim) return;
+    if (anim instanceof gsap.core.Timeline) tweens.push(...(anim.getChildren(true, true, false) as gsap.core.Tween[]));
+    else tweens.push(anim as gsap.core.Tween);
+  });
+  const scaled = new Set<Element>();
+  const moved = new Set<Element>();
+  // ce qui va encore changer d'échelle (une entrée pas encore jouée…) n'aura son calque qu'au passage suivant
+  (gsap.globalTimeline.getChildren(true, true, false) as gsap.core.Tween[]).forEach((t) => {
+    if (!Object.keys(t.vars || {}).some((k) => SCALES.includes(k))) return;
+    t.targets().forEach((el: unknown) => el instanceof Element && scaled.add(el));
+  });
+  tweens.forEach((t) => {
+    const keys = Object.keys(t.vars || {});
+    t.targets().forEach((el: unknown) => {
+      if (!(el instanceof HTMLElement) && !(el instanceof SVGSVGElement && !el.ownerSVGElement)) return;
+      if (keys.some((k) => SCALES.includes(k))) scaled.add(el);
+      else if (keys.some((k) => MOVES.includes(k))) moved.add(el);
+    });
+  });
+  moved.forEach((el) => {
+    if (!scaled.has(el)) (el as HTMLElement).style.willChange = 'transform';
+  });
+}
+
 /** Petit effet magnétique sur un bouton. */
 export function magnetic(el: HTMLElement, strength = 0.25) {
   if (reduced() || window.matchMedia('(hover: none)').matches) return () => {};

@@ -34,9 +34,9 @@ export function gardenSprouts(month: number, max = 18): Sprout[] {
 /** Balisage d'une pousse (utilisé côté navigateur quand le mois change). */
 export function sproutHTML(s: Sprout) {
   return `<li class="sprout" style="left:${s.x}%;top:${s.y}%;--s:${s.size}px;--r:${s.rot}deg;--c:${s.color}">
-  <button type="button" class="sprout__btn" aria-label="${s.name}">
+  <span class="sprout__btn">
     <span class="sprout__float" style="--dur:${s.dur}s;--d:${s.delay}s"><svg class="riso" viewBox="0 0 60 60" aria-hidden="true">${seasonArt(s.name)}</svg></span>
-    <span class="sprout__label" aria-hidden="true">${s.name}</span>
-  </button>
+    <span class="sprout__label">${s.name}</span>
+  </span>
 </li>`;
 }

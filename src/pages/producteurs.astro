@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { faqLd } from '../lib/seo';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import Icon from '../components/Icon.astro';
@@ -56,9 +57,13 @@ const steps = [
 const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
 ---
 
-<Base title="Ajouter ma ferme" description="Inscrivez gratuitement votre ferme sur Farmlize et vendez en direct aux habitants de votre région.">
+<Base
+  title="Producteurs : ajoutez votre ferme gratuitement"
+  description="Inscrivez gratuitement votre ferme sur Farmlize : une fiche prête en dix minutes, sans commission, pour vendre en direct aux habitants de votre région."
+  jsonLd={faqLd(faq)}
+>
   <SiteHeader />
-  <main class="prod" data-prod>
+  <main class="prod" id="contenu" tabindex="-1" data-prod>
     <!-- HERO -->
     <section class="container p-hero">
       <div class="p-hero__text">
@@ -73,19 +78,25 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
         </div>
       </div>
       <div class="p-hero__art" aria-hidden="true">
-        <svg class="p-hero__blob riso" viewBox="0 0 400 400" data-anim-illo data-hero-blob-svg>
-          <defs><clipPath id="p-sun"><circle cx="300" cy="96" r="54"></circle></clipPath></defs>
-          <path d={heroBlob[0]} data-alt={heroBlob[1]} fill="var(--butter)" data-hero-blob></path>
-          <path d={heroBlob[0]} data-alt={heroBlob[1]} fill="url(#ri-o-b)" filter="url(#ri-dot)" data-hero-blob></path>
-          <g class="ri-bob" style="--a:-6px; --dur:4s">
+        <!-- la tache : un dessin fixe (sa trame ne se recalcule jamais), qui respire par un simple mouvement d'ensemble -->
+        <div class="p-hero__blob" data-anim-illo data-hero-blob-svg>
+          <svg class="riso" viewBox="0 0 400 400">
+            <path d={heroBlob[0]} fill="var(--butter)"></path>
+            <path d={heroBlob[0]} fill="url(#ri-o-b)" filter="url(#ri-dot)"></path>
+          </svg>
+        </div>
+        <!-- le soleil : son propre calque (même cadre que la tache), qui flotte sans faire redessiner la tache -->
+        <div class="p-hero__blob p-hero__sun" data-anim-illo data-hero-blob-svg>
+          <svg class="riso" viewBox="0 0 400 400">
+            <defs><clipPath id="p-sun"><circle cx="300" cy="96" r="54"></circle></clipPath></defs>
             <circle cx="300" cy="96" r="54" fill={ink.orange}></circle>
             <g clip-path="url(#p-sun)" fill="var(--butter)">
               <rect x="240" y="106" width="120" height="5"></rect>
               <rect x="240" y="118" width="120" height="8"></rect>
               <rect x="240" y="133" width="120" height="12"></rect>
             </g>
-          </g>
-        </svg>
+          </svg>
+        </div>
         <IlloFarmer class="p-hero__img" data-anim-illo data-hero-farmer />
         <span class="p-bubble p-bubble--1" data-bubble data-depth="1.3"><span class="p-bubble__in print print--sm" style="--off: var(--coral)"><Produce cat="legumes" size="100%" /></span></span>
         <span class="p-bubble p-bubble--2" data-bubble data-depth="0.7"><span class="p-bubble__in print print--sm" style="--off: var(--sky)"><Produce cat="fromages" size="100%" /></span></span>
@@ -115,7 +126,7 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
                     <Icon name={p.icon} size={30} />
                   </span>
                 </span>
-                <h2 class="perk__title">{p.title}</h2>
+                <h3 class="perk__title">{p.title}</h3>
                 <p>{p.text}</p>
               </article>
             ))
@@ -131,8 +142,10 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
       <div class="p-how__head">
         <FunTitle class="title p-how__title" text="Trois étapes, et votre ferme est sur la [carte|sky]." />
       </div>
+      <div class="timeline-wrap">
+      <!-- le rail est décoratif : hors de la liste, pour qu'elle ne contienne que ses étapes -->
+      <span class="timeline__line" aria-hidden="true"><span data-line></span></span>
       <ol class="timeline" data-timeline>
-        <span class="timeline__line"><span data-line></span></span>
         {
           steps.map((s, i) => (
             <li class="tl-step" style={`--c:${s.color}`}>
@@ -148,6 +161,7 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
           ))
         }
       </ol>
+      </div>
     </section>
 
     <!-- FORMULAIRE -->
@@ -241,7 +255,7 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
 
           <div class="form__success" data-success hidden>
             <div class="success__art riso" data-success-art><Produce cat="legumes" size={96} /></div>
-            <h3 class="title">Merci, <span data-success-name>et à très vite</span>&nbsp;!</h3>
+            <h3 class="title" tabindex="-1" data-success-title>Merci, <span data-success-name>et à très vite</span>&nbsp;!</h3>
             <p class="lead">
               Votre demande pour <strong data-success-farm>votre ferme</strong> est bien arrivée. Notre équipe vous
               recontacte sous 48 h pour finaliser la fiche.
@@ -249,6 +263,9 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
             <p class="form__proto">Prototype : aucune donnée n’a été envoyée.</p>
             <a href="/fermes" class="btn">Voir la carte des fermes <Icon name="arrow" size={18} class="icon-arrow" /></a>
           </div>
+
+          <!-- annonces pour les lecteurs d'écran : étape en cours, erreurs -->
+          <p class="sr-only" role="status" data-form-status></p>
 
           <div class="form__nav" data-form-nav>
             <button type="button" class="btn btn--ghost btn--sm" data-fprev hidden>Retour</button>
@@ -325,7 +342,18 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
     inset: 4% -2% 0 4%;
     width: 100%;
     height: 100%;
+  }
+  .p-hero__blob svg {
+    display: block;
+    width: 100%;
+    height: 100%;
     overflow: visible;
+  }
+  /* Tout ce qui bouge ici bouge « d'un bloc » (transform composité) : la trame n'est jamais recalculée
+     pendant le scroll ou la respiration, d'où une animation lisse même sur téléphone. */
+  :global(.p-hero__img),
+  .p-bubble {
+    will-change: transform;
   }
   :global(.p-hero__img) {
     position: relative;
@@ -336,6 +364,30 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
     position: absolute;
     z-index: 2;
     width: clamp(70px, 7.4vw, 108px);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    /* la tache respire (s'étire et pivote à peine), le soleil flotte à son rythme */
+    .p-hero__blob:not(.p-hero__sun) svg {
+      animation: p-breathe 4.5s ease-in-out infinite alternate;
+    }
+    .p-hero__sun svg {
+      animation: p-sun 4s ease-in-out infinite alternate;
+    }
+  }
+  @keyframes p-breathe {
+    from {
+      scale: 1 1;
+      rotate: 0deg;
+    }
+    to {
+      scale: 1.035 0.965;
+      rotate: 2.5deg;
+    }
+  }
+  @keyframes p-sun {
+    to {
+      translate: 0 -6px;
+    }
   }
   .p-bubble__in {
     display: grid;
@@ -464,6 +516,9 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
     position: sticky;
     top: 130px;
     align-self: start;
+  }
+  .timeline-wrap {
+    position: relative;
   }
   .timeline {
     position: relative;
@@ -1039,16 +1094,20 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
         .fromTo('[data-hero-blob-svg]', { scale: 0.5, rotation: -25, autoAlpha: 0 }, { scale: 1, rotation: 0, autoAlpha: 1, duration: 1.4, ease: 'back.out(1.5)', transformOrigin: '50% 50%' })
         .fromTo('[data-hero-farmer]', { yPercent: 28, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 1.3, ease: 'expo.out' }, 0.25)
         .from('.p-bubble__in', { scale: 0, rotation: -60, duration: 0.9, ease: 'back.out(2.4)', stagger: 0.12 }, 0.7);
-      // la tache respire
-      root.querySelectorAll<SVGPathElement>('[data-hero-blob]').forEach((p) =>
-        gsap.to(p, { morphSVG: p.dataset.alt!, duration: 4.5, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
-      );
+      // (la tache respire en CSS, voir p-breathe : un transform composité plutôt qu'un morph qui recalculerait la trame)
       // au scroll : les produits s'envolent chacun à sa vitesse, le fermier descend un peu
       root.querySelectorAll<HTMLElement>('[data-bubble]').forEach((b) => {
         const d = Number(b.dataset.depth || 1);
         gsap.to(b, { y: -110 * d, rotation: d > 1 ? -12 : 10, ease: 'none', scrollTrigger: { trigger: '.p-hero', start: 'top top', end: 'bottom top', scrub: true } });
       });
-      gsap.to('[data-hero-farmer]', { yPercent: 8, ease: 'none', scrollTrigger: { trigger: '.p-hero', start: 'top top', end: 'bottom top', scrub: true } });
+      // (en y et non en yPercent : l'entrée anime déjà yPercent, et le parallaxe repartait de sa position
+      // de départ — 28 % plus bas — au premier scroll : le fermier « sautait » dans la tache)
+      const farmer = root.querySelector<SVGSVGElement>('[data-hero-farmer]')!;
+      gsap.to(farmer, {
+        y: () => farmer.getBoundingClientRect().height * 0.08,
+        ease: 'none',
+        scrollTrigger: { trigger: '.p-hero', start: 'top top', end: 'bottom top', scrub: true, invalidateOnRefresh: true },
+      });
 
       // --- avantages : la tache se déforme et l'icône saute au survol
       root.querySelectorAll<HTMLElement>('[data-perk]').forEach((card) => {
@@ -1141,11 +1200,20 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
       on(b, 'click', () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'))),
     );
 
+    const status = root.querySelector<HTMLElement>('[data-form-status]')!;
+    const say = (msg: string) => {
+      // vidé puis rempli : le même message est annoncé à nouveau
+      status.textContent = '';
+      requestAnimationFrame(() => (status.textContent = msg));
+    };
     const validate = (i: number) => {
       let ok = true;
+      const errors: string[] = [];
       fsteps[i].querySelectorAll<HTMLInputElement>('input[required]:not([type="checkbox"])').forEach((input) => {
         const valid = input.type === 'email' ? /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.value.trim()) : input.value.trim().length > 1;
         input.closest('.f-field')!.classList.toggle('is-invalid', !valid);
+        input.setAttribute('aria-invalid', String(!valid));
+        if (!valid) errors.push(input.closest('.f-field')!.querySelector('.f-error')?.textContent ?? '');
         if (!valid) {
           if (ok) input.focus();
           ok = false;
@@ -1154,24 +1222,34 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
       });
       if (i === 1 && !cats.size) {
         root.querySelector('[data-cats-error]')!.classList.add('is-shown');
+        errors.push(root.querySelector('[data-cats-error]')!.textContent ?? '');
         gsap.fromTo('[data-f-cats]', { x: -6 }, { x: 0, duration: 0.5, ease: 'elastic.out(1, 0.3)' });
         ok = false;
       }
       if (i === 2) {
         const consent = form.querySelector<HTMLInputElement>('[name="consent"]')!;
         root.querySelector('[data-consent-error]')!.classList.toggle('is-shown', !consent.checked);
-        if (!consent.checked) ok = false;
+        if (!consent.checked) {
+          ok = false;
+          errors.push(root.querySelector('[data-consent-error]')!.textContent ?? '');
+          consent.setAttribute('aria-invalid', 'true');
+        } else consent.removeAttribute('aria-invalid');
       }
+      if (!ok) say(errors.filter(Boolean).join(' '));
       return ok;
     };
 
     const show = (i: number, dir: number) => {
       const from = fsteps[current];
       const to = fsteps[i];
+      const hadFocus = form.contains(document.activeElement);
       const swap = () => {
         from.hidden = true;
         to.hidden = false;
         current = i;
+        // le focus suit dans la nouvelle étape (sinon il retomberait sur la page quand « Retour » disparaît)
+        if (hadFocus) to.querySelector<HTMLElement>('input, textarea, button')?.focus();
+        say(`Étape ${i + 1} sur ${fsteps.length} : ${to.querySelector('legend')?.textContent ?? ''}`);
         prev.hidden = i === 0;
         next.innerHTML = i === fsteps.length - 1 ? 'Envoyer ma demande' : 'Continuer';
         sideSteps.forEach((s, j) => {
@@ -1180,13 +1258,14 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
         });
         gsap.to(bar, { width: `${((i + 1) / fsteps.length) * 100}%`, duration: 0.7, ease: 'back.out(1.6)' });
         if (!reduced()) {
-          gsap.fromTo(to.children, { autoAlpha: 0, x: 30 * dir }, { autoAlpha: 1, x: 0, duration: 0.5, stagger: 0.05 });
+          // opacité seule (pas autoAlpha) : un champ en visibility:hidden perdrait le focus qu'on vient de lui donner
+          gsap.fromTo(to.children, { opacity: 0, x: 30 * dir }, { opacity: 1, x: 0, duration: 0.5, stagger: 0.05 });
           // le panier saute à chaque étape franchie
           if (dir > 0) gsap.fromTo('[data-form-basket]', { y: 0, rotation: 0 }, { keyframes: [{ y: -26, rotation: -6, duration: 0.25, ease: 'power2.out' }, { y: 0, rotation: 0, duration: 0.6, ease: 'bounce.out' }] });
         }
       };
       if (reduced()) return swap();
-      gsap.to(from.children, { autoAlpha: 0, x: -30 * dir, duration: 0.25, stagger: 0.02, ease: 'power2.in', onComplete: () => (gsap.set(from.children, { clearProps: 'all' }), swap()) });
+      gsap.to(from.children, { opacity: 0, x: -30 * dir, duration: 0.25, stagger: 0.02, ease: 'power2.in', onComplete: () => (gsap.set(from.children, { clearProps: 'all' }), swap()) });
     };
 
     const confetti = () => {
@@ -1220,9 +1299,11 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
       root.querySelector<HTMLElement>('[data-form-nav]')!.hidden = true;
       sideSteps.forEach((s) => s.classList.add('is-on', 'is-done'));
       success.hidden = false;
+      // le bouton « Envoyer » vient de disparaître : le focus va au message de remerciement (lu à voix haute)
+      root.querySelector<HTMLElement>('[data-success-title]')!.focus();
       gsap.to(bar, { width: '100%', duration: 0.6 });
       if (!reduced()) {
-        gsap.fromTo(success.children, { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08 });
+        gsap.fromTo(success.children, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.08 });
         gsap.fromTo('[data-success-art]', { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 1, ease: 'back.out(2)' });
         gsap.fromTo('[data-form-basket]', { y: 0 }, { y: -24, duration: 0.3, yoyo: true, repeat: 3, ease: 'power2.out' });
         confetti();
@@ -1236,7 +1317,11 @@ const faqOff = ['var(--coral)', 'var(--butter)', 'var(--sky)', 'var(--leaf)'];
     });
     on(prev, 'click', () => current > 0 && show(current - 1, -1));
     on(form, 'submit', (e: SubmitEvent) => e.preventDefault());
-    on(form, 'input', (e: Event) => (e.target as HTMLElement).closest('.f-field')?.classList.remove('is-invalid'));
+    on(form, 'input', (e: Event) => {
+      const t = e.target as HTMLElement;
+      t.closest('.f-field')?.classList.remove('is-invalid');
+      t.removeAttribute('aria-invalid');
+    });
     on(form, 'keydown', (e: KeyboardEvent) => {
       if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
         e.preventDefault();
