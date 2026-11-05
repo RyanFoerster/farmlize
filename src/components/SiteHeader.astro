@@ -402,15 +402,10 @@ const links = [
     );
     document.addEventListener('pointerdown', (e) => megaOpen && !inner.contains(e.target as Node) && setMega(false), { signal });
 
-    // --- en-tête flottant (accueil) : visible après le hero
+    // --- en-tête flottant (accueil) : toujours là ; il descend en place quand le loader se lève
     if (header.classList.contains('site-header--floating')) {
-      const onScroll = () => {
-        const visible = window.scrollY > window.innerHeight * 0.75;
-        header.classList.toggle('is-visible', visible);
-        if (!visible) setMega(false);
-      };
-      onScroll();
-      window.addEventListener('scroll', onScroll, { passive: true, signal });
+      const ready: Promise<void> = (window as any).__fzLoaderDone ?? Promise.resolve();
+      ready.then(() => !signal.aborted && header.classList.add('is-visible'));
     }
   });
 </script>
