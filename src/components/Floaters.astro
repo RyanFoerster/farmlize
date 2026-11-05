@@ -77,6 +77,12 @@ const { items } = Astro.props;
       display: none;
     }
   }
+  /* sur téléphone, plus de place pour flotter sans mordre sur les titres et les cartes */
+  @media (max-width: 600px) {
+    .floater {
+      display: none;
+    }
+  }
 </style>
 
 <script>

@@ -169,6 +169,23 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
     z-index: 20;
     padding: 12px 0;
   }
+  /* collé en haut : un fond crème cache ce qui défile dessous (le grand nom du mois, le compteur…) */
+  .s-picker::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    right: 0;
+    top: -110px;
+    bottom: -14px;
+    background: linear-gradient(to bottom, var(--cream) 80%, rgba(252, 250, 242, 0));
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .s-picker.is-stuck::before {
+    opacity: 1;
+  }
   .s-picker__inner {
     display: flex;
     align-items: center;
@@ -323,6 +340,9 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 16px 14px;
+    /* quand la grille garde sa hauteur pendant un changement, les rangées ne s'étirent pas */
+    align-content: start;
+    align-items: start;
   }
   .s-item {
     position: relative;
@@ -480,15 +500,46 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
       grid-row: auto;
     }
   }
+  /* téléphone : le titre tient sur moins de lignes, le tableau respire */
+  @media (max-width: 560px) {
+    .s-hero {
+      padding: 36px 0 28px;
+    }
+    :global(.s-hero__title) {
+      font-size: 38px;
+    }
+    .s-board {
+      padding: 36px 0 70px;
+    }
+    .s-board__sun {
+      width: 104px;
+      left: -10px;
+    }
+    .s-grid {
+      gap: 14px 10px;
+    }
+    .s-item {
+      padding: 12px 12px 14px;
+      rotate: 0deg;
+    }
+    .s-item__art {
+      width: 46px;
+      height: 46px;
+    }
+    .s-item__name {
+      font-size: 15px;
+    }
+    .s-cta {
+      min-height: auto;
+    }
+  }
 </style>
 
 <script>
-  import { Flip } from 'gsap/Flip';
   import { gsap, ScrollTrigger, onPage, reduced, revealOnScroll } from '../lib/motion';
   import { monthNames } from '../data/seasons';
   import { ink } from '../lib/riso';
 
-  gsap.registerPlugin(Flip);
 
   /** Couleur du soleil selon la saison : bleu l'hiver, vert au printemps, jaune l'été, orange l'automne. */
   const sunInk = (m: number) => ([12, 1, 2].includes(m) ? ink.sky : [3, 4, 5].includes(m) ? ink.leaf : [6, 7, 8].includes(m) ? ink.yellow : ink.orange);
@@ -511,6 +562,8 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
     let month = new Date().getMonth() + 1;
     let kind = 'all';
     let first = true;
+    // l'échange de cartes en cours (filtre ou mois)
+    let swap: gsap.core.Timeline | null = null;
     // les cartes du premier affichage arrivent au scroll ; tant qu'elles n'ont pas toutes été montrées, on garde la main
     let pending: ScrollTrigger[] = [];
     const flushPending = () => {
@@ -555,57 +608,70 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
       moveIndicator(!first);
       setTitle(dir);
 
-      // un filtrage encore en cours est terminé net avant d'en lancer un autre
-      Flip.killFlipsOf(items, true);
-      const state = first || reduced() ? null : Flip.getState(items);
-      // hauteur de la grille avant le filtrage : on l'anime vers la nouvelle,
-      // sinon les cartes passent en absolu, la grille s'effondre et le footer remonte
-      const h0 = grid.offsetHeight;
-      let n = 0;
-      const prev = ((month + 10) % 12) + 1;
-      const next = (month % 12) + 1;
-      items.forEach((it) => {
-        const months = it.dataset.months!.split(' ').map(Number);
-        const show = months.includes(month) && (kind === 'all' || it.dataset.kind === kind);
-        it.style.display = show ? '' : 'none';
-        if (show) n++;
-        const badge = it.querySelector<HTMLElement>('[data-badge]')!;
-        const isNew = months.length < 12 && !months.includes(prev);
-        const isLast = months.length < 12 && !months.includes(next);
-        badge.textContent = isNew ? 'Nouveau' : isLast ? 'Derniers jours' : '';
-        badge.className = `s-item__badge${isNew ? ' is-new' : isLast ? ' is-last' : ''}`;
-        it.querySelectorAll('i').forEach((b) => b.classList.toggle('now', Number((b as HTMLElement).dataset.m) === month));
-      });
-
-      if (state) {
-        gsap.killTweensOf(grid);
-        gsap.set(grid, { clearProps: 'height' });
-        const h1 = grid.offsetHeight;
-        // la grille qui rétrécit le fait en douceur (le footer ne saute pas) ; quand elle grandit, elle grandit tout de suite
-        if (h1 < h0) gsap.fromTo(grid, { height: h0 }, { height: h1, duration: 0.6, ease: 'fz.inOut' });
-        Flip.from(state, {
-          duration: 0.6,
-          ease: 'fz.inOut',
-          // seules les cartes qui partent sortent du flux : les autres gardent leur taille de grille
-          absoluteOnLeave: true,
-          scale: false,
-          stagger: 0.01,
-          // la grille reprend sa hauteur naturelle à la fin, puis on recale Lenis et les ScrollTrigger
-          onComplete: () => {
-            gsap.killTweensOf(grid);
-            gsap.set(grid, { clearProps: 'height' });
-            (window as any).__lenis?.resize();
-            ScrollTrigger.refresh();
-          },
-          onEnter: (els) =>
-            gsap.fromTo(
-              els,
-              { autoAlpha: 0, scale: 0.5, y: -30, rotation: () => gsap.utils.random(-14, 14) },
-              { autoAlpha: 1, scale: 1, y: 0, rotation: 0, duration: 0.7, ease: 'back.out(2)', stagger: 0.025, delay: 0.15 },
-            ),
-          onLeave: (els) => gsap.to(els, { autoAlpha: 0, scale: 0.5, rotation: () => gsap.utils.random(-20, 20), duration: 0.3, ease: 'power2.in' }),
+      // affiche les produits du mois et du type choisis (badges « Nouveau » / « Derniers jours », mois en cours)
+      const apply = () => {
+        let count = 0;
+        const prev = ((month + 10) % 12) + 1;
+        const next = (month % 12) + 1;
+        items.forEach((it) => {
+          const months = it.dataset.months!.split(' ').map(Number);
+          const show = months.includes(month) && (kind === 'all' || it.dataset.kind === kind);
+          it.style.display = show ? '' : 'none';
+          if (show) count++;
+          const badge = it.querySelector<HTMLElement>('[data-badge]')!;
+          const isNew = months.length < 12 && !months.includes(prev);
+          const isLast = months.length < 12 && !months.includes(next);
+          badge.textContent = isNew ? 'Nouveau' : isLast ? 'Derniers jours' : '';
+          badge.className = `s-item__badge${isNew ? ' is-new' : isLast ? ' is-last' : ''}`;
+          it.querySelectorAll('i').forEach((b) => b.classList.toggle('now', Number((b as HTMLElement).dataset.m) === month));
         });
-      } else if (first && !reduced()) {
+        return count;
+      };
+      const countTo = (n: number) => {
+        const c = { v: Number(countEl.textContent) || 0 };
+        gsap.to(c, { v: n, duration: 0.6, onUpdate: () => (countEl.textContent = String(Math.round(c.v))) });
+        if (!first && !reduced()) gsap.fromTo(countEl.parentElement, { scale: 0.85, rotation: -8 }, { scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(2.6)' });
+      };
+      const settle = () => {
+        gsap.set(grid, { clearProps: 'height' });
+        (window as any).__lenis?.resize();
+        ScrollTrigger.refresh();
+      };
+
+      if (!first && !reduced()) {
+        // un changement encore en cours est terminé net : on repart d'une grille propre
+        swap?.kill();
+        gsap.killTweensOf([grid, ...items]);
+        gsap.set(items, { clearProps: 'opacity,visibility,transform' });
+        gsap.set(grid, { clearProps: 'height' });
+
+        // les cartes partent vite, la grille change, puis les nouvelles arrivent une à une.
+        // La grille garde sa hauteur le temps de l'échange puis glisse vers la nouvelle (sans étirer les cartes).
+        const before = items.filter((i) => i.style.display !== 'none');
+        const h0 = grid.offsetHeight;
+        gsap.set(grid, { height: h0 });
+        swap = gsap
+          .timeline()
+          .to(before, { autoAlpha: 0, scale: 0.86, y: 12, duration: 0.2, ease: 'power2.in', stagger: { each: 0.006, from: 'random' } })
+          .add(() => {
+            gsap.set(before, { clearProps: 'opacity,visibility,transform' });
+            const n = apply();
+            const after = items.filter((i) => i.style.display !== 'none');
+            gsap.set(grid, { clearProps: 'height' });
+            const h1 = grid.offsetHeight;
+            gsap.fromTo(grid, { height: h0 }, { height: h1, duration: 0.45, ease: 'fz.inOut', onComplete: settle });
+            gsap.fromTo(
+              after,
+              { autoAlpha: 0, scale: 0.7, y: 22, rotation: () => gsap.utils.random(-8, 8) },
+              { autoAlpha: 1, scale: 1, y: 0, rotation: 0, duration: 0.55, ease: 'back.out(1.8)', stagger: 0.022, clearProps: 'transform' },
+            );
+            countTo(n);
+          });
+        return;
+      }
+
+      const n = apply();
+      if (first && !reduced()) {
         // premier affichage : les cartes tombent par rangées quand elles arrivent à l'écran
         const shown = items.filter((i) => i.style.display !== 'none');
         gsap.set(shown, { autoAlpha: 0 });
@@ -620,9 +686,8 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
             ),
         });
       }
-      const c = { v: Number(countEl.textContent) || 0 };
-      gsap.to(c, { v: n, duration: 0.6, onUpdate: () => (countEl.textContent = String(Math.round(c.v))) });
-      if (!first && !reduced()) gsap.fromTo(countEl.parentElement, { scale: 0.85, rotation: -8 }, { scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(2.6)' });
+      countTo(n);
+      if (!first) settle();
       first = false;
     };
 
@@ -678,6 +743,18 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
       });
     }
     revealOnScroll(root);
+
+    // le sélecteur sait quand il est collé en haut (pour son fond crème)
+    const picker = root.querySelector<HTMLElement>('.s-picker')!;
+    const zone = root.querySelector<HTMLElement>('.s-zone')!;
+    const stuckCheck = () => {
+      const top = parseFloat(getComputedStyle(picker).top) || 0;
+      const r = picker.getBoundingClientRect();
+      picker.classList.toggle('is-stuck', r.top <= top + 0.5 && zone.getBoundingClientRect().bottom > r.bottom + 4);
+    };
+    const stuckST = ScrollTrigger.create({ trigger: zone, start: 'top bottom', end: 'bottom top', onUpdate: stuckCheck, onToggle: stuckCheck });
+    stuckCheck();
+    offs.push(() => stuckST.kill());
 
     return () => {
       pending.forEach((st) => st.kill());

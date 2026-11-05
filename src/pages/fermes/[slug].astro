@@ -247,6 +247,9 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
       <button type="button" class="round-btn fav-btn" data-fav={farm.slug} aria-pressed="false" aria-label="Ajouter aux favoris">
         <Icon name="heart" size={22} />
       </button>
+      <button type="button" class="round-btn" data-share aria-label="Partager">
+        <Icon name="share" size={20} />
+      </button>
     </div>
   </main>
   <SiteFooter />
@@ -861,9 +864,35 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
     .sim:nth-child(n) {
       margin-top: 10px;
     }
-    .farm-hero__actions .btn,
-    .farm-hero__actions .fav-btn {
+    /* les actions passent dans la barre du bas (itinéraire, favori, partage) */
+    .farm-hero__actions {
       display: none;
+    }
+    .farm-hero {
+      padding-bottom: 40px;
+    }
+    .farm-hero__meta {
+      margin-bottom: 0;
+    }
+    .farm-about {
+      padding: 36px 0 30px;
+    }
+    .farm-about__text {
+      font-size: 19px;
+      line-height: 1.32;
+    }
+    :global(.farm-ribbon) {
+      margin-top: 0;
+    }
+    .float {
+      width: 62px;
+    }
+    .float--1,
+    .float--2 {
+      width: 52px;
+    }
+    .float__in {
+      padding: 10px;
     }
     .mobile-bar {
       position: fixed;
@@ -949,7 +978,8 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
     offs.push(() => back.removeEventListener('click', onBack));
 
     // partager
-    const share = root.querySelector<HTMLButtonElement>('[data-share]')!;
+    // deux boutons de partage : dans le hero (ordinateur) et dans la barre du bas (téléphone)
+    const shares = [...root.querySelectorAll<HTMLButtonElement>('[data-share]')];
     const toast = root.querySelector<HTMLElement>('[data-toast]')!;
     const onShare = async () => {
       const data = { title: `${farm.name} — Farmlize`, text: farm.tagline, url: location.href };
@@ -962,8 +992,10 @@ const stampColors = [ink.coral, ink.yellow, ink.sky];
         }
       } catch {}
     };
-    share.addEventListener('click', onShare);
-    offs.push(() => share.removeEventListener('click', onShare));
+    shares.forEach((b) => {
+      b.addEventListener('click', onShare);
+      offs.push(() => b.removeEventListener('click', onShare));
+    });
 
     // animations
     if (reduced()) {

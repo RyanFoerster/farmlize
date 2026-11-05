@@ -976,15 +976,62 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
       grid-template-columns: repeat(2, 1fr);
       column-gap: 12px;
     }
-    .bubble__float {
-      width: calc(clamp(118px, 36vw, 170px) * var(--s));
-    }
     .bubble__label {
       font-size: 14px;
     }
     .picks__head {
       flex-direction: column;
       align-items: flex-start;
+    }
+
+    /* ---------- téléphone : on allège ---------- */
+    /* le bandeau passe sous la pilule d'en-tête, les deux illustrations restent entières */
+    :global(.hero__ribbon) {
+      top: 64px;
+    }
+    .hero__illo--left {
+      left: 0;
+      width: 31vw;
+    }
+    .hero__illo--right {
+      right: 0;
+      width: 31vw;
+    }
+    /* les éléments flottants mordaient sur les titres */
+    .how__float,
+    .picks__heart {
+      display: none;
+    }
+    /* catégories : une grille régulière, sans décalages ni tailles variées */
+    .cats {
+      padding: 70px 0 90px;
+    }
+    .cats__cloud {
+      row-gap: 28px;
+    }
+    .bubble:nth-child(n) {
+      --s: 1;
+      margin-top: 0;
+    }
+    .bubble__float {
+      width: clamp(108px, 32vw, 140px);
+    }
+    .bubble {
+      gap: 10px;
+    }
+    /* sections moins hautes : moins de vide entre les blocs */
+    .how {
+      padding: 70px 0 50px;
+    }
+    .picks {
+      padding: 48px 0 40px;
+    }
+    .join {
+      min-height: 0;
+      padding-top: 70px;
+    }
+    .join__scene {
+      height: 300px;
     }
   }
 </style>
@@ -1148,13 +1195,16 @@ const picks = ['ferme-du-soleil', 'la-laiterie-des-pres', 'les-ruchers-du-bois-j
         });
 
         // --- Catégories : les bulles dérivent chacune à leur vitesse au scroll, se déforment au survol
+        // (sur téléphone, pas de dérive : la grille reste nette)
+        const drift = matchMedia('(min-width: 561px)').matches;
         root.querySelectorAll<HTMLElement>('[data-bubble]').forEach((bubble, i) => {
           const depth = [0.6, 1.2, 0.4, 1, 0.9, 0.5, 1.3, 0.7][i % 8];
-          gsap.fromTo(
-            bubble.querySelector('.bubble__float'),
-            { y: 50 * depth },
-            { y: -50 * depth, ease: 'none', scrollTrigger: { trigger: '.cats__cloud', start: 'top bottom', end: 'bottom top', scrub: true } },
-          );
+          if (drift)
+            gsap.fromTo(
+              bubble.querySelector('.bubble__float'),
+              { y: 50 * depth },
+              { y: -50 * depth, ease: 'none', scrollTrigger: { trigger: '.cats__cloud', start: 'top bottom', end: 'bottom top', scrub: true } },
+            );
           const blob = bubble.querySelector<SVGPathElement>('.bubble__blob')!;
           const icon = bubble.querySelector<HTMLElement>('[data-bubble-icon]')!;
           const shape = blob.getAttribute('d')!;

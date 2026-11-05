@@ -11,3 +11,6 @@ dist/
 
 # journaux
 npm-debug.log*
+
+# vidéos de bugs envoyées pour analyse
+vidéo fix/

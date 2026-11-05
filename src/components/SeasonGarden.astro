@@ -261,6 +261,33 @@ const sprouts = gardenSprouts(month);
       translate: none;
     }
   }
+  /* téléphone : un mois et un soleil plus petits, 12 légumes réguliers sur 3 rangées */
+  @media (max-width: 560px) {
+    .garden__month {
+      font-size: clamp(64px, 20vw, 84px);
+    }
+    .garden__sun {
+      width: 70vw;
+    }
+    .garden__lead {
+      margin: 22px 0 26px;
+      padding: 13px 18px;
+    }
+    .garden__items {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      justify-items: center;
+      gap: 16px 8px;
+    }
+    .sprout {
+      width: 58px;
+      height: 58px;
+      rotate: 0deg;
+    }
+    .sprout:nth-child(n + 13) {
+      display: none;
+    }
+  }
 </style>
 
 <script>
@@ -289,7 +316,8 @@ const sprouts = gardenSprouts(month);
       const tl = gsap.timeline({ scrollTrigger: { trigger: root, start: 'top 65%', once: true } });
       tl.fromTo('[data-garden-sun]', { scale: 0.4, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 1.2, ease: 'back.out(1.6)' }).fromTo(
         sprouts,
-        { y: () => -gsap.utils.random(320, 640), rotation: () => gsap.utils.random(-160, 160), autoAlpha: 0 },
+        // sur téléphone, une chute courte : les légumes ne traversent pas le texte au-dessus d'eux
+        { y: () => -(matchMedia('(max-width: 560px)').matches ? gsap.utils.random(40, 110) : gsap.utils.random(320, 640)), rotation: () => gsap.utils.random(-160, 160), autoAlpha: 0 },
         { y: 0, rotation: 0, autoAlpha: 1, duration: 1.2, ease: 'bounce.out', stagger: { each: 0.05, from: 'random' } },
         0.15,
       );
