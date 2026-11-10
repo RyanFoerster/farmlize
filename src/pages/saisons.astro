@@ -343,7 +343,8 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
     padding: 0;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px 14px;
+    /* rangées assez espacées pour que les étiquettes (« Nouveau », « Derniers jours ») ne mordent pas sur la carte du dessus */
+    gap: 22px 14px;
     /* quand la grille garde sa hauteur pendant un changement, les rangées ne s'étirent pas */
     align-content: start;
     align-items: start;
@@ -389,7 +390,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
   }
   .s-item__badge {
     position: absolute;
-    top: -10px;
+    top: -8px;
     right: 12px;
     padding: 3px 10px;
     border-radius: 999px;
@@ -520,7 +521,7 @@ const items = [...seasonItems].sort((a, b) => a.name.localeCompare(b.name, 'fr')
       left: -10px;
     }
     .s-grid {
-      gap: 14px 10px;
+      gap: 22px 10px;
     }
     .s-item {
       padding: 12px 12px 14px;

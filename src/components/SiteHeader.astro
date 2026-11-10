@@ -15,12 +15,6 @@ interface Props {
   variant?: 'static' | 'floating' | 'explore';
 }
 const { variant = 'static' } = Astro.props;
-const links = [
-  { href: '/', label: 'Accueil' },
-  { href: '/fermes', label: 'La carte' },
-  { href: '/saisons', label: 'De saison' },
-  { href: '/producteurs', label: 'Producteurs' },
-];
 ---
 
 <header class:list={['site-header', `site-header--${variant}`]} data-site-header>
@@ -57,10 +51,8 @@ const links = [
     </nav>
   </div>
   <nav class="mobile-menu" id="mobile-menu" aria-label="Menu principal" data-mobile-menu hidden>
+    <Logo size={28} class="mobile-menu__logo" />
     <MenuCards variant="mobile" />
-    <div class="mobile-menu__links">
-      {links.map((l) => <a href={l.href} class="mobile-link">{l.label}</a>)}
-    </div>
     <p class="mobile-menu__foot">Fermes locales de Belgique · Wallonie, Bruxelles & Flandre</p>
   </nav>
 </header>
@@ -243,25 +235,9 @@ const links = [
   .mobile-menu[hidden] {
     display: none;
   }
-  /* les liens en petites pastilles de papier, sur une ou deux lignes nettes */
-  .mobile-menu__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .mobile-link {
-    display: inline-flex;
-    align-items: center;
-    height: 40px;
-    padding: 0 16px;
-    border-radius: 999px;
-    background: var(--white) url('/textures/paper-grain.png') 0 0 / 240px 240px;
-    box-shadow:
-      inset 0 0 0 1.5px var(--line-strong),
-      2px 3px 0 0 var(--line);
-    font-weight: 600;
-    font-size: 15px;
-    color: var(--ink);
+  /* le logo (retour à l'accueil) n'apparaît dans le menu que là où l'en-tête ne le montre pas : la carte, sur téléphone */
+  .mobile-menu :global(.mobile-menu__logo) {
+    display: none;
   }
   .mobile-menu__foot {
     margin-top: auto;
@@ -297,6 +273,10 @@ const links = [
     }
     .site-header--explore .site-header__bar > :global(.logo) {
       display: none;
+    }
+    .site-header--explore .mobile-menu :global(.mobile-menu__logo) {
+      display: inline-flex;
+      align-self: flex-start;
     }
     .site-header--explore .menu-btn__label {
       display: none;
@@ -383,7 +363,7 @@ const links = [
         menu.hidden = false;
         gsap.fromTo(menu, { clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 0.7, ease: 'fz.inOut' });
         gsap.fromTo(
-          menu.querySelectorAll('[data-mcard], .mobile-link'),
+          menu.querySelectorAll('[data-mcard]'),
           { y: 30, autoAlpha: 0, rotation: (i: number) => (i % 2 ? 2 : -2) },
           { y: 0, autoAlpha: 1, rotation: 0, stagger: 0.05, delay: 0.2, ease: 'back.out(1.5)', clearProps: 'transform' },
         );
