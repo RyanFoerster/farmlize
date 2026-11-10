@@ -100,8 +100,11 @@ const floaters = [
   </div>
 
   <div class="container site-footer__bottom">
-    <span>© {year} Farmlize — prototype</span>
-    <span>Fait avec soin en Belgique · Wallonie, Bruxelles & Flandre</span>
+    <span>© {year} Farmlize</span>
+    <span>
+      Fait avec amour <span aria-hidden="true">❤️</span> par{' '}
+      <a href="https://studiohyphe.com" target="_blank" rel="noopener">Hyphe<span class="sr-only"> (nouvel onglet)</span></a>
+    </span>
   </div>
 </footer>
 
@@ -307,6 +310,15 @@ const floaters = [
     padding: 22px 0 28px;
     font-size: 13px;
     color: rgba(252, 250, 242, 0.55);
+  }
+  .site-footer__bottom a {
+    color: var(--cream);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.3s;
+  }
+  .site-footer__bottom a:hover {
+    color: var(--butter);
   }
   @media (max-width: 860px) {
     .site-footer__top {
